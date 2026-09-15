@@ -73,9 +73,11 @@ intended" half of the version-floor rule; test coverage.
 `language/rust/code-review.md` takes the rest of RT = AT:
 
 - Verbatim: the `[lints] workspace = true` bullet, Error handling, Unsafe code,
-  Public API, and the `just deny` bullet. "Breaking changes to a published crate
-  bump the major version" stays for now; Stage 1 PR 3 decides whether it belongs
-  to `deployment/library/api-stability.md` instead.
+  Public API, and the `just deny` bullet.
+- "Breaking changes to a published crate bump the major version in `Cargo.toml`"
+  → `deployment/library/api-stability.md`, corrected. The version is set by
+  `bump-version.yml` from a `!` or `BREAKING CHANGE` in the merged commit; a hand
+  edit to `Cargo.toml` would be bumped again on merge.
 - MSRV bullet: its "not bumped" half is in core; "in `clippy.toml` and
   `rust-version`" → a pointer to where *Build and test commands* says it is
   declared.
@@ -142,9 +144,8 @@ Same merge as rust, with `name: new-package`, `title: Adding a package`.
 - The command's "Decide the location before scaffolding" kept, in *Pre-flight*.
 - Import path `github.com/ninoverse/claude-mit-go-template/internal/<other>` →
   `<module-path>/internal/<other>`.
-- The command's paragraph on the `internal/greet` and `cmd/app` placeholders not
-  extracted here: it is about the template, not about Go. Stage 1 PR 3 places it
-  in `deployment/template/scope.md` or GT's marker region.
+- The command's paragraph on the `internal/greet` and `cmd/app` placeholders →
+  `concerns/template/rules.md`: it is about being a template, not about Go.
 
 ## `commands/gates.md` → `language/<x>/tasks/gates.md`
 
@@ -168,7 +169,19 @@ override, enabling the `claude-roast` plugin.
 | AT's **Crate visibility** and `cargo run -p agent-cli` lines | AT's marker region, Stage 5. |
 | Behavioral Guidelines (identical in all three) | `core/behavior.md`, headings one level up. |
 | **Extended Rules** list and its intro | Generated: the index of `on-demand` fragments and task pointers, from each `when`. |
-| RT's "# Project Rules — Apply the claude-roast skill …" | Dropped: personal, from the plugin RT's `settings.local.json` enables. |
+| "# Project Rules — Apply the claude-roast skill …" at the end of RT's file | Not in the repository: an uncommitted edit in the local RT checkout, matching the personal plugin its `settings.local.json` enables. Nothing to extract. |
+
+## New content — Stage 1 PR 3
+
+These fragments have no rule file to extract from. Their facts come from:
+
+| Fragment | Source |
+|----------|--------|
+| `deployment/service/release.md` | AT and GT `release.yml`; `release-cloudrun.yml` and `*-bump-version.yml` in `ninoverse/.github@v1`. Graceful shutdown and health checks, which the plan listed, are left out: neither service handles SIGTERM, and only agent-server has a probe (`GET /`). |
+| `deployment/tag-only/release.md` | RT `bump-version.yml`: "There is no deploy watching for that tag." The plan's `template` value, renamed so it does not collide with the concern. |
+| `deployment/library/api-stability.md` | The plan's map, plus the corrected Rust breaking-change rule above. No source repo is a library. |
+| `concerns/template/rules.md` | RT `crates/example/src/lib.rs` docs, RT and GT README placeholder rows, GT `commands/new-package.md` placeholder paragraph. |
+| `architecture/ddd/*`, `concerns/data-access/rules.md`, `concerns/sync/rules.md` | The plan's map. No source repo uses them yet. |
 
 ## Open drift — Stage 1 PR 4
 
@@ -195,3 +208,14 @@ override, enabling the `claude-roast` plugin.
 - `commands/gates.md`: GT says `make ci` stops at the first failing target, so
   later gates are "not run"; `just ci` stops the same way, and the rust command
   does not say so.
+- `BREAKING CHANGE` anywhere in the merged commit message cuts a major release —
+  including a squash message assembled from a PR description that merely
+  mentions the phrase. Belongs in core with the release facts.
+- A subject whose scope has uppercase letters or dots (`feat(API):`) matches no
+  type in the bump workflow's pattern, so the release is silently skipped.
+  Belongs in *Commit message guidelines*.
+- RT `bump-version.yml` says `fix`/`perf`/`refactor`/`chore`/`docs` are patch
+  releases and "anything else not at all"; the called workflow also patches
+  `revert` and `style`.
+- AT `agent-server`'s crate docs say it is designed for Firebase App Hosting; it
+  deploys to Cloud Run. Code, not a rule file — Stage 5.

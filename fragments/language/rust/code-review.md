@@ -34,7 +34,6 @@ Read alongside *Code review*, which holds the checks every language shares.
   `///` doc comment.
 - Public functions have a runnable doc-test example unless behavior is trivially
   obvious from the signature.
-- Breaking changes to a published crate bump the major version in `Cargo.toml`.
 
 ### Dependencies
 - `just deny` passes — licenses allowed, no known advisories,
