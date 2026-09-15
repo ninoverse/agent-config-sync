@@ -2,7 +2,7 @@
 
 Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse repositories into single-axis fragments, composed per repo by a Rust binary and synced as ordinary committed files. Seven stages, sequenced so nothing is built before the thing it depends on is proven.
 
-**30** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
+**31** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
 > **Status:** design settled, implementation not started.
 > Every decision below was reached deliberately; the *Decisions locked in* section
@@ -25,7 +25,7 @@ Three levels, and keeping them straight is the whole model: an **axis** is a dim
 fragments/
 ├── core/                  always included — nothing to pick
 │   ├── git-flow.md        ← a fragment
-│   └── … 6 fragments
+│   └── … 7 fragments
 ├── language/              ← an axis   pick exactly 1
 │   ├── rust/              ← a value   7 fragments inside
 │   │   ├── tooling.md     ← a fragment
@@ -50,7 +50,7 @@ fragments/
 | concerns | any number, / including none — `concerns: [sync]` | data-access, sync | 1 | Language-neutral and path-scoped, so they load only when Claude touches matching files. Heavy-calc and fetching deferred. |
 | sensitivity | exactly 1, defaulted — `sensitivity: none` | **none only** | 0 | Payload logging, error-message contents, retention, encryption at rest, audit trail. Declared now because retrofitting it across dozens of repos later is the expensive case. |
 
-So v1 authors **30 fragments** — 6 core, 7 each for rust and go, 4 for `ddd`, 4 across the deployment values, 2 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
+So v1 authors **31 fragments** — 7 core, 7 each for rust and go, 4 for `ddd`, 4 across the deployment values, 2 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
 
 The whole per-repo footprint is one file. This is what `claude-mit-rust-agent-template`'s would actually say today — note the empty framework and concern picks, which is what "0 or 1" and "any number" look like in practice:
 
@@ -66,7 +66,7 @@ sensitivity: none          # exactly 1, defaulted
 emit:        [agents-md, claude]
 ```
 
-That profile composes **18 fragments**: 6 core + 7 rust + 4 ddd + 1 deployment. Drop the `architecture` line and it is 14. `claude-mit-rust-template` composes 14 too — same core, same rust — differing in exactly one fragment, `template/scope.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
+That profile composes **19 fragments**: 7 core + 7 rust + 4 ddd + 1 deployment. Drop the `architecture` line and it is 15. `claude-mit-rust-template` composes 15 too — same core, same rust — differing in exactly one fragment, `template/scope.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
 
 ### Why deployment is an axis and concurrency is not
 
@@ -103,16 +103,16 @@ The pivotal pair is `language/<x>/values.yml` and its `tooling.md`. The first de
 
 Six passes, in order:
 
-1. **core/** — six fragments, vocabulary neutralised.
+1. **core/** — seven fragments, vocabulary neutralised: the six `.claude/` files plus `behavior.md` from `CLAUDE.md`.
 2. **language/rust/** and **language/go/** — including the new tooling fragment and the permissions/hooks partial.
 3. **deployment/service/**, **library/** and **template/** — new content, and the axis all three existing repos already differ on.
 4. **architecture/ddd/** — new content, four fragments, and the first axis whose rules reach across every layer of a repo that declares it.
 5. **concerns/data-access/** and **concerns/sync/** — new content, two of five, enough to prove the axis carries.
 6. **Reconcile drift** found along the way (see the map below).
 
-Draft the fragment-authoring guide as you go — single-axis discipline, vocabulary neutralisation, what makes something core rather than language. Stage 6 edits it into shape, but the judgement being exercised here is the content, and reconstructing it later is archaeology.
+Draft the fragment-authoring guide (`docs/fragment-authoring.md`) as you go — single-axis discipline, vocabulary neutralisation, what makes something core rather than language. Stage 6 edits it into shape, but the judgement being exercised here is the content, and reconstructing it later is archaeology.
 
-> **Done when** — For each of the three repos, the selected fragments concatenated by hand account for every line currently in its `.claude/` — with each omission deliberate and written down.
+> **Done when** — For each of the three repos, the selected fragments concatenated by hand account for every line currently in its `CLAUDE.md` and `.claude/` — with each omission deliberate and written down in `docs/extraction-ledger.md`.
 
 ### Stage 2 · ~2 days — Build the `agentcfg` crate
 
@@ -138,7 +138,7 @@ Almost nobody types any of it. A repo meets `init` once, then experiences this s
 - **Substitution is ~30 lines, hand-rolled** — scan for `{{ name }}`, resolve against the selected values, and stop. Hand-rolled rather than minijinja precisely so nobody switches conditionals back on later. An unresolved name is a hard error, never an empty string — silently emitting `run` with nothing after it is the worst failure this system could have — and literal braces need an escape, with a real case waiting in the fragment that documents Renovate's own `{{{newValue}}}` templates.
 - **Valid values are the directory listing** — the embed step emits the value set alongside the fragments, so `language: fsharp` becomes legal the moment `language/fsharp/` ships in a release, and is a hard error before that. Never a hand-written enum: that would make every new language a code change and quietly undo the axis design.
 - **Provenance on every block** — each emitted span opens with `<!-- language/rust/tooling.md · v1.3.0 -->`. That comment is what turns `why` into a lookup rather than a text search, and what makes the Monday diff readable at the hunk level.
-- **Budget measured, not remembered** — `check` reports the composed always-on size and fails past a threshold declared centrally (200 lines to start). Path-scoped content is uncounted, since it is the always-on set that costs every session — but the *descriptions* of model-invocable skills are counted, because those load every session too and would otherwise be spend the gate cannot see. An `invocation: user` skill's description never enters context, so it is uncounted. So are HTML comment lines — markers and provenance — which Claude Code strips before loading; counting them would spend 18 of the 200 lines on the reader that does not need them.
+- **Budget measured, not remembered** — `check` reports the composed always-on size — every `scope: always` body plus one index line per `on-demand` trigger — and fails past a threshold declared centrally (200 lines to start). Path-scoped content is uncounted, since it is the always-on set that costs every session — but the *descriptions* of model-invocable skills are counted, because those load every session too and would otherwise be spend the gate cannot see. An `invocation: user` skill's description never enters context, so it is uncounted. So are HTML comment lines — markers and provenance — which Claude Code strips before loading; counting them would spend 18 of the 200 lines on the reader that does not need them.
 - **Empty globs warn** — a `paths:` pattern matching zero files in the repo is reported by `check`. A warning, not a failure: a young repo may legitimately not have that layout yet.
 - **A damaged marker region is a hard error** — missing end marker, nested markers, markers out of order. `sync` refuses and leaves the file untouched rather than guessing where generated content ends.
 - **`init` detects what it can** — `Cargo.toml` or `go.mod` pre-fills `language`. Everything else is a flag or a default, because everything else is genuinely a choice. It prompts only when stdin is a TTY *and* a required value is still missing; `--non-interactive` turns that into a hard failure. Flags always win, so an agent scaffolding a repo from the template never sees a question.
@@ -204,7 +204,8 @@ Where each existing file lands. Derived from diffing the three repos rather than
 | core | pr-guidelines.md | pr-guidelines.md | One line differs across repos: the gate command. Neutralise and it is universal. |
 | core | execution-order.md | execution-order.md | Universal once crate/package becomes the unit noun defined by the language fragment. |
 | core | code-review.md | code-review.md **split** | Only the review *process* is universal. The language idioms below are a separate fragment, not a rendering of this one. |
-| language | tooling.md + values.yml **order: 0** | new | The command table, plus the `values.yml` declaring unit noun, gate command and formatter for every core fragment to reference. `order: 0` is now presentation — substitution means nothing depends on reading it first. |
+| core | behavior.md | CLAUDE.md | **byte-identical in all three** The Behavioral Guidelines block, plus the "Maintain the Build" rule. `scope: always`. Added in Stage 1: `CLAUDE.md` becomes an `@AGENTS.md` import, so its content needs fragments too. |
+| language | tooling.md + values.yml **order: 0** | CLAUDE.md **Commands & Tooling** | The command table and the workspace or module rules from `CLAUDE.md`, plus the `values.yml` declaring unit noun, gate command and formatter for every core fragment to reference. `order: 0` is now presentation — substitution means nothing depends on reading it first. |
 | language | code-review.md | code-review.md | The unwrap/expect ban and unsafe policy for Rust; the errcheck and wrapping rules for Go. Genuinely different rules, not different words. |
 | language | testing.md | testing-requirements.md | The one file that already differs between the two Rust repos. The agent-template's extra MSRV rationale goes to its local region, not here. |
 | language | file-naming.md | file-naming.md | **~95% language-specific** Layout and naming tables throughout. Goes entirely to language — no core half worth extracting. |
@@ -264,7 +265,9 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 **Path-scoping strategy** — Claude gets native `paths:` frontmatter. AGENTS.md gets an explicit "read X before touching Y" pointer — portable across all 30 tools, and the pattern the current CLAUDE.md already uses.
 
-**order: in frontmatter** — Not `10-`/`20-` filename prefixes. Order and identity are different things; welding them together means reordering is renaming, and renaming costs `git log --follow` and blame on a rules fragment. Default 0, set explicitly only for `tooling.md` — and honestly weaker than when it was written: substitution means nothing has to be *read* before anything else to be understood, so `order:` now serves readability rather than correctness. Kept because it costs nothing and a composed document still reads better with its command table near the top.
+**Three scopes, not two** — `always`, `on-demand` and `paths`. Added in Stage 1, because none of the source repos loads its rules every session: `CLAUDE.md` is always-on and points at `.claude/*.md` by activity ("Committing code: read …"). Git flow and commit conventions have no path to scope to, and loading them every session would put core alone at 295 lines against a 200-line budget. An `on-demand` fragment declares `when:`; AGENTS.md carries one index line per trigger, the body goes to its own file every agent can read, and only the index line counts against the budget. The index replaces the hand-written *Extended Rules* list all three repos keep today.
+
+**order: in frontmatter** — Not `10-`/`20-` filename prefixes. Order and identity are different things; welding them together means reordering is renaming, and renaming costs `git log --follow` and blame on a rules fragment. Default 0, set explicitly only for `tooling.md` and for `git-flow.md`, whose index line says to read it first — and honestly weaker than when it was written: substitution means nothing has to be *read* before anything else to be understood, so `order:` now serves readability rather than correctness. Kept because it costs nothing and a composed document still reads better with its command table near the top.
 
 **invocation: is per fragment, not policy** — `invocation: model | user`, default `model`. Revised at Stage 0 from `surface: skill | command | both`: Claude Code has merged commands into skills, a skill shadows a command of the same name so `both` has no correct rendering, and "command" is now just a skill flag. Both values emit `.claude/skills/<name>/SKILL.md`; `user` adds `disable-model-invocation: true`. What the field decides is unchanged — who pulls the trigger. A `model` skill's description is a condition the model tests, so only it runs the gates before concluding a task or traces a rule mid-session, and its description loads every session and counts against the budget. A `user` skill fires only when typed and costs nothing until then. Skills of either kind are slash-invocable, take arguments, and carry `allowed-tools` natively. Neither is universally right, so the fragment declares its own invocation and the emitter obeys, exactly as it does for `scope`.
 
@@ -304,7 +307,7 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 ### Context budget on the always-on set
 
-Core plus language loads unconditionally in every session, and adherence degrades well before 200 lines. Measure at Stage 3, not at rollout, and from Stage 2 onward `check` holds the line automatically. If it runs long, the fix is moving more content behind `scope: paths` — not trimming the rules.
+Every `scope: always` body and the on-demand index load unconditionally in every session, and adherence degrades well before 200 lines. Measure at Stage 3, not at rollout, and from Stage 2 onward `check` holds the line automatically. If it runs long, the fix is moving more content behind `scope: paths` — not trimming the rules.
 
 ### Stage 4 leans on one Renovate feature
 
@@ -336,7 +339,7 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **agentcfg** — The Rust binary. Reads a profile, selects fragments, runs emitters. It never parses markdown — bodies pass through untouched but for one `{{ name }}` substitution pass — so the work is frontmatter splitting, selection, substitution and emission. Six subcommands: `sync`, `check`, `plan`, `why`, `init`, `eject`.
 
-**always-on budget** — The ceiling on composed `scope: always` content, 200 lines to start, declared centrally and enforced by `check`. Path-scoped fragments do not count against it — they cost only the sessions that touch matching files. It is the constraint that keeps composition honest: without it, every fragment added anywhere is a tax on every session everywhere.
+**always-on budget** — The ceiling on composed `scope: always` content plus the on-demand index, 200 lines to start, declared centrally and enforced by `check`. Path-scoped and on-demand bodies do not count against it — they cost only the sessions that reach them. It is the constraint that keeps composition honest: without it, every fragment added anywhere is a tax on every session everywhere.
 
 **cardinality** — How many values of one axis a single repo may pick. `language` and `deployment` take exactly one, `framework` and `architecture` none or one, `concerns` any number including none. It is a property of the axis, not of a fragment, and the profile schema enforces it.
 
@@ -348,7 +351,7 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **emitter** — Translates selected fragments into one agent's file layout — same bodies, different frontmatter and paths. `agents-md` and `claude` in v1. A new agent is a new emitter, never a content migration.
 
-**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always` or `paths`), `title`, `order` where sequence matters, and `invocation` on the task-shaped ones. A repo composes 14 of them today; v1 authors 30 in total.
+**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always`, `on-demand` or `paths`), `when` on the on-demand ones, `title`, `order` where sequence matters, and `invocation` on the task-shaped ones. A repo composes 15 of them today; v1 authors 31 in total.
 
 **manifest** — `.agentcfg-manifest.json` — every path the tool generated in this repo. Without it, dropping a concern from a profile leaves an orphaned rule file that nothing ever deletes.
 
@@ -356,11 +359,11 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **profile** — `.agentprofile.yml` — the entire per-repo footprint. Names the repo's coordinate on each axis plus the pinned `config_version`, and drives both the fragment selection and the emitted settings.
 
-**provenance comment** — The label each emitted block opens with — source fragment and the `config_version` that produced it. It answers the question centralising creates: a rule you disagree with is no longer a file in your repo you can edit, it is one of eighteen fragments composed from six axes. The comment makes that traceable in the file itself, makes `why` a lookup, and gives every hunk of the Monday diff a name.
+**provenance comment** — The label each emitted block opens with — source fragment and the `config_version` that produced it. It answers the question centralising creates: a rule you disagree with is no longer a file in your repo you can edit, it is one of nineteen fragments composed from six axes. The comment makes that traceable in the file itself, makes `why` a lookup, and gives every hunk of the Monday diff a name.
 
 **single-axis refactor** — The Stage 1 editorial pass: rewriting each existing file so it belongs to exactly one axis. It is what removes the crate/package and `just`/`make` vocabulary problem without control flow — the words move into the language value, and the core fragment references them as variables instead of choosing between them.
 
-**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
+**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-one. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
 
 **value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library` and `template` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
 
