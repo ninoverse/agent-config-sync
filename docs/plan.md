@@ -2,7 +2,7 @@
 
 Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse repositories into single-axis fragments, composed per repo by a Rust binary and synced as ordinary committed files. Seven stages, sequenced so nothing is built before the thing it depends on is proven.
 
-**33** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
+**34** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
 > **Status:** design settled, implementation not started.
 > Every decision below was reached deliberately; the *Decisions locked in* section
@@ -34,9 +34,9 @@ fragments/
 ├── architecture/          ← an axis   pick 0 or 1
 │   └── ddd/               4 fragments inside
 ├── deployment/            ← an axis   pick exactly 1
-│   ├── service/  library/  template/  cli/
+│   ├── service/  library/  tag-only/  cli/
 └── concerns/             ← an axis   pick any number
-    ├── data-access/  sync/
+    ├── data-access/  sync/  template/
 ```
 
 `core/` is not an axis — it has no values and is always included, which is why it has no cardinality. The six real axes each have a cardinality: how many of that axis's values a single repo may name in its profile. Two languages exist, but a repo declares exactly one of them; five concerns will exist, and a repo may declare none, one or all five. That is what the schema enforces:
@@ -46,13 +46,13 @@ fragments/
 | language | exactly 1 — `language: rust` | rust, go | 8 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
 | framework | 0 or 1 — `framework: ~` | **none yet** | — | Axum, Dioxus and the rest. The schema accepts the axis; no value is written until a repo needs one. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
-| deployment | exactly 1 — `deployment: service` | service, library, / template, cli | 1 | Release consequences, config and shutdown discipline for a service; semver, API stability and doc coverage for a library; exit codes and stream discipline for a cli. |
-| concerns | any number, / including none — `concerns: [sync]` | data-access, sync | 1 | Language-neutral and path-scoped, so they load only when Claude touches matching files. Heavy-calc and fetching deferred. |
+| deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli. |
+| concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template | 1 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files; `template` is the always-on exception, the rules for a repository others copy. Heavy-calc and fetching deferred. |
 | sensitivity | exactly 1, defaulted — `sensitivity: none` | **none only** | 0 | Payload logging, error-message contents, retention, encryption at rest, audit trail. Declared now because retrofitting it across dozens of repos later is the expensive case. |
 
-So v1 authors **33 fragments** — 7 core, 8 each for rust and go, 4 for `ddd`, 4 across the deployment values, 2 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
+So v1 authors **34 fragments** — 7 core, 8 each for rust and go, 4 for `ddd`, 4 across the deployment values, 3 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
 
-The whole per-repo footprint is one file. This is what `claude-mit-rust-agent-template`'s would actually say today — note the empty framework and concern picks, which is what "0 or 1" and "any number" look like in practice:
+The whole per-repo footprint is one file. This is what `claude-mit-rust-agent-template`'s would actually say today — note the empty framework pick, which is what "0 or 1" looks like in practice:
 
 ```yaml
 # .agentprofile.yml
@@ -61,16 +61,16 @@ language:    rust          # exactly 1
 framework:   ~             # 0 or 1 — none yet
 architecture: ddd           # 0 or 1
 deployment:  service       # exactly 1
-concerns:  []            # any number — none yet
+concerns:  [template]    # any number
 sensitivity: none          # exactly 1, defaulted
 emit:        [agents-md, claude]
 ```
 
-That profile composes **20 fragments**: 7 core + 8 rust + 4 ddd + 1 deployment. Drop the `architecture` line and it is 16. `claude-mit-rust-template` composes 16 too — same core, same rust — differing in exactly one fragment, `template/scope.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
+That profile composes **21 fragments**: 7 core + 8 rust + 4 ddd + 1 deployment + 1 concern. Drop the `architecture` line and it is 17. `claude-mit-rust-template` composes 17 too — same core, same rust, same concern — differing in exactly one fragment, `tag-only/release.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
 
 ### Why deployment is an axis and concurrency is not
 
-Deployment is already differentiated across the three existing repos, and it is the axis the bump-version finding below actually turns on: `claude-mit-rust-template` is a `template` with no deploy, the other two are `service` repos wired to Cloud Run. The rules genuinely diverge — graceful shutdown and env-driven config on one side, semver and public-API stability on the other — and neither belongs to language or concern.
+Deployment is already differentiated across the three existing repos, and it is the axis the bump-version finding below actually turns on: `claude-mit-rust-template` is `tag-only`, with no deploy, the other two are `service` repos wired to Cloud Run. The rules genuinely diverge — a merge that deploys and a server that must honour `PORT` on one side, semver and public-API stability on the other — and neither belongs to language or concern.
 
 Architecture qualified on the same test but by a different route: it has no value in any repo yet, but one value — `ddd` — is a large, coherent, language-neutral body of rules that will be declared by several repos rather than one. That is the reuse ratio an axis has to clear, and a business-domain axis (billing, telemetry) fails it badly: roughly forty values for seventy-five repos is relocation, not centralisation. Domain rules stay in the marker region.
 
@@ -105,9 +105,9 @@ Six passes, in order:
 
 1. **core/** — seven fragments, vocabulary neutralised: the six `.claude/` files plus `behavior.md` from `CLAUDE.md`.
 2. **language/rust/** and **language/go/** — including the new tooling fragment and the permissions/hooks partial.
-3. **deployment/service/**, **library/** and **template/** — new content, and the axis all three existing repos already differ on.
+3. **deployment/service/**, **library/** and **tag-only/** — new content, and the axis all three existing repos already differ on.
 4. **architecture/ddd/** — new content, four fragments, and the first axis whose rules reach across every layer of a repo that declares it.
-5. **concerns/data-access/** and **concerns/sync/** — new content, two of five, enough to prove the axis carries.
+5. **concerns/data-access/**, **concerns/sync/** and **concerns/template/** — two hazard concerns of five, enough to prove the axis carries, plus the template rules all three repos share.
 6. **Reconcile drift** found along the way (see the map below).
 
 Draft the fragment-authoring guide (`docs/fragment-authoring.md`) as you go — single-axis discipline, vocabulary neutralisation, what makes something core rather than language. Stage 6 edits it into shape, but the judgement being exercised here is the content, and reconstructing it later is archaeology.
@@ -217,12 +217,13 @@ Where each existing file lands. Derived from diffing the three repos rather than
 | architecture | ddd/domain-model.md | new | `paths: **/domain/**`. Entities, value objects, aggregates. Immutability and value equality; the aggregate as transaction boundary; reference other aggregates by ID, never by pointer. Naming goes through the glossary: check it before introducing or renaming a type, and add the term in the same commit. This fragment carries the enforcement because it is the one already scoped to the domain layer. |
 | architecture | ddd/repositories.md | new | `paths: **/repository/**, **/infrastructure/**`. The interface lives in the domain, the implementation in infrastructure; it returns aggregates, never rows, and no persistence type crosses back. |
 | architecture | ddd/boundaries.md | new | `scope: always`. Bounded contexts, ubiquitous language, and an anti-corruption layer at every external boundary. Also fixes the **glossary convention**: every context keeps its ubiquitous language at `docs/domain/glossary.md`, a plain doc a domain expert can read and correct. Types carry their own definition as a doc comment — that copy cannot drift; the glossary covers everything that is not a type, plus the synonyms this context deliberately rejects. Never centralised: a glossary shared across contexts is the universal-`Customer` mistake in new clothes. |
-| deployment | service/release.md | new | What a push to `main` actually costs when a tag deploys, plus env-driven config, `PORT`, graceful shutdown, health checks. Carries the bump-version facts below. |
+| deployment | service/release.md | new | What a merge to `main` actually costs when the tag deploys to Cloud Run, the injected `PORT`, and a service that is public by default. Shares its trigger with *Git flow*. Graceful shutdown and health checks wait until a service implements them. |
 | deployment | library/api-stability.md | new | Semver discipline, public-API stability, deprecation path, doc coverage on exported items. |
-| deployment | template/scope.md | new | Keep the example minimal, no real business logic, the tag is a marker rather than a release. This is what all three current repos actually are. |
+| deployment | tag-only/release.md | new | The tag is a marker rather than a release: nothing deploys. The plan's `template` value, renamed in Stage 1 when the template rules became a concern. |
 | deployment | cli/conventions.md | new | Written at Stage 6, because agent-config is itself a CLI and becomes the first repo to declare the value. Exit codes, stdout versus stderr, `--help` quality, and the non-interactive rule. |
 | concerns | data-access/rules.md | new | Language-neutral, `scope: paths`. Transactions, N+1, forward-only migrations, lock discipline. |
 | concerns | sync/rules.md | new | Idempotency keys, ordering guarantees, at-least-once semantics, conflict resolution. |
+| concerns | template/rules.md | READMEs, placeholder docs | `scope: always`. Keep the example minimal, no real business logic, placeholders removed only once real code covers them, and a copy drops the concern from its profile. This is what all three current repos actually are. |
 | concerns | heavy-calc/ · fetching/ · … | new | **deferred** Write them when a repo needs them. The schema already supports the axis. |
 
 ### Drift found while mapping
@@ -277,6 +278,8 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 **Glossary at a conventional path** — `docs/domain/glossary.md`, always that path. A convention rather than a variable, deliberately: the path is identical in every repo, so there is nothing to vary and a fragment can simply name it. Deliberately not in `AGENTS.md`: a real glossary runs 30–100 terms and would spend the always-on budget in every session to serve maybe one in four, degrading adherence to everything else.
 
 **One architecture per repo** — Cardinality 0 or 1, not many — the one axis where that asymmetry with `concerns` is deliberate. Concerns are hazards and stack harmlessly: more caution is never incoherent. Architectures are prescriptions and can contradict — `ddd` says the repository returns current aggregate state, `event-sourced` says rehydrate from a stream, and Claude would get both with no way to arbitrate. Cardinality 1 makes that conflict impossible instead of something review has to catch. If `hexagonal` always travels with `ddd`, it belongs inside `ddd/layers.md`; if it sometimes diverges, write it as its own value and widen the field.
+
+**Template is a concern, not a deployment** — Added in Stage 1. All three source repos are GitHub templates, but two of them deploy to Cloud Run on every tag, so their deployment is `service`, and deployment takes exactly one value. The rules for being a template — keep the example minimal, keep placeholders until real code covers them, drop the concern in a copy — hold whether or not the tag deploys, so they live in `concerns/template/`, which all three declare. It is the one concern that is not path-scoped, because it is about the whole repository rather than an activity in some of its files. The deployment value that deploys nothing was renamed from `template` to `tag-only`, so a profile never uses one word for two things.
 
 **A generated PR has to stay reviewable** — Two halves of one answer. Every emitted block is labelled with the fragment and version it came from, and every bump PR opens with the release's own fragment-level summary, which Renovate embeds from the GitHub release. Written once per release rather than computed in seventy-five repos — and sufficient, because on a version bump the profile is not changing, so the difference is purely upstream. The other case, "you dropped a concern last week", now surfaces where it belongs: `check` failing in the PR of whoever edited the profile. Without both, the Monday PR is 180 lines of reflowed prose, and by week four it gets merged unread. That failure mode is the normal outcome for generated-code PRs, not a pessimistic one.
 
@@ -354,7 +357,7 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **emitter** — Translates selected fragments into one agent's file layout — same bodies, different frontmatter and paths. `agents-md` and `claude` in v1. A new agent is a new emitter, never a content migration.
 
-**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always`, `on-demand` or `paths`), `when` on the on-demand ones, `title`, `order` where sequence matters, `emit` where only some agents should read it, and `invocation` on the task-shaped ones. A repo composes 16 of them today; v1 authors 33 in total.
+**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always`, `on-demand` or `paths`), `when` on the on-demand ones, `title`, `order` where sequence matters, `emit` where only some agents should read it, and `invocation` on the task-shaped ones. A repo composes 17 of them today; v1 authors 34 in total.
 
 **manifest** — `.agentcfg-manifest.json` — every path the tool generated in this repo. Without it, dropping a concern from a profile leaves an orphaned rule file that nothing ever deletes.
 
@@ -362,13 +365,13 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **profile** — `.agentprofile.yml` — the entire per-repo footprint. Names the repo's coordinate on each axis plus the pinned `config_version`, and drives both the fragment selection and the emitted settings.
 
-**provenance comment** — The label each emitted block opens with — source fragment and the `config_version` that produced it. It answers the question centralising creates: a rule you disagree with is no longer a file in your repo you can edit, it is one of twenty fragments composed from six axes. The comment makes that traceable in the file itself, makes `why` a lookup, and gives every hunk of the Monday diff a name.
+**provenance comment** — The label each emitted block opens with — source fragment and the `config_version` that produced it. It answers the question centralising creates: a rule you disagree with is no longer a file in your repo you can edit, it is one of twenty-one fragments composed from six axes. The comment makes that traceable in the file itself, makes `why` a lookup, and gives every hunk of the Monday diff a name.
 
 **single-axis refactor** — The Stage 1 editorial pass: rewriting each existing file so it belongs to exactly one axis. It is what removes the crate/package and `just`/`make` vocabulary problem without control flow — the words move into the language value, and the core fragment references them as variables instead of choosing between them.
 
-**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-three. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
+**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-four. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
 
-**value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library` and `template` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
+**value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library` and `tag-only` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
 
 ### Borrowed from elsewhere
 
