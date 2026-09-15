@@ -2,7 +2,7 @@
 
 Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse repositories into single-axis fragments, composed per repo by a Rust binary and synced as ordinary committed files. Seven stages, sequenced so nothing is built before the thing it depends on is proven.
 
-**31** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
+**33** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
 > **Status:** design settled, implementation not started.
 > Every decision below was reached deliberately; the *Decisions locked in* section
@@ -27,10 +27,10 @@ fragments/
 │   ├── git-flow.md        ← a fragment
 │   └── … 7 fragments
 ├── language/              ← an axis   pick exactly 1
-│   ├── rust/              ← a value   7 fragments inside
+│   ├── rust/              ← a value   8 fragments inside
 │   │   ├── tooling.md     ← a fragment
 │   │   └── …
-│   └── go/                7 fragments inside
+│   └── go/                8 fragments inside
 ├── architecture/          ← an axis   pick 0 or 1
 │   └── ddd/               4 fragments inside
 ├── deployment/            ← an axis   pick exactly 1
@@ -43,14 +43,14 @@ fragments/
 
 | Axis | How many values / one repo declares | Values that exist / to choose from | Fragments / per value | Covers |
 | --- | --- | --- | --- | --- |
-| language | exactly 1 — `language: rust` | rust, go | 7 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
+| language | exactly 1 — `language: rust` | rust, go | 8 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
 | framework | 0 or 1 — `framework: ~` | **none yet** | — | Axum, Dioxus and the rest. The schema accepts the axis; no value is written until a repo needs one. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
 | deployment | exactly 1 — `deployment: service` | service, library, / template, cli | 1 | Release consequences, config and shutdown discipline for a service; semver, API stability and doc coverage for a library; exit codes and stream discipline for a cli. |
 | concerns | any number, / including none — `concerns: [sync]` | data-access, sync | 1 | Language-neutral and path-scoped, so they load only when Claude touches matching files. Heavy-calc and fetching deferred. |
 | sensitivity | exactly 1, defaulted — `sensitivity: none` | **none only** | 0 | Payload logging, error-message contents, retention, encryption at rest, audit trail. Declared now because retrofitting it across dozens of repos later is the expensive case. |
 
-So v1 authors **31 fragments** — 7 core, 7 each for rust and go, 4 for `ddd`, 4 across the deployment values, 2 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
+So v1 authors **33 fragments** — 7 core, 8 each for rust and go, 4 for `ddd`, 4 across the deployment values, 2 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
 
 The whole per-repo footprint is one file. This is what `claude-mit-rust-agent-template`'s would actually say today — note the empty framework and concern picks, which is what "0 or 1" and "any number" look like in practice:
 
@@ -66,7 +66,7 @@ sensitivity: none          # exactly 1, defaulted
 emit:        [agents-md, claude]
 ```
 
-That profile composes **19 fragments**: 7 core + 7 rust + 4 ddd + 1 deployment. Drop the `architecture` line and it is 15. `claude-mit-rust-template` composes 15 too — same core, same rust — differing in exactly one fragment, `template/scope.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
+That profile composes **20 fragments**: 7 core + 8 rust + 4 ddd + 1 deployment. Drop the `architecture` line and it is 16. `claude-mit-rust-template` composes 16 too — same core, same rust — differing in exactly one fragment, `template/scope.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
 
 ### Why deployment is an axis and concurrency is not
 
@@ -212,6 +212,7 @@ Where each existing file lands. Derived from diffing the three repos rather than
 | language | tasks/new-unit.md | crate-workflow.md / package-workflow.md | Task-shaped, `invocation: model`. Emitted into AGENTS.md as a pointer and as `.claude/skills/` for Claude — model-invocable because "add a crate" said in prose should run the nine steps, which a user-only skill never sees. Takes a named `arguments:` list rather than `$1` — see the drift note below. |
 | language | tasks/gates.md | commands/gates.md | Same treatment as above. |
 | language | settings.partial.json | .claude/settings.json | Permission allowlist plus the formatter and build-check hooks. Claude-only, merged by the claude emitter. |
+| language | automation.md | CLAUDE.md **Automation** | `emit: [claude]`. What the settings hooks do — format on edit, check the build at turn end — and so what Claude need not do by hand. Added in Stage 1: true for Claude Code, wrong for every agent reading AGENTS.md. |
 | architecture | ddd/layers.md | new | `scope: always`. The layer model and dependency direction — the domain layer imports nothing. Also carries the build-order supplement: domain unit first, then application, then infrastructure. |
 | architecture | ddd/domain-model.md | new | `paths: **/domain/**`. Entities, value objects, aggregates. Immutability and value equality; the aggregate as transaction boundary; reference other aggregates by ID, never by pointer. Naming goes through the glossary: check it before introducing or renaming a type, and add the term in the same commit. This fragment carries the enforcement because it is the one already scoped to the domain layer. |
 | architecture | ddd/repositories.md | new | `paths: **/repository/**, **/infrastructure/**`. The interface lives in the domain, the implementation in infrastructure; it returns aggregates, never rows, and no persistence type crosses back. |
@@ -249,7 +250,7 @@ One more, found at Stage 0 and unrelated to releases: **the unit-creation comman
 
 Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
-**AGENTS.md canonical** — Primary artifact, not a fallback. `CLAUDE.md` is a two-line `@AGENTS.md` adapter. If an emitter breaks, every agent still reads AGENTS.md and nothing is lost.
+**AGENTS.md canonical** — Primary artifact, not a fallback. `CLAUDE.md` is a two-line `@AGENTS.md` adapter, plus any `emit: [claude]` fragments below it. If an emitter breaks, every agent still reads AGENTS.md and nothing is lost.
 
 **Embedded fragments** — Compiled into the binary, so one downloaded artifact is the whole contract and `config_version` pins content and code atomically. A fragment edit therefore requires a release — which is correct, not a cost.
 
@@ -258,6 +259,8 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 **Marker-delimited regions** — Generated content sits between `<!-- agentcfg:start -->` and `<!-- agentcfg:end -->`; anything outside is preserved verbatim. This is the escape hatch for genuinely local content, and what keeps the agent-template's MSRV rationale alive. Markdown only — JSON has no comment syntax and takes the route below.
 
 **emit has no implicit default** — The profile states which emitters it wants; there is no fallback list. `emit: []` is therefore meaningful rather than broken — the manifest deletes everything previously generated, which is the soft off-switch, distinct from `eject`: one leaves the repo with nothing, the other leaves it with the composed files as ordinary content. Because that is a destructive setting reachable by typo, an unknown emitter name is a hard error rather than an empty list — `emit: [agent-md]` must fail loudly, never quietly wipe `.claude/`.
+
+**Agent-specific content is a fragment filter** — A fragment may declare `emit: [claude]`, and only the emitters it names receive it; the default is every emitter the profile selects. Added in Stage 1 for `CLAUDE.md`'s *Automation* paragraph, which says formatting runs on every edit so the formatter need not be run by hand — true for Claude Code, whose `.claude/settings.json` holds the hook, and wrong for every agent reading AGENTS.md. The claude emitter writes such a fragment below `CLAUDE.md`'s `@AGENTS.md` import, and it counts only against Claude's budget. Attributing the sentence to Claude inside AGENTS.md was the alternative, rejected so that no agent reads rules that do not apply to it.
 
 **Generated JSON is owned outright** — JSON has no comments, so `.claude/settings.json` cannot carry a marker region, and a merging emitter could never tell a key it wrote last month from one a person added — drop a permission centrally and it could never be removed anywhere, silently, in the one file that governs what Claude may run unprompted. So the emitter owns the file whole and `check` verifies it byte-for-byte like every other output. Repo-local additions go in the profile as `settings_extra:`, merged last. Not `settings.local.json`, which is the personal gitignored override and no home for committed repo config. The invariant holds either way: every generated file is entirely generated, and `.agentprofile.yml` is the only file in a consumer repo a human writes.
 
@@ -351,7 +354,7 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **emitter** — Translates selected fragments into one agent's file layout — same bodies, different frontmatter and paths. `agents-md` and `claude` in v1. A new agent is a new emitter, never a content migration.
 
-**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always`, `on-demand` or `paths`), `when` on the on-demand ones, `title`, `order` where sequence matters, and `invocation` on the task-shaped ones. A repo composes 15 of them today; v1 authors 31 in total.
+**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always`, `on-demand` or `paths`), `when` on the on-demand ones, `title`, `order` where sequence matters, `emit` where only some agents should read it, and `invocation` on the task-shaped ones. A repo composes 16 of them today; v1 authors 33 in total.
 
 **manifest** — `.agentcfg-manifest.json` — every path the tool generated in this repo. Without it, dropping a concern from a profile leaves an orphaned rule file that nothing ever deletes.
 
@@ -359,11 +362,11 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **profile** — `.agentprofile.yml` — the entire per-repo footprint. Names the repo's coordinate on each axis plus the pinned `config_version`, and drives both the fragment selection and the emitted settings.
 
-**provenance comment** — The label each emitted block opens with — source fragment and the `config_version` that produced it. It answers the question centralising creates: a rule you disagree with is no longer a file in your repo you can edit, it is one of nineteen fragments composed from six axes. The comment makes that traceable in the file itself, makes `why` a lookup, and gives every hunk of the Monday diff a name.
+**provenance comment** — The label each emitted block opens with — source fragment and the `config_version` that produced it. It answers the question centralising creates: a rule you disagree with is no longer a file in your repo you can edit, it is one of twenty fragments composed from six axes. The comment makes that traceable in the file itself, makes `why` a lookup, and gives every hunk of the Monday diff a name.
 
 **single-axis refactor** — The Stage 1 editorial pass: rewriting each existing file so it belongs to exactly one axis. It is what removes the crate/package and `just`/`make` vocabulary problem without control flow — the words move into the language value, and the core fragment references them as variables instead of choosing between them.
 
-**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-one. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
+**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-three. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
 
 **value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library` and `template` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
 

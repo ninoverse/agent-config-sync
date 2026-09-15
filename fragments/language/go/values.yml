@@ -1,0 +1,14 @@
+# Vocabulary the core fragments substitute. Every language value defines the
+# same names; see docs/fragment-authoring.md.
+unit: "package"
+units: "packages"
+unit_container: "module"
+gate_command: "make ci"
+gates: "every gate"
+gates_clean: "zero findings"
+unit_lint_command: "golangci-lint run ./internal/<pkg>/..."
+unit_test_command: "gotestsum -- -race ./internal/<pkg>/..."
+version_floor: "Go version"
+lint_suppression: "`//nolint:...` directive"
+dependency_bump_example: "golang.org/x/sync to v0.10.0"
+breaking_change_example: "drop support for Go 1.24"
