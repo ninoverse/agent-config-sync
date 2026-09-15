@@ -75,7 +75,7 @@ COPY --from=builder /app/service /usr/local/bin/service
 # `just docker-build` fills these in; a bare `docker build` leaves them
 # "unknown", which is honest rather than wrong.
 ARG GIT_SHA=unknown
-ARG SOURCE_URL=https://github.com/ninoverse/claude-mit-rust-template
+ARG SOURCE_URL=https://github.com/ninoverse/agent-config-sync
 LABEL org.opencontainers.image.revision="${GIT_SHA}" \
       org.opencontainers.image.source="${SOURCE_URL}" \
       org.opencontainers.image.licenses="MIT"

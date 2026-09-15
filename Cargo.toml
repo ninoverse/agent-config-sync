@@ -6,10 +6,10 @@ resolver = "3"
 # Every crate inherits this with `version.workspace = true`, so the workspace
 # moves in lockstep. bump-version.yml rewrites it on merge to main and refuses
 # to tag if crate versions have somehow diverged.
-version = "0.2.0"
+version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/ninoverse/claude-mit-rust-template"
+repository = "https://github.com/ninoverse/agent-config-sync"
 rust-version = "1.85"
 
 [workspace.dependencies]
