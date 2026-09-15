@@ -31,9 +31,11 @@ Every fragment except a task fragment:
 | `when` | with `on-demand` | The activity that triggers reading it, written as the lead-in of its index line: `Committing code` renders as "**Committing code:** read …". Fragments that share a `when` share one index line. |
 | `paths` | with `paths` | List of globs, in Claude Code `paths:` syntax. |
 | `order` | no | Integer, default `0`, lower first. Ties break by axis (core, language, framework, architecture, deployment, concerns), then by path. Set it only where position helps a reader. |
+| `emit` | no | The emitters that receive this fragment, e.g. `[claude]`. Default: every emitter the profile selects. Use it only for content that is false for the other agents. The claude emitter writes an `always` claude-only fragment below `CLAUDE.md`'s `@AGENTS.md` import, and it counts only against Claude's budget. |
 
 A task fragment, under `tasks/`, becomes a skill for Claude and a pointer in
-AGENTS.md. It takes no `scope`, and adds:
+AGENTS.md. It keeps `title` and `when`, which label that pointer, takes no
+`scope` or `paths`, and adds:
 
 | Field | Required | Meaning |
 |-------|----------|---------|
@@ -50,7 +52,12 @@ AGENTS.md. It takes no `scope`, and adds:
   path. Where a fragment lands differs per emitter; its title does not. Inside a
   code block, drop the italics: `# see Branch naming`.
 - Keep the body agent-neutral. Claude-only mechanics — hooks, settings, skill
-  fields — live in `settings.partial.json` and task frontmatter.
+  fields — live in `settings.partial.json`, task frontmatter, or a fragment with
+  `emit: [claude]`.
+- In a task body, Claude replaces `$name` and `$ARGUMENTS`; every other agent
+  reads them literally. Write so the sentence works either way — "The crate:
+  `$name`." — and keep `<name>` placeholders in commands, where a literal `$name`
+  would be pasted into a shell.
 
 ## Substitution
 

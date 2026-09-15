@@ -1,0 +1,14 @@
+# Vocabulary the core fragments substitute. Every language value defines the
+# same names; see docs/fragment-authoring.md.
+unit: "crate"
+units: "crates"
+unit_container: "workspace"
+gate_command: "just ci"
+gates: "all four gates"
+gates_clean: "zero warnings"
+unit_lint_command: "cargo clippy -p <crate> --all-targets -- -D warnings"
+unit_test_command: "cargo nextest run -p <crate>"
+version_floor: "MSRV"
+lint_suppression: "`#[allow(...)]` attribute"
+dependency_bump_example: "tokio to 1.40"
+breaking_change_example: "bump MSRV to 1.85"
