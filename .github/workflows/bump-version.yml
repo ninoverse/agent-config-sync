@@ -1,0 +1,43 @@
+name: Bump Version and Tag
+
+# The version logic lives in ninoverse/.github so every repository in the
+# organization derives versions the same way. This file only says *when* to run
+# it, and supplies the app credentials.
+#
+# The called workflow reads the subject of the merged commit, bumps
+# [workspace.package].version accordingly — `feat` minor,
+# `fix`/`perf`/`refactor`/`chore`/`docs` patch, `!` or BREAKING CHANGE major,
+# anything else not at all — then commits and pushes a matching tag. Every crate
+# inherits the version via `version.workspace = true`, so the workspace moves in
+# lockstep.
+#
+# There is no deploy watching for that tag. This repository is a template; the
+# tag exists so someone can point at the version of it they copied.
+#
+# Requires an organization-level RELEASE_APP_ID variable and
+# RELEASE_APP_PRIVATE_KEY secret. Without them the run fails immediately with a
+# named error rather than obscurely inside the token action.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Two merges in quick succession would otherwise both bump from the same
+# starting version and collide on the tag. Queue rather than cancel: cancelling
+# a run between the commit and the push is the one way to leave those two apart.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    # Pinned to a tag, not @main — a change to @main would land here with no
+    # pull request in this repository.
+    uses: ninoverse/.github/.github/workflows/rust-bump-version.yml@v1
+    with:
+      app-id: ${{ vars.RELEASE_APP_ID }}
+    secrets:
+      app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}

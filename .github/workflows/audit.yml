@@ -1,0 +1,32 @@
+name: Audit
+
+# Advisories are published against dependencies you already have, with no commit
+# on your side. A push trigger would never fire for them, so this runs on a
+# schedule — and on changes to the dependency set, where a new advisory could
+# arrive with the bump.
+#
+# The jobs themselves live in ninoverse/.github; this file only sets the
+# triggers.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays, 06:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+      - "deny.toml"
+  pull_request:
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+      - "deny.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    uses: ninoverse/.github/.github/workflows/rust-audit.yml@v1

@@ -1,0 +1,23 @@
+# target/ is the whole point of this file — it is gigabytes of build output and
+# copying it into the build context would dwarf the source and bust the cache.
+target/
+**/target/
+
+.git/
+.github/
+.claude/
+.devcontainer/
+.vscode/
+
+Dockerfile
+.dockerignore
+compose.yaml
+README.md
+CLAUDE.md
+LICENSE
+
+# Never let secrets into an image layer.
+.env
+.env.*
+*.pem
+*.key

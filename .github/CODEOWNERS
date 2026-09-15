@@ -1,0 +1,21 @@
+# Owners must be a GitHub user (@username) or a team (@org/team-slug) with write
+# access. A bare organization name is not valid — `@ninoverse` is the org that
+# owns this repo, not an owner GitHub can resolve.
+#
+# If you fork this template, replace @nicolapasqua99 throughout. Once the org has
+# a team, prefer @ninoverse/<team-slug>: a team survives people joining and
+# leaving, a personal handle does not.
+
+# Every file, unless overridden below.
+*                       @nicolapasqua99
+
+# The rule files are the product here — a change to them changes how every
+# project cloned from this template behaves.
+/CLAUDE.md              @nicolapasqua99
+/.claude/               @nicolapasqua99
+
+# Supply chain and CI: a change here can weaken the merge gates.
+/.github/workflows/     @nicolapasqua99
+/deny.toml              @nicolapasqua99
+/rust-toolchain.toml    @nicolapasqua99
+/Cargo.toml             @nicolapasqua99

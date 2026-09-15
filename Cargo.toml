@@ -1,0 +1,38 @@
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
+# Every crate inherits this with `version.workspace = true`, so the workspace
+# moves in lockstep. bump-version.yml rewrites it on merge to main and refuses
+# to tag if crate versions have somehow diverged.
+version = "0.2.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/ninoverse/claude-mit-rust-template"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Pin shared dependencies here so every crate in the workspace gets the same
+# version. Reference them in crate manifests with `<name> = { workspace = true }`.
+
+# Enforced in every build and in rust-analyzer, not just when someone remembers
+# `-D warnings`. Crates opt in with `[lints] workspace = true` in their manifest.
+[workspace.lints.rust]
+# Opt in per crate with a justified `#![allow(unsafe_code)]`; see .claude/code-review.md.
+unsafe_code = "deny"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+# Warn, not deny: .claude/code-review.md exempts test code, which allows these
+# back in via the `#![allow(...)]` in the test-module template.
+unwrap_used = "warn"
+expect_used = "warn"
+todo = "warn"
+panic_in_result_fn = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

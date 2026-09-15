@@ -1,0 +1,63 @@
+# Local development. `docker compose run --rm dev just ci` runs the gates in a
+# container with the pinned toolchain and every auxiliary tool preinstalled.
+#
+# The named volumes matter. Bind-mounting the source is what you want for fast
+# edits, but letting target/ and the cargo registry live on that bind mount
+# destroys build times (and on macOS/Windows, catastrophically so). Keeping them
+# in named volumes leaves them on the container filesystem where they belong.
+
+services:
+  dev:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - .:/app
+      - cargo-target:/app/target
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+    working_dir: /app
+    # Keep the container alive so `docker compose exec dev bash` works.
+    command: sleep infinity
+    environment:
+      CARGO_TERM_COLOR: always
+    # Uncomment once a service below is enabled.
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+
+  # The built runtime image, for checking the artifact you actually ship.
+  # `docker compose run --rm app`
+  app:
+    build:
+      context: .
+      target: runtime
+      args:
+        BIN: example
+    profiles: [app]
+
+  # ---- Backing services. Uncomment what you need. ----
+  #
+  # postgres:
+  #   image: postgres:17-alpine
+  #   environment:
+  #     POSTGRES_PASSWORD: dev
+  #     POSTGRES_USER: dev
+  #     POSTGRES_DB: dev
+  #   ports: ["5432:5432"]
+  #   volumes: ["postgres-data:/var/lib/postgresql/data"]
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U dev"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   ports: ["6379:6379"]
+
+volumes:
+  cargo-target:
+  cargo-registry:
+  cargo-git:
+  # postgres-data:

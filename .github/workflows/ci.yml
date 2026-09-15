@@ -1,0 +1,34 @@
+name: CI
+
+# The gate definitions live in ninoverse/.github so every Rust repository in the
+# organization runs the same ones. This file only says *when* to run them and
+# what this workspace's MSRV is.
+#
+# The reusable workflow's contract is the justfile: it invokes `just fmt-check`,
+# `just lint`, `just test` and `just deny`, so the cargo invocation behind each
+# gate keeps exactly one definition, here in the justfile.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Belongs here rather than in the called workflow: inside a called workflow,
+# `github.workflow` still resolves to this caller's name.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    # Pinned to a tag, not @main — a change to @main would land here with no
+    # pull request in this repository.
+    uses: ninoverse/.github/.github/workflows/rust-ci.yml@v1
+    with:
+      # Must match [workspace.package].rust-version in Cargo.toml. Nothing else
+      # catches a change that breaks it, because rust-toolchain.toml pins the
+      # channel to `stable`.
+      msrv: "1.85"
