@@ -50,7 +50,7 @@ Inherit shared metadata from the workspace:
 ```toml
 [package]
 name = "<name>"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -67,6 +67,10 @@ workspace = true
 The `[lints]` table is **not** optional. Without it the crate silently opts out
 of the workspace lints in `Cargo.toml` and `-D warnings` will not catch a
 missing doc comment or an `unwrap()` in a non-test path.
+
+`version.workspace = true` is not optional either. `cargo new` writes
+`version = "0.1.0"`; replace it. `bump-version.yml` bumps the workspace version
+and refuses to tag when crate versions diverge.
 
 ### 3. `crates/<name>/src/lib.rs` (or `main.rs`)
 
@@ -154,7 +158,7 @@ Points that are easy to get wrong, so verify each one:
 - `[lints] workspace = true` in the crate manifest. Without it the crate opts
   out of the workspace lints and the clippy gate cannot catch anything.
 - Package keys inherit from the workspace: `edition.workspace = true`, and the
-  same for `license`, `repository` and `rust-version`.
+  same for `version`, `license`, `repository` and `rust-version`.
 - Every `pub` item has a `///` doc comment, and public functions have a runnable
   doc-test — `missing_docs` is a workspace lint and the gate runs with
   `-D warnings`.

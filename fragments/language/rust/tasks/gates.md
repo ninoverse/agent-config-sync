@@ -27,4 +27,7 @@ Then report a one-line-per-gate summary:
 - Whether any gate could not run because its tool is not installed. Do not
   report a skipped gate as a passing gate.
 
+`just ci` stops at the first failing recipe, so a gate listed after the failure
+has not run. Report those as not run, not as passing.
+
 Do not fix anything unless asked. This command reports; it does not edit.

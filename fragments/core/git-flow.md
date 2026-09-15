@@ -60,15 +60,27 @@ A push to `main` is not only a process violation here. `bump-version.yml`
 triggers on it, reads the commit subject, and pushes a release tag — so a
 hand-pushed commit silently cuts a release.
 
+The same mechanism makes two merge rules load-bearing:
+
+- **Squash-merge every PR.** A merge commit's subject — `Merge pull request #12
+  from …` — matches no commit type, so no release is cut while the workflow
+  still reports success.
+- **One commit per branch is a versioning rule, not a style.** Only the subject
+  of the newest commit on `main` is read. A rebase merge of `feat: X` then
+  `fix: Y` cuts a patch release, and the feature ships under a version that says
+  nothing was added.
+
 ## Verify the merge before continuing
 
 `main` moving is the only proof step 7 happened. A squash merge rewrites the
 commit, so the local branch will not be an ancestor of `main` — check the
-subject line, not the hash:
+subject line, not the hash. Look past the newest commit: the squash appends
+` (#N)` to the subject, and `bump-version.yml` may push a `chore: release`
+commit on top of it.
 
 ```bash
 git fetch origin --prune
-git log origin/main -1 --format='%h %s'
+git log origin/main -5 --format='%h %s'
 ```
 
 Then delete the stale local branch (`git branch -D <branch>`) and start the next

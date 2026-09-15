@@ -4,14 +4,15 @@ Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse re
 
 **34** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
-> **Status:** design settled, implementation not started.
+> **Status:** design settled; Stages 0 and 1 complete, Stage 2 next.
 > Every decision below was reached deliberately; the *Decisions locked in* section
 > exists so they are not relitigated. Four questions remain genuinely open, each
 > tied to the stage that closes it — see *What could go wrong*.
 >
-> **Start here:** Stage 1. Stage 0 is done — `docs/stage-0-spec-read.md` records
-> what the spec says and what it moved. Stage 1 is editorial, not code — no Rust
-> is written until Stage 2.
+> **Start here:** Stage 2. Stage 0 is recorded in `docs/stage-0-spec-read.md`;
+> Stage 1's fragments are in `fragments/`, their format in
+> `docs/fragment-authoring.md`, and the account of every source line in
+> `docs/extraction-ledger.md`.
 >
 > A rendered version of this document lives at
 > <https://claude.ai/artifact/2iMBD8bNNRRuC7gzVB7o1d>. This file is the canonical
@@ -113,6 +114,8 @@ Six passes, in order:
 Draft the fragment-authoring guide (`docs/fragment-authoring.md`) as you go — single-axis discipline, vocabulary neutralisation, what makes something core rather than language. Stage 6 edits it into shape, but the judgement being exercised here is the content, and reconstructing it later is archaeology.
 
 > **Done when** — For each of the three repos, the selected fragments concatenated by hand account for every line currently in its `CLAUDE.md` and `.claude/` — with each omission deliberate and written down in `docs/extraction-ledger.md`.
+
+> **Result** — Landed as four PRs: core and the fragment format; rust and go; deployment, ddd and concerns; drift and accounting. The design moved in four places, each recorded under *Decisions locked in*: a third scope, `on-demand`; the `emit:` filter; template as a concern, with `tag-only` as the deployment that deploys nothing; and `core/behavior.md` from `CLAUDE.md`. The ledger accounts for every line of all three repos' `CLAUDE.md` and `.claude/`.
 
 ### Stage 2 · ~2 days — Build the `agentcfg` crate
 
