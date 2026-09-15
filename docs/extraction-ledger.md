@@ -10,7 +10,10 @@ Sources: **RT** `claude-mit-rust-template` · **AT** `claude-mit-rust-agent-temp
 
 Throughout: a file-path reference such as `.claude/branch-naming.md` becomes the
 target fragment's title (*Branch naming*), and each file's `#` heading becomes its
-`title:`.
+`title:`. The same goes for `CLAUDE.md`'s `##` section headings — *Commands &
+Tooling* and *Behavioral Guidelines* become fragment titles, *Extended Rules* the
+generated index — and a lone list item that became a fragment's opening paragraph
+loses its `- `.
 
 ## `.claude/branch-naming.md` → `core/branch-naming.md`
 
@@ -183,7 +186,9 @@ These fragments have no rule file to extract from. Their facts come from:
 | `concerns/template/rules.md` | RT `crates/example/src/lib.rs` docs, RT and GT README placeholder rows, GT `commands/new-package.md` placeholder paragraph. |
 | `architecture/ddd/*`, `concerns/data-access/rules.md`, `concerns/sync/rules.md` | The plan's map. No source repo uses them yet. |
 
-## Open drift — Stage 1 PR 4
+## Drift found during Stage 1
+
+Each item below is resolved in the table that follows it.
 
 - `branch-naming.md`, all three: "Branch off `main` unless working on a dependent
   feature; in that case branch off the parent feature branch" contradicts *Git
@@ -219,3 +224,58 @@ These fragments have no rule file to extract from. Their facts come from:
   `revert` and `style`.
 - AT `agent-server`'s crate docs say it is designed for Firebase App Hosting; it
   deploys to Cloud Run. Code, not a rule file — Stage 5.
+
+### Resolution — Stage 1 PR 4
+
+| Drift | Resolution |
+|-------|------------|
+| `branch-naming.md`: branch off the parent feature branch | `core/branch-naming.md`: branch off an up-to-date `main`, never another branch. *Git flow*'s hard rule wins. |
+| `git-flow.md`: merge check with `git log origin/main -1` | `core/git-flow.md` reads the last five commits and says why. |
+| AT's "the merged subject line also picks the next version number", and the plan's release facts | `core/commit-conventions.md` gains *The subject picks the release*: the bump workflow's type table, taken from `*-bump-version.yml`. `core/git-flow.md` gains squash-merge and one-commit-per-branch as versioning rules. `core/pr-guidelines.md` keeps the PR title identical to the commit subject. |
+| `BREAKING CHANGE` anywhere in the message | *The subject picks the release*. |
+| Scope with uppercase letters or dots | *The subject picks the release*. |
+| `crate-workflow.md`: `version = "0.1.0"` | `language/rust/tasks/new-unit.md`: `version.workspace = true`, with the reason, and `version` added to the inheritance check. |
+| `.cargo/config.toml` aliases absent from AT | Fragments unchanged. AT gains RT's `.cargo/config.toml` at Stage 5. |
+| `commands/gates.md`: `just ci` stops at the first failure | `language/rust/tasks/gates.md` says so, as the go skill does. |
+| `$1` is the second argument | Resolved in Stage 1 PR 2 by named `arguments`. |
+| RT `bump-version.yml` comment omits `revert` and `style` | A workflow comment, not a rule file. Fixed in RT at Stage 5. |
+| AT `agent-server` docs name Firebase App Hosting | Code, not a rule file. Fixed in AT at Stage 5. |
+
+## Local content for Stage 5
+
+What each repo keeps in its marker region, or changes in its own tree, when it
+adopts the generated files.
+
+| Repo | Marker region | Repository change |
+|------|---------------|-------------------|
+| RT | — | `bump-version.yml` comment: add `revert` and `style` to the patch types. |
+| AT | MSRV 1.86 rationale (`clap`, `idna_adapter`, the `icu_*` chain); the `Dockerfile` pinned to the MSRV as a fourth place; **Crate visibility** (`publish = false`) and `publish` in the inheritance check; `ToolRegistry` and `Agent` as the `Debug` shapes that come up; running `agent-cli` with `.env`. | Add RT's `.cargo/config.toml`. `agent-server` crate docs: Cloud Run, not Firebase App Hosting. |
+| GT | — | — |
+
+## Accounting — Stage 1's Done-when
+
+Each repo's fragments were composed for its profile: core, its language with that
+language's `values.yml` substituted, its deployment, and `concerns/template`.
+Every non-blank line of its `CLAUDE.md` and `.claude/**/*.md` as committed on
+`main` — code-fence and `---` lines aside — was then looked up in the composed
+text. Figures as of Stage 1 PR 4:
+
+| Repo | Profile | Source lines | Found verbatim | Not verbatim |
+|------|---------|-------------:|---------------:|-------------:|
+| RT | rust · tag-only · template | 463 | 364 | 99 |
+| AT | rust · service · template | 477 | 378 | 99 |
+| GT | go · service · template | 486 | 392 | 94 |
+
+Every line not found verbatim is covered by the section for its source file
+above: a path reference replaced by a title, a heading replaced by `title:`,
+vocabulary substituted per language, a command merged into its workflow skill,
+the `CLAUDE.md` index generated from `when`, a repo-specific line moved to
+*Local content for Stage 5*, or drift resolved in PR 4. No line is dropped
+without an entry.
+
+The plan's sample profile gives AT `architecture: ddd`. That adds fragments but
+no source lines, so it does not change these figures.
+
+`.claude/settings.json`, compared as parsed JSON: RT and AT equal
+`language/rust/settings.partial.json`; GT equals
+`language/go/settings.partial.json`.

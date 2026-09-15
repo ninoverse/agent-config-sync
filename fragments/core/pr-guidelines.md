@@ -7,7 +7,9 @@ when: Opening PRs
 ## Title
 
 Follow the same format as commit messages: `<type>(<scope>): <description>`.  
-Keep it under 72 characters.
+Keep it under 72 characters. Keep it identical to the branch's single commit
+subject: either can become the squash commit's subject on `main`, which picks the
+release — see *Commit message guidelines*.
 
 ## Description template
 

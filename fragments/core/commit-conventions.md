@@ -48,6 +48,24 @@ docs: document the {{ version_floor }} policy
 feat!: {{ breaking_change_example }}
 ```
 
+## The subject picks the release
+
+`bump-version.yml` reads the commit that lands on `main` and releases
+accordingly:
+
+| Commit | Release |
+|--------|---------|
+| `!` after the type or scope, or `BREAKING CHANGE` anywhere in the message | major |
+| `feat` | minor |
+| `fix`, `perf`, `refactor`, `revert`, `style`, `chore`, `docs` | patch |
+| anything else — `test`, `build`, `ci`, a merge commit | none |
+
+- `BREAKING CHANGE` counts wherever it appears, body included. A squash commit
+  whose description merely mentions the phrase cuts a major release; write it
+  only when the change breaks something.
+- A scope is lowercase letters, digits, `-` and `_`. `feat(API):` or
+  `fix(v1.2):` matches no type, and the release is silently skipped.
+
 ## What to avoid
 
 - Vague messages: `fix stuff`, `update`, `wip`
