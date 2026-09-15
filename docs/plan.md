@@ -9,7 +9,8 @@ Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse re
 > exists so they are not relitigated. Four questions remain genuinely open, each
 > tied to the stage that closes it — see *What could go wrong*.
 >
-> **Start here:** Stage 0, then Stage 1. Stage 1 is editorial, not code — no Rust
+> **Start here:** Stage 1. Stage 0 is done — `docs/stage-0-spec-read.md` records
+> what the spec says and what it moved. Stage 1 is editorial, not code — no Rust
 > is written until Stage 2.
 >
 > A rendered version of this document lives at
@@ -88,9 +89,11 @@ Everything downstream assumes the spec's shape, and this environment's egress pr
 - No frontmatter convention that collides with `scope:` / `paths:`.
 - Whether nested files *replace* or *supplement* the parent — this decides whether concern rules may ever be emitted as nested `AGENTS.md` files rather than root-level pointers.
 - Recommended section headings worth matching, so the output reads as idiomatic AGENTS.md rather than a transliterated CLAUDE.md.
-- Not the spec, but check it here too: whether a skill is slash-invocable, whether it receives arguments, and whether `allowed-tools` has a skill equivalent. Those three answers set the default for `surface:`, and getting them wrong is a regression in ergonomics rather than a redesign.
+- Not the spec, but check it here too: whether a skill is slash-invocable, whether it receives arguments, and whether `allowed-tools` has a skill equivalent. Those three answers set the default for `surface:` (renamed `invocation:` by the result), and getting them wrong is a regression in ergonomics rather than a redesign.
 
 > **Done when** — A note records what the spec actually says, and either confirms the emitter design unchanged or lists exactly what moves. It lands as the first commit of Stage 1 — the repo does not exist yet.
+
+> **Result** — `docs/stage-0-spec-read.md`. AGENTS.md design unchanged; four things moved, all applied below: `surface:` became `invocation:`, the budget counts only model-invocable skill descriptions, HTML comments are uncounted, and the existing `$1` argument references are drift. It landed as its own docs PR rather than inside Stage 1: this repo already existed, and git-flow allows one commit per branch.
 
 ### Stage 1 · ~1 day — Extract the fragments — the single-axis refactor
 
@@ -129,17 +132,17 @@ The first three run the same computation and differ only in sink: selection prod
 
 Almost nobody types any of it. A repo meets `init` once, then experiences this system as a Monday pull request and, on a bad day, a red `check`. That is the interface that has to be good; the CLI is for authoring fragments and for the two moments something goes wrong.
 
-- **Emitters** behind one trait: `agents-md` and `claude`. Cursor waits — Cursor reads AGENTS.md natively. The claude emitter reads `surface:` to decide whether a task fragment lands in `.claude/skills/`, `.claude/commands/`, or both.
+- **Emitters** behind one trait: `agents-md` and `claude`. Cursor waits — Cursor reads AGENTS.md natively. The claude emitter writes every task fragment to `.claude/skills/<name>/SKILL.md` and reads `invocation:` to decide whether it adds `disable-model-invocation: true`. It never writes `.claude/commands/` — commands have been merged into skills.
 - **Golden-file tests** under `tests/fixtures/<profile>/`, which fits the existing test gate exactly.
 - **Fragments embedded** in the binary at build time, so `config_version` pins content and code together and can never desync. `--fragments` overrides for local iteration.
 - **Substitution is ~30 lines, hand-rolled** — scan for `{{ name }}`, resolve against the selected values, and stop. Hand-rolled rather than minijinja precisely so nobody switches conditionals back on later. An unresolved name is a hard error, never an empty string — silently emitting `run` with nothing after it is the worst failure this system could have — and literal braces need an escape, with a real case waiting in the fragment that documents Renovate's own `{{{newValue}}}` templates.
 - **Valid values are the directory listing** — the embed step emits the value set alongside the fragments, so `language: fsharp` becomes legal the moment `language/fsharp/` ships in a release, and is a hard error before that. Never a hand-written enum: that would make every new language a code change and quietly undo the axis design.
 - **Provenance on every block** — each emitted span opens with `<!-- language/rust/tooling.md · v1.3.0 -->`. That comment is what turns `why` into a lookup rather than a text search, and what makes the Monday diff readable at the hunk level.
-- **Budget measured, not remembered** — `check` reports the composed always-on size and fails past a threshold declared centrally (200 lines to start). Path-scoped content is uncounted, since it is the always-on set that costs every session — but emitted skill and command *descriptions* are counted, because those load every session too and would otherwise be spend the gate cannot see.
+- **Budget measured, not remembered** — `check` reports the composed always-on size and fails past a threshold declared centrally (200 lines to start). Path-scoped content is uncounted, since it is the always-on set that costs every session — but the *descriptions* of model-invocable skills are counted, because those load every session too and would otherwise be spend the gate cannot see. An `invocation: user` skill's description never enters context, so it is uncounted. So are HTML comment lines — markers and provenance — which Claude Code strips before loading; counting them would spend 18 of the 200 lines on the reader that does not need them.
 - **Empty globs warn** — a `paths:` pattern matching zero files in the repo is reported by `check`. A warning, not a failure: a young repo may legitimately not have that layout yet.
 - **A damaged marker region is a hard error** — missing end marker, nested markers, markers out of order. `sync` refuses and leaves the file untouched rather than guessing where generated content ends.
 - **`init` detects what it can** — `Cargo.toml` or `go.mod` pre-fills `language`. Everything else is a flag or a default, because everything else is genuinely a choice. It prompts only when stdin is a TTY *and* a required value is still missing; `--non-interactive` turns that into a hard failure. Flags always win, so an agent scaffolding a repo from the template never sees a question.
-- **`why` ships as a slash command too** — the claude emitter writes `/why` next to the existing `/gates` and `/new-crate`. The agent obeying these rules is the one most likely to need to trace one, and mid-session is exactly when the distance to the central repo hurts.
+- **`why` ships as a skill too** — the claude emitter writes a model-invocable `/why` next to `/gates` and `/new-crate`. The agent obeying these rules is the one most likely to need to trace one, and mid-session is exactly when the distance to the central repo hurts.
 - **The profile schema is written down** — one documented reference for every field, its cardinality, its default and whether it is required. It has accreted across design rather than being specified in one place, and the tool that validates it is the natural home for the document.
 - **`sync` never writes `.agentprofile.yml`** — it only reads it. That is a correctness constraint, not a preference: Renovate's custom manager owns that file during a bump, and a post-upgrade task that rewrites a file the manager already changed has its version silently discarded.
 - **The claude emitter owns `.claude/settings.json`** — composed from the language value's `settings.partial.json` plus the profile's `settings_extra:`, written whole, verified byte-for-byte. No key-level merge, because JSON cannot carry a marker region.
@@ -205,7 +208,7 @@ Where each existing file lands. Derived from diffing the three repos rather than
 | language | code-review.md | code-review.md | The unwrap/expect ban and unsafe policy for Rust; the errcheck and wrapping rules for Go. Genuinely different rules, not different words. |
 | language | testing.md | testing-requirements.md | The one file that already differs between the two Rust repos. The agent-template's extra MSRV rationale goes to its local region, not here. |
 | language | file-naming.md | file-naming.md | **~95% language-specific** Layout and naming tables throughout. Goes entirely to language — no core half worth extracting. |
-| language | tasks/new-unit.md | crate-workflow.md / package-workflow.md | Task-shaped, `surface: skill`. Emitted into AGENTS.md as a pointer and as `.claude/skills/` for Claude — a skill because "add a crate" said in prose should run the nine steps, which a slash command never sees. |
+| language | tasks/new-unit.md | crate-workflow.md / package-workflow.md | Task-shaped, `invocation: model`. Emitted into AGENTS.md as a pointer and as `.claude/skills/` for Claude — model-invocable because "add a crate" said in prose should run the nine steps, which a user-only skill never sees. Takes a named `arguments:` list rather than `$1` — see the drift note below. |
 | language | tasks/gates.md | commands/gates.md | Same treatment as above. |
 | language | settings.partial.json | .claude/settings.json | Permission allowlist plus the formatter and build-check hooks. Claude-only, merged by the claude emitter. |
 | architecture | ddd/layers.md | new | `scope: always`. The layer model and dependency direction — the domain layer imports nothing. Also carries the build-order supplement: domain unit first, then application, then infrastructure. |
@@ -239,6 +242,8 @@ Two further findings, both worse, both undocumented in every repo:
 
 Three facts for `core/git-flow.md`, none of which exist today: a push to `main` with a conventional subject cuts a release, and where a `release.yml` exists that means a deploy; the merge strategy must be squash; one commit per PR is correctness. This is what centralisation buys first — the gap is only visible when the doc and the workflow are read side by side.
 
+One more, found at Stage 0 and unrelated to releases: **the unit-creation command reads the wrong argument.** `new-crate.md` and `new-package.md` in all three repos say "Add a new crate named `$1`". Skill arguments are 0-based — `$0` is the first — and a missing index stays literal, so `/new-crate foo` asks for a crate named `$1`. Found from the docs rather than by running it: invoke `/new-crate` once in a template repo to confirm before reconciling.
+
 ## Decisions locked in
 
 Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
@@ -261,7 +266,7 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 **order: in frontmatter** — Not `10-`/`20-` filename prefixes. Order and identity are different things; welding them together means reordering is renaming, and renaming costs `git log --follow` and blame on a rules fragment. Default 0, set explicitly only for `tooling.md` — and honestly weaker than when it was written: substitution means nothing has to be *read* before anything else to be understood, so `order:` now serves readability rather than correctness. Kept because it costs nothing and a composed document still reads better with its command table near the top.
 
-**surface: is per fragment, not policy** — `surface: skill | command | both`, default `skill`. Skills and slash commands differ in who pulls the trigger: a command fires only when typed, a skill's description is a condition the model tests, so only a skill runs the gates before concluding a task or traces a rule mid-session. Duplicating to both surfaces spends the always-on budget twice for one capability — which is why descriptions now count against it — while buying less than it appears: skills are slash-invocable and take arguments, and `allowed-tools` is redundant against a permissions allowlist these repos already carry. Neither is universally right, so the fragment declares its own surface and the emitter obeys, exactly as it does for `scope`.
+**invocation: is per fragment, not policy** — `invocation: model | user`, default `model`. Revised at Stage 0 from `surface: skill | command | both`: Claude Code has merged commands into skills, a skill shadows a command of the same name so `both` has no correct rendering, and "command" is now just a skill flag. Both values emit `.claude/skills/<name>/SKILL.md`; `user` adds `disable-model-invocation: true`. What the field decides is unchanged — who pulls the trigger. A `model` skill's description is a condition the model tests, so only it runs the gates before concluding a task or traces a rule mid-session, and its description loads every session and counts against the budget. A `user` skill fires only when typed and costs nothing until then. Skills of either kind are slash-invocable, take arguments, and carry `allowed-tools` natively. Neither is universally right, so the fragment declares its own invocation and the emitter obeys, exactly as it does for `scope`.
 
 **Glossary at a conventional path** — `docs/domain/glossary.md`, always that path. A convention rather than a variable, deliberately: the path is identical in every repo, so there is nothing to vary and a fragment can simply name it. Deliberately not in `AGENTS.md`: a real glossary runs 30–100 terms and would spend the always-on budget in every session to serve maybe one in four, degrading adherence to everything else.
 
@@ -269,7 +274,7 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 **A generated PR has to stay reviewable** — Two halves of one answer. Every emitted block is labelled with the fragment and version it came from, and every bump PR opens with the release's own fragment-level summary, which Renovate embeds from the GitHub release. Written once per release rather than computed in seventy-five repos — and sufficient, because on a version bump the profile is not changing, so the difference is purely upstream. The other case, "you dropped a concern last week", now surfaces where it belongs: `check` failing in the PR of whoever edited the profile. Without both, the Monday PR is 180 lines of reflowed prose, and by week four it gets merged unread. That failure mode is the normal outcome for generated-code PRs, not a pessimistic one.
 
-**The budget is a gate, not an intention** — The always-on set staying small is the assumption the whole composition rests on — it is why the glossary went to a file and why concerns are path-scoped. Stated in a plan and enforced by nobody, it decays: four fragments added over a year degrade every session in every repo with no one noticing. So `check` measures it and fails past a central threshold, and the fix when it trips is moving content behind `scope: paths`, never deleting a rule. What counts is everything loaded unconditionally, which includes the description line of every emitted skill and command — otherwise the cheapest way to evade the gate would be to move rules into a surface it does not measure.
+**The budget is a gate, not an intention** — The always-on set staying small is the assumption the whole composition rests on — it is why the glossary went to a file and why concerns are path-scoped. Stated in a plan and enforced by nobody, it decays: four fragments added over a year degrade every session in every repo with no one noticing. So `check` measures it and fails past a central threshold, and the fix when it trips is moving content behind `scope: paths`, never deleting a rule. What counts is everything loaded unconditionally, which includes the description line of every model-invocable skill — otherwise the cheapest way to evade the gate would be to move rules into a surface it does not measure. What does not count is what never reaches context: `invocation: user` descriptions, and HTML comment lines, which Claude Code strips. Counting either would push authors toward the wrong choice just to pass the gate.
 
 **Reversible on purpose** — `agentcfg eject` strips the markers, leaves the composed files as ordinary checked-in content, and deletes the profile and manifest. It costs almost nothing to build and it answers the only fair objection to centralising 75 repos — "what if this turns out to be wrong in a year". A repo can leave without a rewrite, which is also what makes adopting it a small decision rather than a large one.
 
@@ -295,7 +300,7 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 ### The spec read moves the emitter design
 
-Stage 0 exists precisely for this, and it is 30 minutes against a design resting on secondary sources. If nested-file semantics turn out to be additive rather than override, concern rules gain a second viable emission strategy — an improvement, but one worth knowing before Stage 2 rather than after.
+**Closed at Stage 0.** The AGENTS.md side held: nested-file semantics differ by agent — Codex supplements, Copilot is unspecified, Claude Code reads no AGENTS.md at all — and concern scopes are globs no single nested file can express, so root-level pointers remain the only strategy. What moved was the claude emitter's `surface:` model, revised to `invocation:` before any code depended on it. Detail in `docs/stage-0-spec-read.md`.
 
 ### Context budget on the always-on set
 
@@ -343,7 +348,7 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **emitter** — Translates selected fragments into one agent's file layout — same bodies, different frontmatter and paths. `agents-md` and `claude` in v1. A new agent is a new emitter, never a content migration.
 
-**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always` or `paths`), `title`, `order` where sequence matters, and `surface` on the task-shaped ones. A repo composes 14 of them today; v1 authors 30 in total.
+**fragment** — One markdown file of instructions, the smallest unit — it lives inside exactly one axis value (or inside `core/`). Agent-neutral body; neutral frontmatter carrying `scope` (`always` or `paths`), `title`, `order` where sequence matters, and `invocation` on the task-shaped ones. A repo composes 14 of them today; v1 authors 30 in total.
 
 **manifest** — `.agentcfg-manifest.json` — every path the tool generated in this repo. Without it, dropping a concern from a profile leaves an orphaned rule file that nothing ever deletes.
 
