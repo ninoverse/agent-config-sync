@@ -40,7 +40,12 @@ impl FragmentSet {
         Self::build(crate::embedded::FILES, crate::embedded::AXES)
     }
 
-    fn build(files: &[(&str, &str)], axes: &[(&str, &[&str])]) -> Result<Self, FragmentError> {
+    /// Builds a set from explicit tables, for tests that need a tree the
+    /// real `fragments/` does not contain.
+    pub(crate) fn build(
+        files: &[(&str, &str)],
+        axes: &[(&str, &[&str])],
+    ) -> Result<Self, FragmentError> {
         let mut fragments = Vec::new();
         for (path, contents) in files {
             if path.ends_with(".md") {

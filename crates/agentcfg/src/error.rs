@@ -164,3 +164,59 @@ fn shipped(available: &[String]) -> String {
         format!("this release ships: {}", available.join(", "))
     }
 }
+
+/// A selection that could not be composed from the profile and the fragments.
+#[derive(Debug, thiserror::Error)]
+pub enum SelectionError {
+    /// A `values.yml` is not the flat map of names to strings it must be.
+    #[error("{path}: {source}")]
+    Values {
+        /// The `values.yml` path, relative to `fragments/`.
+        path: String,
+        /// What the YAML parser objected to.
+        source: serde_yaml_ng::Error,
+    },
+
+    /// Two selected values declare the same name, so the reference is
+    /// ambiguous. Which value wins would be an invisible rule; failing is not.
+    #[error("`{name}` is declared by both {first} and {second} — a name belongs to one value")]
+    DuplicateVariable {
+        /// The name declared twice.
+        name: String,
+        /// The first `values.yml` to declare it.
+        first: String,
+        /// The second.
+        second: String,
+    },
+
+    /// A fragment references a name the selected values do not declare.
+    ///
+    /// Always an error, never an empty string: a rule that renders as "run"
+    /// with nothing after it is worse than no rule at all. It is also what
+    /// catches a new language value that forgot to declare something.
+    #[error("{path}: `{{{{ {name} }}}}` is not declared by any selected value — {}", declared(.available))]
+    UnresolvedVariable {
+        /// The fragment holding the reference.
+        path: String,
+        /// The name that did not resolve.
+        name: String,
+        /// Every name the selected values do declare.
+        available: Vec<String>,
+    },
+
+    /// A `{{` with no closing `}}`, which would otherwise emit as literal text.
+    #[error("{path}: a `{{{{` is never closed — write `\\{{{{` for a literal one")]
+    UnclosedSubstitution {
+        /// The fragment holding the reference.
+        path: String,
+    },
+}
+
+/// Renders the names in scope, for the tail of an `UnresolvedVariable` message.
+fn declared(available: &[String]) -> String {
+    if available.is_empty() {
+        "the selected values declare nothing".to_owned()
+    } else {
+        format!("in scope: {}", available.join(", "))
+    }
+}

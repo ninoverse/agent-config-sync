@@ -51,10 +51,13 @@ mod emit;
 mod error;
 mod fragment;
 mod profile;
+mod selection;
 mod set;
+mod substitute;
 
 pub use emit::{EmitterName, UnknownEmitter};
-pub use error::{FragmentError, ProfileError};
+pub use error::{FragmentError, ProfileError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
 pub use profile::Profile;
+pub use selection::Selection;
 pub use set::FragmentSet;

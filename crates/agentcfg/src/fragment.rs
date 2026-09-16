@@ -182,6 +182,45 @@ impl Fragment {
     pub fn body(&self) -> &str {
         &self.body
     }
+
+    /// Applies `f` to every string this fragment carries — each frontmatter
+    /// value and the body.
+    ///
+    /// One place knows the full list, so a field added later cannot quietly
+    /// miss the substitution pass. The path is not visited: it identifies the
+    /// fragment rather than being content.
+    pub(crate) fn map_strings<E>(
+        &mut self,
+        mut f: impl FnMut(&mut String) -> Result<(), E>,
+    ) -> Result<(), E> {
+        match &mut self.meta {
+            Meta::Rules(meta) => {
+                f(&mut meta.title)?;
+                if let Some(when) = &mut meta.when {
+                    f(when)?;
+                }
+                for glob in &mut meta.paths {
+                    f(glob)?;
+                }
+            }
+            Meta::Task(meta) => {
+                f(&mut meta.name)?;
+                f(&mut meta.title)?;
+                f(&mut meta.when)?;
+                f(&mut meta.description)?;
+                if let Some(hint) = &mut meta.argument_hint {
+                    f(hint)?;
+                }
+                for argument in &mut meta.arguments {
+                    f(argument)?;
+                }
+                if let Some(tools) = &mut meta.allowed_tools {
+                    f(tools)?;
+                }
+            }
+        }
+        f(&mut self.body)
+    }
 }
 
 /// Whether `path` sits under a `tasks/` directory.
