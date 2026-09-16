@@ -1,0 +1,5 @@
+config_version: v1.0.0
+language: rust
+deployment: tag-only
+concerns: [template, data-access, sync]
+emit: [agents-md, claude]

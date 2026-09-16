@@ -76,6 +76,15 @@ pub enum FragmentError {
         /// The name that did not match.
         source: UnknownEmitter,
     },
+
+    /// A `--fragments` directory that could not be read.
+    #[error("{path}: {source}")]
+    Io {
+        /// The path that could not be read.
+        path: String,
+        /// What the filesystem reported.
+        source: std::io::Error,
+    },
 }
 
 impl FragmentError {
@@ -97,7 +106,8 @@ impl FragmentError {
             | Self::MissingPaths { path }
             | Self::FieldNotAllowed { path, .. }
             | Self::EmptyEmit { path }
-            | Self::UnknownEmitter { path, .. } => path,
+            | Self::UnknownEmitter { path, .. }
+            | Self::Io { path, .. } => path,
         }
     }
 }
@@ -302,3 +312,31 @@ pub enum RepoError {
 
 /// Where the list of generated paths lives.
 pub(crate) const MANIFEST: &str = ".agentcfg-manifest.json";
+
+/// Anything that can go wrong composing a repository's configuration.
+///
+/// Each variant renders as the underlying message and nothing more: the tool
+/// never prompts, so its failures carry the whole user experience, and a prefix
+/// naming the layer that failed would only get between the reader and the fix.
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    /// A fragment could not be read.
+    #[error(transparent)]
+    Fragment(#[from] FragmentError),
+
+    /// The profile could not be read, or names something unreleased.
+    #[error(transparent)]
+    Profile(#[from] ProfileError),
+
+    /// The selection could not be composed.
+    #[error(transparent)]
+    Selection(#[from] SelectionError),
+
+    /// An emitter could not render the selection.
+    #[error(transparent)]
+    Emit(#[from] EmitError),
+
+    /// The repository could not be read or written.
+    #[error(transparent)]
+    Repo(#[from] RepoError),
+}
