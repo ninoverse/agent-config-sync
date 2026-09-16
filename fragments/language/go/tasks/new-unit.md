@@ -4,13 +4,12 @@ title: Adding a package
 when: Adding or modifying a package
 description: Add a package to the module following the 9-step package workflow
 argument-hint: "<package-name> [one-line description of what it does]"
-arguments: [name]
 ---
 
 The exact procedure for adding or modifying a single package in this Go module.
 Follow every step in order; do not skip or reorder.
 
-The package: `$name`. Full request: $ARGUMENTS
+The package to add: $ARGUMENTS
 
 ---
 
