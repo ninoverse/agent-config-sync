@@ -7,9 +7,11 @@
 //! something goes wrong — which is why the error messages carry the polish
 //! budget a wizard would otherwise have absorbed.
 
-use std::{path::PathBuf, process::ExitCode};
+use std::{io::IsTerminal, io::Write, path::PathBuf, process::ExitCode};
 
-use agentcfg::{Budget, Change, ChangeKind, Composition, FragmentSet, Plan, Repo, UnusedRule};
+use agentcfg::{
+    Budget, Change, ChangeKind, Composition, EmitterName, FragmentSet, Meta, Plan, Repo, UnusedRule,
+};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 /// The release this binary is, as a profile would pin it.
@@ -39,6 +41,30 @@ enum Command {
         #[arg(long, value_enum, default_value_t = Format::Text)]
         format: Format,
     },
+    /// Name the fragment a rule comes from.
+    Why {
+        #[command(flatten)]
+        common: Common,
+        /// A phrase from the rule, as it appears in the composed files.
+        #[arg(value_name = "PHRASE")]
+        phrase: String,
+    },
+    /// Write a profile for a repository that does not have one.
+    Init(Init),
+    /// Stop managing this repository, keeping every composed file.
+    ///
+    /// The composed files stay where they are, as ordinary content with their
+    /// markers stripped; the profile and the manifest are removed. Nothing is
+    /// deleted.
+    ///
+    /// To remove the composed files instead, set `emit: []` in the profile and
+    /// run `agentcfg sync`. That leaves the repository managed but generating
+    /// nothing, so naming the emitters again brings every file back.
+    Eject {
+        /// The repository to release.
+        #[arg(long, default_value = ".", value_name = "PATH")]
+        repo: PathBuf,
+    },
 }
 
 #[derive(Args)]
@@ -49,6 +75,34 @@ struct Common {
     /// Compose from this fragment directory instead of the embedded release.
     #[arg(long, value_name = "PATH")]
     fragments: Option<PathBuf>,
+}
+
+#[derive(Args)]
+struct Init {
+    /// Where to write the profile.
+    #[arg(long, default_value = ".", value_name = "PATH")]
+    repo: PathBuf,
+    /// Detected from `Cargo.toml` or `go.mod` when not given.
+    #[arg(long, value_name = "NAME")]
+    language: Option<String>,
+    #[arg(long, value_name = "NAME")]
+    framework: Option<String>,
+    #[arg(long, value_name = "NAME")]
+    architecture: Option<String>,
+    /// What a merge to `main` does. There is nothing to detect this from.
+    #[arg(long, value_name = "NAME")]
+    deployment: Option<String>,
+    /// Repeatable.
+    #[arg(long = "concern", value_name = "NAME")]
+    concerns: Vec<String>,
+    #[arg(long, value_name = "NAME")]
+    sensitivity: Option<String>,
+    /// Repeatable. Defaults to every emitter.
+    #[arg(long = "emit", value_name = "NAME")]
+    emit: Vec<String>,
+    /// Fail on a missing value rather than asking for it.
+    #[arg(long)]
+    non_interactive: bool,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -64,6 +118,21 @@ enum Format {
 enum Failure {
     #[error(transparent)]
     Compose(#[from] agentcfg::Error),
+
+    /// A repository that already has a profile.
+    #[error("{0} already has a profile — edit it rather than starting over")]
+    AlreadyInitialised(String),
+
+    /// `init` needs a value it was not given and cannot ask for.
+    #[error(
+        "no {axis} given, and nothing to ask — pass `--{axis} <name>`. This release ships: {available}"
+    )]
+    Missing {
+        /// The axis with no value.
+        axis: &'static str,
+        /// What could be chosen.
+        available: String,
+    },
 
     /// The profile pins a release this binary is not.
     ///
@@ -101,7 +170,7 @@ fn run() -> Result<ExitCode, Failure> {
         }
         Command::Check(common) => {
             let (repo, composed) = compose(&common)?;
-            let budget = Budget::measure(&composed.files, &composed.selection);
+            let budget = Budget::measure(&composed.files);
 
             for warning in
                 agentcfg::unused_rules(&repo, &composed.selection).map_err(agentcfg::Error::from)?
@@ -117,10 +186,211 @@ fn run() -> Result<ExitCode, Failure> {
                 ExitCode::FAILURE
             })
         }
+        Command::Why { common, phrase } => {
+            let (_, composed) = compose(&common)?;
+            let found = why(&composed, &phrase);
+
+            print!("{found}");
+
+            // Nothing found is not an error, but it is worth a status, the way
+            // a failed search is in any other tool.
+            Ok(if found.is_empty() {
+                println!("Nothing in this repository's rules says that.");
+                ExitCode::FAILURE
+            } else {
+                ExitCode::SUCCESS
+            })
+        }
+        Command::Init(options) => {
+            init(&options)?;
+            Ok(ExitCode::SUCCESS)
+        }
+        Command::Eject { repo } => {
+            let repo = Repo::at(repo);
+            let freed = repo.eject().map_err(agentcfg::Error::from)?;
+
+            println!("{}", released(freed.len()));
+            Ok(ExitCode::SUCCESS)
+        }
     }
 }
 
-/// A rule nothing in this repository would ever trigger.
+/// What `eject` leaves behind, and the door it is not.
+///
+/// The two exits are easy to mistake for each other, and only one of them is
+/// reversible by editing a line. Saying so here costs nothing and is the only
+/// place the command line mentions the other.
+fn released(count: usize) -> String {
+    format!(
+        "Released {count} file{}; they are ordinary content now, and the profile and manifest are gone.\n\
+         Nothing was deleted. To remove the composed files instead, restore this and sync with `emit: []`.",
+        plural(count)
+    )
+}
+
+/// Which fragment says a thing, and where that lands.
+///
+/// The question centralising creates: a rule you disagree with is no longer a
+/// file in your repository you can edit, it is one of twenty fragments composed
+/// from six axes. This is the lookup that makes it traceable.
+fn why(composed: &Composition, phrase: &str) -> String {
+    let needle = phrase.to_lowercase();
+    let mut out = String::new();
+
+    for fragment in composed.selection.fragments() {
+        let matches: Vec<&str> = fragment
+            .body()
+            .lines()
+            .filter(|line| line.to_lowercase().contains(&needle))
+            .collect();
+        if matches.is_empty() {
+            continue;
+        }
+
+        let title = match fragment.meta() {
+            Meta::Rules(meta) => &meta.title,
+            Meta::Task(meta) => &meta.title,
+        };
+        out.push_str(&format!("{} — {title}\n", fragment.path()));
+
+        for file in &composed.files {
+            if file
+                .content
+                .contains(&format!("<!-- {} · ", fragment.path()))
+            {
+                out.push_str(&format!("  in {}\n", file.path));
+            }
+        }
+        if let Meta::Rules(meta) = fragment.meta() {
+            if let Some(when) = &meta.when {
+                out.push_str(&format!("  read when: {when}\n"));
+            }
+        }
+
+        out.push('\n');
+        for line in matches.iter().take(5) {
+            out.push_str(&format!("  {}\n", line.trim()));
+        }
+        if matches.len() > 5 {
+            out.push_str(&format!("  … and {} more lines\n", matches.len() - 5));
+        }
+        out.push('\n');
+    }
+
+    out
+}
+
+/// Writes a profile for a repository that does not have one.
+///
+/// Detects what it can and asks only for what is genuinely a choice — and only
+/// when there is someone to ask. Flags always win, so an agent scaffolding a
+/// repository from a template never sees a question.
+fn init(options: &Init) -> Result<(), Failure> {
+    let profile_path = options.repo.join(".agentprofile.yml");
+    if profile_path.exists() {
+        return Err(Failure::AlreadyInitialised(
+            profile_path.display().to_string(),
+        ));
+    }
+
+    let tree = FragmentSet::embedded().map_err(agentcfg::Error::from)?;
+
+    let language = match &options.language {
+        Some(given) => given.clone(),
+        None => match detect(&options.repo) {
+            Some(detected) => detected,
+            None => ask("language", &tree, options.non_interactive)?,
+        },
+    };
+    let deployment = match &options.deployment {
+        Some(given) => given.clone(),
+        None => ask("deployment", &tree, options.non_interactive)?,
+    };
+
+    let emit = if options.emit.is_empty() {
+        EmitterName::ALL
+            .iter()
+            .map(|emitter| emitter.as_str().to_owned())
+            .collect()
+    } else {
+        options.emit.clone()
+    };
+
+    let mut yaml = format!("config_version: {VERSION}\nlanguage: {language}\n");
+    if let Some(framework) = &options.framework {
+        yaml.push_str(&format!("framework: {framework}\n"));
+    }
+    if let Some(architecture) = &options.architecture {
+        yaml.push_str(&format!("architecture: {architecture}\n"));
+    }
+    yaml.push_str(&format!("deployment: {deployment}\n"));
+    if !options.concerns.is_empty() {
+        yaml.push_str(&format!("concerns: [{}]\n", options.concerns.join(", ")));
+    }
+    if let Some(sensitivity) = &options.sensitivity {
+        yaml.push_str(&format!("sensitivity: {sensitivity}\n"));
+    }
+    yaml.push_str(&format!("emit: [{}]\n", emit.join(", ")));
+
+    // Validated by the same parser every other command uses, so `init` cannot
+    // write a profile that `sync` would then reject.
+    agentcfg::Profile::parse(&yaml, &tree).map_err(agentcfg::Error::from)?;
+
+    std::fs::write(&profile_path, &yaml).map_err(|source| {
+        agentcfg::Error::from(agentcfg::RepoError::Io {
+            path: profile_path.display().to_string(),
+            source,
+        })
+    })?;
+
+    println!("Wrote {}:\n\n{yaml}", profile_path.display());
+    println!("Run `agentcfg sync` to compose it.");
+    Ok(())
+}
+
+/// The language a repository is obviously written in, if it is obvious.
+fn detect(repo: &std::path::Path) -> Option<String> {
+    for (marker, language) in [("Cargo.toml", "rust"), ("go.mod", "go")] {
+        if repo.join(marker).exists() {
+            return Some(language.to_owned());
+        }
+    }
+    None
+}
+
+/// Asks for a value, but only when there is a terminal to ask at.
+///
+/// A tool that prompts cannot run in a workflow, and the workflow is the
+/// primary caller — so this is the single exception, and `--non-interactive`
+/// removes even that.
+fn ask(axis: &'static str, tree: &FragmentSet, non_interactive: bool) -> Result<String, Failure> {
+    let available = tree.values(axis).join(", ");
+
+    if non_interactive || !std::io::stdin().is_terminal() {
+        return Err(Failure::Missing { axis, available });
+    }
+
+    loop {
+        print!("{axis} ({available}): ");
+        let _ = std::io::stdout().flush();
+
+        let mut answer = String::new();
+        if std::io::stdin().read_line(&mut answer).is_err() {
+            return Err(Failure::Missing { axis, available });
+        }
+
+        let answer = answer.trim().to_owned();
+        if tree.values(axis).contains(&answer) {
+            return Ok(answer);
+        }
+        if answer.is_empty() {
+            return Err(Failure::Missing { axis, available });
+        }
+        eprintln!("`{answer}` is not one of: {available}");
+    }
+}
+
+/// A rule nothing in this repository would ever trigger./// A rule nothing in this repository would ever trigger.
 fn describe(warning: &UnusedRule) -> String {
     format!(
         "{} will never load here — nothing matches {}. Either the rule does not apply to this repository, or its code lives somewhere unexpected.",
@@ -365,6 +635,65 @@ mod tests {
     }
 
     #[test]
+    fn ejecting_says_what_it_did_not_do() {
+        // `eject` and `emit: []` are easy to mistake for each other, and the
+        // command line mentions the second nowhere else.
+        let message = super::released(18);
+
+        assert!(message.contains("Released 18 files"), "{message}");
+        assert!(message.contains("Nothing was deleted"), "{message}");
+        assert!(message.contains("`emit: []`"), "{message}");
+    }
+
+    #[test]
+    fn why_names_the_fragment_and_where_it_lands() {
+        let (_dir, repo) = sandbox();
+        let composed = compose(&repo);
+
+        let found = super::why(&composed, "no stacked PRs");
+
+        assert!(found.contains("core/git-flow.md — Git flow"), "{found}");
+        assert!(found.contains("in .agents/git-flow.md"), "{found}");
+        assert!(
+            found.contains("read when: Any change that ends in a PR"),
+            "{found}"
+        );
+    }
+
+    #[test]
+    fn why_is_case_insensitive_and_finds_every_fragment_that_says_it() {
+        let (_dir, repo) = sandbox();
+        let composed = compose(&repo);
+
+        let found = super::why(&composed, "NO STACKED prs");
+
+        // Git flow states it; execution order repeats it as a consequence.
+        assert!(found.contains("core/git-flow.md"), "{found}");
+        assert!(found.contains("core/execution-order.md"), "{found}");
+    }
+
+    #[test]
+    fn why_says_nothing_when_nothing_says_it() {
+        let (_dir, repo) = sandbox();
+
+        assert!(super::why(&compose(&repo), "kubernetes operator").is_empty());
+    }
+
+    #[test]
+    fn the_language_is_detected_from_the_file_that_makes_it_obvious() {
+        let dir = tempfile::tempdir().unwrap();
+        assert_eq!(super::detect(dir.path()), None);
+
+        std::fs::write(dir.path().join("go.mod"), "module x\n").unwrap();
+        assert_eq!(super::detect(dir.path()).as_deref(), Some("go"));
+
+        // Cargo.toml wins where both exist, which only happens in a repository
+        // that would have to say which it is anyway.
+        std::fs::write(dir.path().join("Cargo.toml"), "[package]\n").unwrap();
+        assert_eq!(super::detect(dir.path()).as_deref(), Some("rust"));
+    }
+
+    #[test]
     fn a_clean_repository_still_reports_what_it_spends() {
         // `check` reports the always-on size whether or not it is over: a number
         // nobody sees until it fails is a number nobody has a feel for.
@@ -373,7 +702,7 @@ mod tests {
         repo.apply(&composed.plan).unwrap();
 
         let composed = compose(&repo);
-        let budget = Budget::measure(&composed.files, &composed.selection);
+        let budget = Budget::measure(&composed.files);
         let report = check_report(&composed.plan, &budget);
 
         assert!(
@@ -390,7 +719,7 @@ mod tests {
     fn drift_names_the_files_and_the_one_command_that_fixes_them() {
         let (_dir, repo) = sandbox();
         let composed = compose(&repo);
-        let budget = Budget::measure(&composed.files, &composed.selection);
+        let budget = Budget::measure(&composed.files);
         let report = check_report(&composed.plan, &budget);
 
         assert!(
@@ -411,7 +740,7 @@ mod tests {
         std::fs::write(repo.root().join("AGENTS.md"), "tampered\n").unwrap();
 
         let composed = compose(&repo);
-        let budget = Budget::measure(&composed.files, &composed.selection);
+        let budget = Budget::measure(&composed.files);
         let report = check_report(&composed.plan, &budget);
 
         assert!(

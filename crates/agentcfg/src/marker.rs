@@ -43,6 +43,22 @@ pub(crate) fn splice(
     }
 }
 
+/// Removes the markers, keeping everything between them.
+///
+/// `None` when the file carries no region, so there is nothing to strip.
+pub(crate) fn strip(path: &str, existing: &str) -> Result<Option<String>, RepoError> {
+    let Some((before, after)) = locate(path, existing)? else {
+        return Ok(None);
+    };
+
+    let region = &existing[before.len() + START.len()..existing.len() - after.len() - END.len()];
+
+    Ok(Some(format!(
+        "{before}{}{after}",
+        region.trim_matches('\n')
+    )))
+}
+
 /// Everything outside the region: the text before the start marker and the text
 /// after the end marker. `None` when the file carries no region.
 pub(crate) fn outside<'a>(
@@ -164,6 +180,18 @@ mod tests {
 
         assert_eq!(once, twice);
         assert_eq!(splice_ok(Some(&twice), "rules"), twice);
+    }
+
+    #[test]
+    fn stripping_leaves_the_content_and_takes_the_markers() {
+        let managed = splice_ok(Some("Local note.\n"), "the rules");
+
+        assert_eq!(
+            strip("AGENTS.md", &managed).unwrap(),
+            Some("Local note.\n\nthe rules\n".to_owned())
+        );
+        // A file that was never managed has nothing to strip.
+        assert_eq!(strip("AGENTS.md", "plain\n").unwrap(), None);
     }
 
     #[test]

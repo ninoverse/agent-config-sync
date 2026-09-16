@@ -115,11 +115,46 @@ impl Emitter for Claude {
             },
         );
 
+        files.push(why_skill(input.version));
+
         if let Some(settings) = settings(input)? {
             files.push(settings);
         }
 
         Ok(files)
+    }
+}
+
+/// The `/why` skill, which belongs to no fragment.
+///
+/// Centralising rules creates a question no repository can answer on its own: a
+/// rule you disagree with is no longer a file you can edit, it is one of twenty
+/// fragments composed from six axes. The agent obeying these rules is the one
+/// most likely to need to trace one, and mid-session is exactly when the
+/// distance to the central repository hurts — so the trace is a skill rather
+/// than something to go and read about.
+fn why_skill(version: &str) -> OutputFile {
+    OutputFile {
+        path: ".claude/skills/why/SKILL.md".to_owned(),
+        content: format!(
+            concat!(
+                "---\n",
+                "name: \"why\"\n",
+                "description: \"Trace a rule in AGENTS.md or CLAUDE.md back to the fragment that defines it\"\n",
+                "argument-hint: \"<a phrase from the rule>\"\n",
+                "allowed-tools: \"Bash(agentcfg why:*)\"\n",
+                "---\n\n",
+                "<!-- agentcfg:why · {version} -->\n",
+                "# Why this rule\n\n",
+                "Run `agentcfg why \"$ARGUMENTS\"` and report what it says.\n\n",
+                "The rules here are composed from fragments in a central release, so a\n",
+                "rule is not a file in this repository that can simply be edited. This\n",
+                "names the fragment that owns it, which is where a change has to be made,\n",
+                "and every repository selecting that fragment gets the change too.\n",
+            ),
+            version = version
+        ),
+        ownership: Ownership::Whole,
     }
 }
 

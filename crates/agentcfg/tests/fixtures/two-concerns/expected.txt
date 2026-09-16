@@ -40,4 +40,5 @@ CLAUDE.md (region)
     concerns/data-access/rules.md
 .claude/rules/sync-rules.md (whole)
     concerns/sync/rules.md
+.claude/skills/why/SKILL.md (whole)
 .claude/settings.json (whole)

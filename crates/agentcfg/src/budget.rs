@@ -16,7 +16,7 @@
 //! `invocation: user` skills, which enter context only when someone types the
 //! name.
 
-use crate::{Meta, OutputFile, Selection, emit};
+use crate::{OutputFile, emit};
 
 /// The ceiling on always-on content, in lines.
 ///
@@ -69,7 +69,7 @@ impl Budget {
     ///     version: "v1.0.0",
     /// })?;
     ///
-    /// let budget = Budget::measure(&files, &selection);
+    /// let budget = Budget::measure(&files);
     /// assert!(!budget.is_over());
     ///
     /// // Largest first, so the thing to move is the first line you read.
@@ -78,7 +78,7 @@ impl Budget {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[must_use]
-    pub fn measure(files: &[OutputFile], selection: &Selection) -> Self {
+    pub fn measure(files: &[OutputFile]) -> Self {
         let mut entries: Vec<Entry> = Vec::new();
 
         let mut add = |source: &str, lines: usize| {
@@ -109,18 +109,33 @@ impl Budget {
         }
 
         // A model-invocable skill's description is tested every session, so it
-        // is spend the gate would otherwise not see.
-        let writes_skills = files
+        // is spend the gate would otherwise not see. Counted from the emitted
+        // skills rather than from the fragments, so a skill the emitter builds
+        // in — `/why` — is measured like any other.
+        for file in files
             .iter()
-            .any(|file| file.path.starts_with(".claude/skills/"));
-        if writes_skills {
-            for fragment in selection.fragments() {
-                if let Meta::Task(meta) = fragment.meta() {
-                    if meta.invocation == crate::Invocation::Model {
-                        add(fragment.path(), 1);
-                    }
-                }
+            .filter(|file| file.path.starts_with(".claude/skills/"))
+        {
+            let user_invocable_only = file
+                .content
+                .lines()
+                .any(|line| line.trim() == "disable-model-invocation: true");
+            if user_invocable_only {
+                continue;
             }
+
+            let source = file
+                .content
+                .lines()
+                .find_map(provenance)
+                .unwrap_or(&file.path)
+                .to_owned();
+            let description = file
+                .content
+                .lines()
+                .filter(|line| line.starts_with("description:"))
+                .count();
+            add(&source, description);
         }
 
         entries.sort_by(|a, b| b.lines.cmp(&a.lines).then_with(|| a.source.cmp(&b.source)));
@@ -176,7 +191,7 @@ mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used)]
 
     use super::*;
-    use crate::{FragmentSet, Ownership, Profile};
+    use crate::{FragmentSet, Meta, Ownership, Profile, Selection};
 
     fn selection(axes: &str) -> Selection {
         let tree = FragmentSet::embedded().unwrap();
@@ -197,10 +212,7 @@ mod tests {
     }
 
     fn measure(content: &str) -> Budget {
-        Budget::measure(
-            &[agents_md(content)],
-            &selection("language: rust\ndeployment: tag-only\n"),
-        )
+        Budget::measure(&[agents_md(content)])
     }
 
     #[test]
@@ -264,18 +276,15 @@ mod tests {
     #[test]
     fn content_outside_the_always_on_files_is_not_counted() {
         // A path-scoped rule costs only the sessions that reach it.
-        let budget = Budget::measure(
-            &[
-                agents_md("<!-- core/behavior.md · v1 -->\none\n"),
-                OutputFile {
-                    path: ".agents/data-access-rules.md".to_owned(),
-                    content: "<!-- concerns/data-access/rules.md · v1 -->\n".to_owned()
-                        + &"line\n".repeat(500),
-                    ownership: Ownership::Region,
-                },
-            ],
-            &selection("language: rust\ndeployment: tag-only\n"),
-        );
+        let budget = Budget::measure(&[
+            agents_md("<!-- core/behavior.md · v1 -->\none\n"),
+            OutputFile {
+                path: ".agents/data-access-rules.md".to_owned(),
+                content: "<!-- concerns/data-access/rules.md · v1 -->\n".to_owned()
+                    + &"line\n".repeat(500),
+                ownership: Ownership::Region,
+            },
+        ]);
 
         assert_eq!(budget.total(), 1);
     }
@@ -283,34 +292,48 @@ mod tests {
     #[test]
     fn a_model_invocable_skill_description_is_spend_the_gate_can_see() {
         let selection = selection("language: rust\ndeployment: tag-only\n");
+        let tasks = selection
+            .fragments()
+            .iter()
+            .filter(|fragment| matches!(fragment.meta(), Meta::Task(_)))
+            .count();
+
         let skills: Vec<OutputFile> = selection
             .fragments()
             .iter()
             .filter(|fragment| matches!(fragment.meta(), Meta::Task(_)))
             .map(|fragment| OutputFile {
                 path: format!(".claude/skills/{}/SKILL.md", fragment.path()),
-                content: String::new(),
+                content: format!(
+                    "---\nname: \"x\"\ndescription: \"y\"\n---\n\n<!-- {} · v1 -->\n",
+                    fragment.path()
+                ),
                 ownership: Ownership::Whole,
             })
             .collect();
 
-        let without = Budget::measure(&[agents_md("x\n")], &selection).total();
-
         let mut with = vec![agents_md("x\n")];
-        with.extend(skills.clone());
-        let with = Budget::measure(&with, &selection).total();
+        with.extend(skills);
+        let budget = Budget::measure(&with);
 
-        // Both tasks in the rust value are model-invocable, so each costs the
-        // one line of description the model tests every session.
-        assert_eq!(with - without, skills.len());
-        assert_eq!(skills.len(), 2);
+        assert_eq!(budget.total(), 1 + tasks);
+        assert_eq!(tasks, 2);
     }
 
     #[test]
-    fn a_profile_that_emits_no_skills_pays_for_no_descriptions() {
-        let selection = selection("language: rust\ndeployment: tag-only\n");
+    fn a_user_invocable_skill_costs_nothing_until_it_is_typed() {
+        let user_only = OutputFile {
+            path: ".claude/skills/gates/SKILL.md".to_owned(),
+            content: concat!(
+                "---\nname: \"gates\"\ndescription: \"y\"\n",
+                "disable-model-invocation: true\n---\n",
+                "<!-- language/rust/tasks/gates.md · v1 -->\n",
+            )
+            .to_owned(),
+            ownership: Ownership::Whole,
+        };
 
-        assert_eq!(Budget::measure(&[agents_md("x\n")], &selection).total(), 1);
+        assert_eq!(Budget::measure(&[agents_md("x\n"), user_only]).total(), 1);
     }
 
     #[test]
@@ -360,7 +383,7 @@ mod tests {
             let composed =
                 crate::Composition::of(&crate::Repo::at(sandbox.path()), &tree, "v1.0.0").unwrap();
 
-            let budget = Budget::measure(&composed.files, &composed.selection);
+            let budget = Budget::measure(&composed.files);
 
             assert!(
                 !budget.is_over(),
