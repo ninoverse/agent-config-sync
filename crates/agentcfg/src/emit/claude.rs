@@ -18,6 +18,10 @@ use serde_json::{Map, Value};
 use super::{EmitInput, Emitter, EmitterName, OutputFile, Ownership, file_stem, receives};
 use crate::{Fragment, Invocation, Meta, Scope, error::EmitError};
 
+/// Names the `@AGENTS.md` import in its provenance comment, so the always-on
+/// budget can attribute its line.
+pub(crate) const IMPORT: &str = "agentcfg:import";
+
 /// Writes the Claude Code layout for a selection.
 ///
 /// ```
@@ -66,7 +70,7 @@ impl Emitter for Claude {
 
     fn files(&self, input: EmitInput<'_>) -> Result<Vec<OutputFile>, EmitError> {
         let mut claude_md = vec![format!(
-            "<!-- agentcfg · {} — the rules live in AGENTS.md; this imports them. -->\n@AGENTS.md\n",
+            "<!-- {IMPORT} · {} -->\n@AGENTS.md\n",
             input.version
         )];
         let mut files = Vec::new();

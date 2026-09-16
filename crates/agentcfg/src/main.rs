@@ -9,7 +9,7 @@
 
 use std::{path::PathBuf, process::ExitCode};
 
-use agentcfg::{Change, ChangeKind, Composition, FragmentSet, Plan, Repo};
+use agentcfg::{Budget, Change, ChangeKind, Composition, FragmentSet, Plan, Repo, UnusedRule};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 /// The release this binary is, as a profile would pin it.
@@ -29,6 +29,8 @@ struct Cli {
 enum Command {
     /// Write the composed configuration into a repository.
     Sync(Common),
+    /// Report drift and the always-on budget; exit non-zero if either is wrong.
+    Check(Common),
     /// Print what sync would change, without changing it.
     Plan {
         #[command(flatten)]
@@ -76,7 +78,7 @@ enum Failure {
 
 fn main() -> ExitCode {
     match run() {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(code) => code,
         Err(failure) => {
             eprintln!("error: {failure}");
             ExitCode::FAILURE
@@ -84,20 +86,102 @@ fn main() -> ExitCode {
     }
 }
 
-fn run() -> Result<(), Failure> {
+fn run() -> Result<ExitCode, Failure> {
     match Cli::parse().command {
         Command::Sync(common) => {
             let (repo, composed) = compose(&common)?;
             repo.apply(&composed.plan).map_err(agentcfg::Error::from)?;
             println!("{}", summary(&composed.plan, "Wrote", "Nothing to write."));
-            Ok(())
+            Ok(ExitCode::SUCCESS)
         }
         Command::Plan { common, format } => {
             let (_, composed) = compose(&common)?;
             print!("{}", render(&composed.plan, format));
-            Ok(())
+            Ok(ExitCode::SUCCESS)
+        }
+        Command::Check(common) => {
+            let (repo, composed) = compose(&common)?;
+            let budget = Budget::measure(&composed.files, &composed.selection);
+
+            for warning in
+                agentcfg::unused_rules(&repo, &composed.selection).map_err(agentcfg::Error::from)?
+            {
+                eprintln!("warning: {}", describe(&warning));
+            }
+
+            print!("{}", check_report(&composed.plan, &budget));
+
+            Ok(if composed.plan.is_clean() && !budget.is_over() {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::FAILURE
+            })
         }
     }
+}
+
+/// A rule nothing in this repository would ever trigger.
+fn describe(warning: &UnusedRule) -> String {
+    format!(
+        "{} will never load here — nothing matches {}. Either the rule does not apply to this repository, or its code lives somewhere unexpected.",
+        warning.title,
+        warning
+            .globs
+            .iter()
+            .map(|glob| format!("`{glob}`"))
+            .collect::<Vec<_>>()
+            .join(" or ")
+    )
+}
+
+/// What `check` found, and what to do about it.
+///
+/// A drift failure names the files and the one command that fixes them; a
+/// budget failure lists the always-on set largest first, so the thing to move
+/// behind `scope: paths` is the first line read.
+fn check_report(plan: &Plan, budget: &Budget) -> String {
+    let mut out = String::new();
+
+    if !plan.is_clean() {
+        let count = plan.pending().count();
+        out.push_str(&format!(
+            "{count} generated file{} out of date:\n\n",
+            if count == 1 { " is" } else { "s are" }
+        ));
+        for change in plan.pending() {
+            out.push_str(&format!("  {:<7} {}\n", verb(change), change.path));
+        }
+        out.push_str("\nRun `agentcfg sync` to bring them back in line.\n");
+    }
+
+    if budget.is_over() {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out.push_str(&format!(
+            "The always-on set is {} lines, over the {}-line budget:\n\n",
+            budget.total(),
+            budget.limit()
+        ));
+        for entry in budget.entries() {
+            out.push_str(&format!("  {:>4}  {}\n", entry.lines, entry.source));
+        }
+        out.push_str("\nMove the largest behind `scope: paths`. Deleting a rule is not the fix.\n");
+    } else if out.is_empty() {
+        out.push_str(&format!(
+            "Up to date. Always-on set: {} of {} lines.\n",
+            budget.total(),
+            budget.limit()
+        ));
+    } else {
+        out.push_str(&format!(
+            "\nAlways-on set: {} of {} lines.\n",
+            budget.total(),
+            budget.limit()
+        ));
+    }
+
+    out
 }
 
 /// Reads the repository and composes it, honouring `--fragments`.
@@ -219,7 +303,9 @@ mod tests {
 
     use agentcfg::{Composition, FragmentSet, Repo};
 
-    use super::{Format, render, summary};
+    use agentcfg::Budget;
+
+    use super::{Format, check_report, render, summary};
 
     /// A repository with a profile and nothing generated yet.
     fn sandbox() -> (tempfile::TempDir, Repo) {
@@ -275,6 +361,62 @@ mod tests {
         assert!(
             rendered.contains("| create | `AGENTS.md` |\n"),
             "{rendered}"
+        );
+    }
+
+    #[test]
+    fn a_clean_repository_still_reports_what_it_spends() {
+        // `check` reports the always-on size whether or not it is over: a number
+        // nobody sees until it fails is a number nobody has a feel for.
+        let (_dir, repo) = sandbox();
+        let composed = compose(&repo);
+        repo.apply(&composed.plan).unwrap();
+
+        let composed = compose(&repo);
+        let budget = Budget::measure(&composed.files, &composed.selection);
+        let report = check_report(&composed.plan, &budget);
+
+        assert!(
+            report.starts_with("Up to date. Always-on set: "),
+            "{report}"
+        );
+        assert!(
+            report.contains(&format!("of {} lines.", budget.limit())),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn drift_names_the_files_and_the_one_command_that_fixes_them() {
+        let (_dir, repo) = sandbox();
+        let composed = compose(&repo);
+        let budget = Budget::measure(&composed.files, &composed.selection);
+        let report = check_report(&composed.plan, &budget);
+
+        assert!(
+            report.contains("generated files are out of date:"),
+            "{report}"
+        );
+        assert!(report.contains("  create  AGENTS.md\n"), "{report}");
+        assert!(report.contains("Run `agentcfg sync`"), "{report}");
+        // Still says what it spends, even while failing for another reason.
+        assert!(report.contains("Always-on set:"), "{report}");
+    }
+
+    #[test]
+    fn one_file_out_of_date_reads_as_one_file() {
+        let (_dir, repo) = sandbox();
+        let composed = compose(&repo);
+        repo.apply(&composed.plan).unwrap();
+        std::fs::write(repo.root().join("AGENTS.md"), "tampered\n").unwrap();
+
+        let composed = compose(&repo);
+        let budget = Budget::measure(&composed.files, &composed.selection);
+        let report = check_report(&composed.plan, &budget);
+
+        assert!(
+            report.starts_with("1 generated file is out of date:"),
+            "{report}"
         );
     }
 

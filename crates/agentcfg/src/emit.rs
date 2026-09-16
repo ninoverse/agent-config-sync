@@ -9,7 +9,9 @@ use std::{collections::BTreeSet, fmt, str::FromStr};
 use crate::{Fragment, FragmentSet, Meta, Profile, Selection, error::EmitError};
 
 pub use agents_md::AgentsMd;
+pub(crate) use agents_md::INDEX;
 pub use claude::Claude;
+pub(crate) use claude::IMPORT;
 
 /// One of the emitters `agentcfg` renders fragments for.
 ///
