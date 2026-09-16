@@ -32,4 +32,5 @@ CLAUDE.md (region)
     language/rust/tasks/gates.md
 .claude/skills/new-crate/SKILL.md (whole)
     language/rust/tasks/new-unit.md
+.claude/skills/why/SKILL.md (whole)
 .claude/settings.json (whole)

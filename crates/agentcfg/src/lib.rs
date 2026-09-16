@@ -12,9 +12,11 @@
 //! that picks between its values, composes the two into the files each agent
 //! reads, and works out what writing them would change in a repository.
 //!
-//! The binary drives it: `sync` writes, `plan` prints. Both run the one
-//! computation in [`Composition`], which is why drift detection costs nothing
-//! extra — it is the same code path asked a different question.
+//! The binary drives it. `sync`, `plan` and `check` run the one computation in
+//! [`Composition`] and differ only in what they do with the answer, which is
+//! why drift detection costs nothing extra. `why` is a lookup over that same
+//! selection, and `init` and `eject` are the two ends of a repository's life
+//! under the tool.
 //!
 //! ```
 //! use agentcfg::{FragmentSet, Meta, Profile, Scope};

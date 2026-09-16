@@ -42,4 +42,5 @@ CLAUDE.md (region)
     architecture/ddd/domain-model.md
 .claude/rules/ddd-repositories.md (whole)
     architecture/ddd/repositories.md
+.claude/skills/why/SKILL.md (whole)
 .claude/settings.json (whole)

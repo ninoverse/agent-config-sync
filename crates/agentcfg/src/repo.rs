@@ -219,6 +219,56 @@ impl Repo {
         Ok(())
     }
 
+    /// Leaves the composed files as ordinary content and stops managing them.
+    ///
+    /// Strips the markers, then removes the manifest and the profile. The
+    /// repository keeps every file and loses nothing — which is the point. It
+    /// answers the only fair objection to centralising rules across dozens of
+    /// repositories: what if this turns out to be wrong in a year. A repository
+    /// can leave without a rewrite, which is also what makes adopting it a
+    /// small decision rather than a large one.
+    ///
+    /// # Errors
+    ///
+    /// [`RepoError`] if a generated file cannot be read or written, or carries
+    /// a damaged region.
+    pub fn eject(&self) -> Result<Vec<String>, RepoError> {
+        let Some(text) = self.read(MANIFEST)? else {
+            return Ok(Vec::new());
+        };
+        let manifest: Manifest =
+            serde_json::from_str(&text).map_err(|source| RepoError::Manifest { source })?;
+
+        let mut freed = Vec::new();
+        for path in manifest.files {
+            let Some(existing) = self.read(&path)? else {
+                continue;
+            };
+            if let Some(stripped) = marker::strip(&path, &existing)? {
+                fs::write(self.root.join(&path), stripped).map_err(|source| RepoError::Io {
+                    path: path.clone(),
+                    source,
+                })?;
+            }
+            freed.push(path);
+        }
+
+        for bookkeeping in [MANIFEST, PROFILE] {
+            match fs::remove_file(self.root.join(bookkeeping)) {
+                Ok(()) => {}
+                Err(source) if source.kind() == std::io::ErrorKind::NotFound => {}
+                Err(source) => {
+                    return Err(RepoError::Io {
+                        path: bookkeeping.to_owned(),
+                        source,
+                    });
+                }
+            }
+        }
+
+        Ok(freed)
+    }
+
     /// Paths the last sync wrote that this one does not.
     fn orphans(&self, generated: &BTreeSet<&str>) -> Result<Vec<String>, RepoError> {
         let Some(text) = self.read(MANIFEST)? else {
