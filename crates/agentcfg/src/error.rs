@@ -145,6 +145,16 @@ pub enum ProfileError {
         value: String,
     },
 
+    /// `claude` without `agents-md`.
+    ///
+    /// `CLAUDE.md` is an `@AGENTS.md` import and the AGENTS.md index is what
+    /// points Claude at the rules it reads on demand, so the claude output has
+    /// nothing to import and nothing to follow on its own.
+    #[error(
+        "{PROFILE}: `emit:` names claude without agents-md — CLAUDE.md imports AGENTS.md, so claude cannot be emitted alone"
+    )]
+    ClaudeNeedsAgentsMd,
+
     /// An `emit:` entry naming an emitter this release does not have.
     #[error("{PROFILE}: {source}")]
     UnknownEmitter {
@@ -232,5 +242,14 @@ pub enum EmitError {
         emitter: crate::EmitterName,
         /// The path claimed twice.
         path: String,
+    },
+
+    /// A `settings.partial.json` in the tree is not valid JSON.
+    #[error("{path}: {source}")]
+    Settings {
+        /// The partial's path, relative to `fragments/`.
+        path: String,
+        /// What the JSON parser objected to.
+        source: serde_json::Error,
     },
 }

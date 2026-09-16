@@ -82,6 +82,12 @@ other leaves it with the composed files as ordinary content.
 Because an empty list is reachable by typo, an unknown emitter name is a hard
 error. `emit: [agent-md]` fails rather than quietly wiping `.claude/`.
 
+`claude` cannot be named without `agents-md`. `CLAUDE.md` is an `@AGENTS.md`
+import, and the AGENTS.md index is what points Claude at the rules it reads on
+demand, so a claude-only profile would import a file nobody wrote and follow
+pointers into nothing. `agents-md` alone is fine — that is what AGENTS.md being
+canonical rather than a fallback means.
+
 ## `settings_extra`
 
 A mapping merged last into the generated `.claude/settings.json`. The claude
@@ -90,6 +96,16 @@ no comment syntax and so cannot carry a marker region — a merging emitter
 could never tell a key it wrote last month from one a person added. Repo-local
 additions therefore live here, in the profile, rather than in the generated
 file.
+
+It merges **last**, over the selected values' partials, and merges **deeply**:
+objects combine key by key, so adding `env:` leaves `permissions:` alone.
+Anything else replaces — an array in `settings_extra` takes the place of the
+array it lands on rather than extending it, so a repository can remove an entry
+as well as add one. The result is written whole and verified byte-for-byte,
+so a merge that did something unexpected fails `check` in the PR that caused it.
+
+Keys come out sorted, which is a property of how the file is serialised rather
+than a choice; what matters is that it is deterministic.
 
 Not to be confused with `.claude/settings.local.json`, which is the personal
 gitignored override and no home for committed repository config.
@@ -116,6 +132,7 @@ in `ninoverse/.github`. A setting the deciding tool cannot read is decoration.
 | An axis that ships nothing yet | `unknown framework ... — this release ships no values for that axis yet` |
 | The same concern listed twice | ``listed twice under `concerns:` `` |
 | An unknown emitter name | `unknown emitter ... — expected one of: agents-md, claude` |
+| `emit:` naming claude without agents-md | `CLAUDE.md imports AGENTS.md, so claude cannot be emitted alone` |
 | `settings_extra` that is not a mapping | `invalid type ...` |
 
 Every message names `.agentprofile.yml`, because the tool never prompts and so

@@ -176,13 +176,19 @@ fn shipped(tree: &FragmentSet, axis: &'static str, value: String) -> Result<Stri
 }
 
 fn emitters(names: Vec<String>) -> Result<Vec<EmitterName>, ProfileError> {
-    names
+    let emitters: Vec<EmitterName> = names
         .iter()
         .map(|name| {
             name.parse()
                 .map_err(|source| ProfileError::UnknownEmitter { source })
         })
-        .collect()
+        .collect::<Result<_, _>>()?;
+
+    if emitters.contains(&EmitterName::Claude) && !emitters.contains(&EmitterName::AgentsMd) {
+        return Err(ProfileError::ClaudeNeedsAgentsMd);
+    }
+
+    Ok(emitters)
 }
 
 #[cfg(test)]
@@ -198,7 +204,7 @@ mod tests {
 config_version: v1.0.0
 language: rust
 deployment: tag-only
-emit: [claude]
+emit: [agents-md]
 ";
 
     fn tree() -> FragmentSet {
@@ -224,7 +230,7 @@ emit: [claude]
         assert_eq!(profile.architecture, None);
         assert!(profile.concerns.is_empty());
         assert_eq!(profile.sensitivity, "none");
-        assert_eq!(profile.emit, [EmitterName::Claude]);
+        assert_eq!(profile.emit, [EmitterName::AgentsMd]);
         assert_eq!(profile.settings_extra, None);
     }
 
@@ -274,6 +280,26 @@ emit: [claude]
                 .unwrap();
 
         assert!(profile.emit.is_empty());
+    }
+
+    #[test]
+    fn claude_cannot_be_emitted_without_the_file_it_imports() {
+        // CLAUDE.md is an `@AGENTS.md` import, and the AGENTS.md index is what
+        // points Claude at the rules it reads on demand. Alone, it would import
+        // a file nobody wrote.
+        let error =
+            parse("config_version: v1.0.0\nlanguage: rust\ndeployment: tag-only\nemit: [claude]\n")
+                .unwrap_err();
+
+        assert!(matches!(error, ProfileError::ClaudeNeedsAgentsMd));
+        assert!(error.to_string().contains("agents-md"), "{error}");
+
+        // Together they are fine, and so is agents-md alone.
+        assert!(with("").is_ok());
+        assert!(
+            parse("config_version: v1.0.0\nlanguage: rust\ndeployment: tag-only\nemit: [agents-md, claude]\n")
+                .is_ok()
+        );
     }
 
     #[test]

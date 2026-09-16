@@ -307,7 +307,7 @@ mod tests {
         .unwrap();
 
         let profile = Profile::parse(
-            "config_version: v1.0.0\nlanguage: rust\ndeployment: tag-only\nemit: [claude]\n",
+            "config_version: v1.0.0\nlanguage: rust\ndeployment: tag-only\nemit: [agents-md]\n",
             &tree,
         )
         .unwrap();
