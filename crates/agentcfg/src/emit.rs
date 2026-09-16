@@ -2,12 +2,14 @@
 //! implement.
 
 mod agents_md;
+mod claude;
 
 use std::{collections::BTreeSet, fmt, str::FromStr};
 
 use crate::{Fragment, FragmentSet, Meta, Profile, Selection, error::EmitError};
 
 pub use agents_md::AgentsMd;
+pub use claude::Claude;
 
 /// One of the emitters `agentcfg` renders fragments for.
 ///
@@ -92,12 +94,14 @@ impl FromStr for EmitterName {
 /// How a generated file relates to what is already at its path.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Ownership {
-    /// Markdown: the content sits inside a marker region and anything outside
-    /// it survives regeneration. The escape hatch for genuinely local content.
+    /// The content sits inside a marker region, and anything outside it
+    /// survives regeneration. The escape hatch for genuinely local content.
     Region,
-    /// JSON: the file is owned outright. JSON has no comment syntax, so it
-    /// cannot carry a marker region, and a merging emitter could never tell a
-    /// key it wrote last month from one a person added.
+    /// The file is owned outright and verified byte-for-byte. Two kinds take
+    /// this route: JSON, which has no comment syntax to carry a marker and
+    /// where a merging emitter could never tell a key it wrote last month from
+    /// one a person added; and markdown that leads with generated frontmatter,
+    /// which a marker comment cannot sit above without breaking it.
     Whole,
 }
 

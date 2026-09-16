@@ -55,7 +55,9 @@ mod selection;
 mod set;
 mod substitute;
 
-pub use emit::{AgentsMd, EmitInput, Emitter, EmitterName, OutputFile, Ownership, UnknownEmitter};
+pub use emit::{
+    AgentsMd, Claude, EmitInput, Emitter, EmitterName, OutputFile, Ownership, UnknownEmitter,
+};
 pub use error::{EmitError, FragmentError, ProfileError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
 pub use profile::Profile;
