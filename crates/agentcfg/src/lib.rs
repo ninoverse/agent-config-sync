@@ -8,9 +8,10 @@
 //! substitutes the vocabulary those values declare, and hands the result to one
 //! emitter per agent.
 //!
-//! This crate reads the fragment tree compiled into the binary, the profile
-//! that picks between its values, and composes the two into the files one
-//! agent reads. The `agents-md` emitter is implemented; the rest follow.
+//! This crate reads the fragment tree compiled into the binary and the profile
+//! that picks between its values, composes the two into the files each agent
+//! reads, and works out what writing them would change in a repository. The
+//! commands that drive it follow.
 //!
 //! ```
 //! use agentcfg::{FragmentSet, Meta, Profile, Scope};
@@ -50,7 +51,9 @@ mod embedded {
 mod emit;
 mod error;
 mod fragment;
+mod marker;
 mod profile;
+mod repo;
 mod selection;
 mod set;
 mod substitute;
@@ -58,8 +61,9 @@ mod substitute;
 pub use emit::{
     AgentsMd, Claude, EmitInput, Emitter, EmitterName, OutputFile, Ownership, UnknownEmitter,
 };
-pub use error::{EmitError, FragmentError, ProfileError, SelectionError};
+pub use error::{EmitError, FragmentError, ProfileError, RepoError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
 pub use profile::Profile;
+pub use repo::{Change, ChangeKind, Plan, Repo};
 pub use selection::Selection;
 pub use set::FragmentSet;
