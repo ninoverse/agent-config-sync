@@ -20,6 +20,7 @@ serde_json = "1.0.145"
 # serde_yaml is unmaintained and yanked from active development; serde_yaml_ng is
 # the maintained fork with the same API.
 serde_yaml_ng = "0.10.0"
+tempfile = "3.27.0"
 thiserror = "2.0.20"
 
 # Enforced in every build and in rust-analyzer, not just when someone remembers
