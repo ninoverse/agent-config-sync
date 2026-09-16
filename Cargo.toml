@@ -15,6 +15,7 @@ rust-version = "1.85"
 [workspace.dependencies]
 # Pin shared dependencies here so every crate in the workspace gets the same
 # version. Reference them in crate manifests with `<name> = { workspace = true }`.
+clap = { version = "4.6.7", features = ["derive"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.145"
 # serde_yaml is unmaintained and yanked from active development; serde_yaml_ng is

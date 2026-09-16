@@ -10,8 +10,11 @@
 //!
 //! This crate reads the fragment tree compiled into the binary and the profile
 //! that picks between its values, composes the two into the files each agent
-//! reads, and works out what writing them would change in a repository. The
-//! commands that drive it follow.
+//! reads, and works out what writing them would change in a repository.
+//!
+//! The binary drives it: `sync` writes, `plan` prints. Both run the one
+//! computation in [`Composition`], which is why drift detection costs nothing
+//! extra — it is the same code path asked a different question.
 //!
 //! ```
 //! use agentcfg::{FragmentSet, Meta, Profile, Scope};
@@ -48,6 +51,7 @@ mod embedded {
     include!(concat!(env!("OUT_DIR"), "/embedded.rs"));
 }
 
+mod compose;
 mod emit;
 mod error;
 mod fragment;
@@ -58,10 +62,11 @@ mod selection;
 mod set;
 mod substitute;
 
+pub use compose::Composition;
 pub use emit::{
     AgentsMd, Claude, EmitInput, Emitter, EmitterName, OutputFile, Ownership, UnknownEmitter,
 };
-pub use error::{EmitError, FragmentError, ProfileError, RepoError, SelectionError};
+pub use error::{EmitError, Error, FragmentError, ProfileError, RepoError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
 pub use profile::Profile;
 pub use repo::{Change, ChangeKind, Plan, Repo};

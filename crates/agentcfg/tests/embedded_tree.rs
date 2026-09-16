@@ -142,3 +142,23 @@ fn the_language_values_stay_at_parity() {
         }
     }
 }
+
+#[test]
+fn reading_the_tree_from_disk_agrees_with_the_embedded_copy() {
+    // `--fragments` and the release must compose identically, or iterating
+    // locally proves nothing about what ships. This caught a real divergence:
+    // deriving axes from file paths rather than directories made
+    // `sensitivity/none/` — which holds no fragments — disappear, so
+    // `sensitivity: none` was rejected under `--fragments` and accepted under
+    // the embedded tree.
+    let embedded = tree();
+    let on_disk = FragmentSet::from_dir(std::path::Path::new("../../fragments"))
+        .expect("the workspace's own fragments/ directory");
+
+    assert_eq!(embedded.axes(), on_disk.axes());
+    assert_eq!(embedded.fragments(), on_disk.fragments());
+    assert_eq!(
+        embedded.file("language/rust/values.yml"),
+        on_disk.file("language/rust/values.yml")
+    );
+}
