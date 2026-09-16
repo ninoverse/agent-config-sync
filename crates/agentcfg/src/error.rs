@@ -1,4 +1,4 @@
-//! What can go wrong reading a fragment.
+//! What can go wrong reading the inputs.
 //!
 //! The tool never prompts, so its failures carry the whole user experience.
 //! Every variant names the file it came from and, where there is one, the edit
@@ -99,5 +99,68 @@ impl FragmentError {
             | Self::EmptyEmit { path }
             | Self::UnknownEmitter { path, .. } => path,
         }
+    }
+}
+
+/// A profile that could not be read, or that names something this release does
+/// not ship.
+#[derive(Debug, thiserror::Error)]
+pub enum ProfileError {
+    /// The file is not the YAML the schema expects — a missing required key, an
+    /// unknown one, or a value of the wrong shape.
+    #[error("{PROFILE}: {source}")]
+    Syntax {
+        /// What the YAML parser objected to.
+        source: serde_yaml_ng::Error,
+    },
+
+    /// `config_version` is not a release tag, so nothing could resolve it.
+    #[error(
+        "{PROFILE}: `config_version: {value}` is not a release tag — expected `v<major>.<minor>.<patch>`, such as `v1.0.0`"
+    )]
+    ConfigVersion {
+        /// The value that was written.
+        value: String,
+    },
+
+    /// An axis names a value this release does not ship.
+    ///
+    /// Central first: a value becomes legal when its directory ships, not when
+    /// a repository asks for it.
+    #[error("{PROFILE}: unknown {axis} `{value}` — {}", shipped(.available))]
+    UnknownValue {
+        /// The axis the value was written under.
+        axis: &'static str,
+        /// The value that was written.
+        value: String,
+        /// The values this release does ship for that axis.
+        available: Vec<String>,
+    },
+
+    /// One concern listed twice — a typo rather than an intention, since a
+    /// concern selected twice composes exactly as it does once.
+    #[error("{PROFILE}: `{value}` is listed twice under `concerns:`")]
+    DuplicateConcern {
+        /// The repeated value.
+        value: String,
+    },
+
+    /// An `emit:` entry naming an emitter this release does not have.
+    #[error("{PROFILE}: {source}")]
+    UnknownEmitter {
+        /// The name that did not match.
+        source: UnknownEmitter,
+    },
+}
+
+/// The profile's fixed filename — the one file in a consumer repo a human writes.
+const PROFILE: &str = ".agentprofile.yml";
+
+/// Renders the values an axis ships, for the tail of an `UnknownValue` message.
+fn shipped(available: &[String]) -> String {
+    if available.is_empty() {
+        "this release ships no values for that axis yet".to_owned()
+    } else {
+        format!("this release ships: {}", available.join(", "))
     }
 }

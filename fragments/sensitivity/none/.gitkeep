@@ -1,0 +1,7 @@
+The sensitivity axis ships one value and no fragments yet.
+
+`none` exists as a directory so that valid values stay the directory listing:
+a profile writes `sensitivity: none` today, and adding rules later means adding
+files here, or a sibling value directory — never a code change.
+
+See docs/profile-schema.md and the `sensitivity` row in docs/plan.md.
