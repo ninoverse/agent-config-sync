@@ -30,7 +30,7 @@ Every fragment except a task fragment:
 | `scope` | yes | `always`, `on-demand` or `paths` — see *Choosing a scope*. |
 | `when` | with `on-demand` | The activity that triggers reading it, written as the lead-in of its index line: `Committing code` renders as "**Committing code:** read …". Fragments that share a `when` share one index line. |
 | `paths` | with `paths` | List of globs, in Claude Code `paths:` syntax. |
-| `order` | no | Integer, default `0`, lower first. Ties break by axis (core, language, framework, architecture, deployment, concerns), then by path. Set it only where position helps a reader. |
+| `order` | no | Integer, default `0`, lower first. Ties break by axis (core, language, framework, architecture, deployment, concerns, sensitivity), then by path. Set it only where position helps a reader. |
 | `emit` | no | The emitters that receive this fragment, e.g. `[claude]`. Default: every emitter the profile selects. Use it only for content that is false for the other agents. The claude emitter writes an `always` claude-only fragment below `CLAUDE.md`'s `@AGENTS.md` import, and it counts only against Claude's budget. |
 
 A task fragment, under `tasks/`, becomes a skill for Claude and a pointer in
