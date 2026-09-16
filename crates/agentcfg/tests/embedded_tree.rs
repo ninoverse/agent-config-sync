@@ -162,3 +162,23 @@ fn reading_the_tree_from_disk_agrees_with_the_embedded_copy() {
         on_disk.file("language/rust/values.yml")
     );
 }
+
+#[test]
+fn every_path_scoped_glob_in_the_tree_compiles() {
+    // A malformed pattern matches nothing, which at run time is indistinguishable
+    // from a rule that simply does not apply to a repository. Catching it here
+    // keeps that an authoring error rather than a silent one.
+    for fragment in tree().fragments() {
+        let Meta::Rules(meta) = fragment.meta() else {
+            continue;
+        };
+
+        for pattern in &meta.paths {
+            assert!(
+                globset::Glob::new(pattern).is_ok(),
+                "{}: `{pattern}` is not a valid glob",
+                fragment.path()
+            );
+        }
+    }
+}

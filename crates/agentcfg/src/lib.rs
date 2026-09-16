@@ -51,10 +51,12 @@ mod embedded {
     include!(concat!(env!("OUT_DIR"), "/embedded.rs"));
 }
 
+mod budget;
 mod compose;
 mod emit;
 mod error;
 mod fragment;
+mod globs;
 mod marker;
 mod profile;
 mod repo;
@@ -62,12 +64,14 @@ mod selection;
 mod set;
 mod substitute;
 
+pub use budget::{ALWAYS_ON_BUDGET, Budget, Entry};
 pub use compose::Composition;
 pub use emit::{
     AgentsMd, Claude, EmitInput, Emitter, EmitterName, OutputFile, Ownership, UnknownEmitter,
 };
 pub use error::{EmitError, Error, FragmentError, ProfileError, RepoError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
+pub use globs::{UnusedRule, unused_rules};
 pub use profile::Profile;
 pub use repo::{Change, ChangeKind, Plan, Repo};
 pub use selection::Selection;

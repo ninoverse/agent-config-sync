@@ -18,6 +18,10 @@ use crate::{Fragment, Meta, Scope, error::EmitError};
 /// Where the bodies an agent reads on demand live.
 const RULES_DIR: &str = ".agents";
 
+/// Names the index in its provenance comment, so the always-on budget can
+/// attribute its lines to something other than the fragment above it.
+pub(crate) const INDEX: &str = "agentcfg:index";
+
 /// Writes `AGENTS.md` and one file per rule that is not always-on.
 ///
 /// ```
@@ -115,7 +119,7 @@ impl Emitter for AgentsMd {
             });
         }
 
-        blocks.extend(extended_rules(&activities, &by_file));
+        blocks.extend(extended_rules(&activities, &by_file, input.version));
         files.insert(
             0,
             OutputFile {
@@ -165,13 +169,17 @@ fn index(activities: &mut Vec<(String, Vec<String>)>, when: Option<&str>, link: 
 }
 
 /// The index that replaces the hand-written *Extended Rules* list.
-fn extended_rules(activities: &[(String, Vec<String>)], by_file: &[String]) -> Option<String> {
+fn extended_rules(
+    activities: &[(String, Vec<String>)],
+    by_file: &[String],
+    version: &str,
+) -> Option<String> {
     if activities.is_empty() && by_file.is_empty() {
         return None;
     }
 
-    let mut out = String::from(
-        "# Extended rules\n\nRead these when they apply; they are not loaded by default.\n",
+    let mut out = format!(
+        "<!-- {INDEX} · {version} -->\n# Extended rules\n\nRead these when they apply; they are not loaded by default.\n"
     );
 
     if !activities.is_empty() {
