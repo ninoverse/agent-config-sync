@@ -15,6 +15,11 @@ rust-version = "1.85"
 [workspace.dependencies]
 # Pin shared dependencies here so every crate in the workspace gets the same
 # version. Reference them in crate manifests with `<name> = { workspace = true }`.
+serde = { version = "1.0.229", features = ["derive"] }
+# serde_yaml is unmaintained and yanked from active development; serde_yaml_ng is
+# the maintained fork with the same API.
+serde_yaml_ng = "0.10.0"
+thiserror = "2.0.20"
 
 # Enforced in every build and in rust-analyzer, not just when someone remembers
 # `-D warnings`. Crates opt in with `[lints] workspace = true` in their manifest.
