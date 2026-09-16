@@ -220,3 +220,17 @@ fn declared(available: &[String]) -> String {
         format!("in scope: {}", available.join(", "))
     }
 }
+
+/// A selection an emitter could not render.
+#[derive(Debug, thiserror::Error)]
+pub enum EmitError {
+    /// Two fragments would render to the same file, so one would silently
+    /// overwrite the other.
+    #[error("the {emitter} emitter would write `{path}` twice — two fragments render to one file")]
+    DuplicatePath {
+        /// The emitter that produced the clash.
+        emitter: crate::EmitterName,
+        /// The path claimed twice.
+        path: String,
+    },
+}

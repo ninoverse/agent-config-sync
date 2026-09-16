@@ -8,9 +8,9 @@
 //! substitutes the vocabulary those values declare, and hands the result to one
 //! emitter per agent.
 //!
-//! This crate models the inputs so far: the fragment tree compiled into the
-//! binary, the frontmatter each fragment carries, and the profile that picks
-//! between them. Selection, substitution and emission follow.
+//! This crate reads the fragment tree compiled into the binary, the profile
+//! that picks between its values, and composes the two into the files one
+//! agent reads. The `agents-md` emitter is implemented; the rest follow.
 //!
 //! ```
 //! use agentcfg::{FragmentSet, Meta, Profile, Scope};
@@ -55,8 +55,8 @@ mod selection;
 mod set;
 mod substitute;
 
-pub use emit::{EmitterName, UnknownEmitter};
-pub use error::{FragmentError, ProfileError, SelectionError};
+pub use emit::{AgentsMd, EmitInput, Emitter, EmitterName, OutputFile, Ownership, UnknownEmitter};
+pub use error::{EmitError, FragmentError, ProfileError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
 pub use profile::Profile;
 pub use selection::Selection;
