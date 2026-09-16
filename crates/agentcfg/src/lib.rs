@@ -9,23 +9,34 @@
 //! emitter per agent.
 //!
 //! This crate models the inputs so far: the fragment tree compiled into the
-//! binary, and the frontmatter each fragment carries. Selection, substitution
-//! and emission follow.
+//! binary, the frontmatter each fragment carries, and the profile that picks
+//! between them. Selection, substitution and emission follow.
 //!
 //! ```
-//! use agentcfg::{FragmentSet, Meta, Scope};
+//! use agentcfg::{FragmentSet, Meta, Profile, Scope};
 //!
-//! let set = FragmentSet::embedded()?;
+//! let tree = FragmentSet::embedded()?;
 //!
 //! // Fragments loaded in every session — the set the always-on budget governs.
-//! let always_on = set.fragments().iter().filter(|fragment| {
+//! let always_on = tree.fragments().iter().filter(|fragment| {
 //!     matches!(fragment.meta(), Meta::Rules(meta) if meta.scope == Scope::Always)
 //! });
 //! assert!(always_on.count() > 0);
 //!
-//! // Values come from the directory listing, never a hand-written enum.
-//! assert_eq!(set.values("language"), ["go", "rust"]);
-//! # Ok::<(), agentcfg::FragmentError>(())
+//! // A profile names one value per axis, validated against that same listing —
+//! // never against a hand-written enum.
+//! let profile = Profile::parse(
+//!     "\
+//! config_version: v1.0.0
+//! language: rust
+//! deployment: tag-only
+//! concerns: [template]
+//! emit: [agents-md, claude]
+//! ",
+//!     &tree,
+//! )?;
+//! assert!(tree.values("language").contains(&profile.language));
+//! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
 /// The fragment tree, compiled in by `build.rs`.
@@ -39,9 +50,11 @@ mod embedded {
 mod emit;
 mod error;
 mod fragment;
+mod profile;
 mod set;
 
 pub use emit::{EmitterName, UnknownEmitter};
-pub use error::FragmentError;
+pub use error::{FragmentError, ProfileError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
+pub use profile::Profile;
 pub use set::FragmentSet;

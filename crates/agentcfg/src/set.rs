@@ -136,7 +136,16 @@ mod tests {
         // Adding an axis is the expensive change the plan guards; it should not
         // pass unnoticed. Adding a *value* is cheap, so values are not pinned
         // here beyond the two languages every core fragment substitutes from.
-        assert_eq!(axes, ["architecture", "concerns", "deployment", "language"]);
+        assert_eq!(
+            axes,
+            [
+                "architecture",
+                "concerns",
+                "deployment",
+                "language",
+                "sensitivity"
+            ]
+        );
         assert_eq!(set.values("language"), ["go", "rust"]);
         assert!(
             !set.axes().contains_key("core"),

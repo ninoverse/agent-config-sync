@@ -79,7 +79,8 @@ fn collect_files(
         let path = entry.path();
         if entry.file_type()?.is_dir() {
             collect_files(root, &path, out)?;
-        } else {
+        } else if !entry.file_name().to_string_lossy().starts_with('.') {
+            // A `.gitkeep` holding an empty value directory is not content.
             out.push((display(path.strip_prefix(root)?)?, path));
         }
     }
