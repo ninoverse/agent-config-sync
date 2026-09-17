@@ -3,6 +3,11 @@
 # These recipes are the canonical form of every command in CLAUDE.md, the README
 # and the .claude/ rule files. Change a command here, not in five places.
 
+# `just agentcfg why "a phrase"` has to reach the binary as one argument, and a
+# variadic parameter joins its arguments with spaces. This passes them through
+# as real positional arguments instead, so `"$@"` keeps every boundary.
+set positional-arguments
+
 # List available recipes
 default:
     @just --list
@@ -72,6 +77,46 @@ release:
 dist target:
     rustup target add {{ target }}
     cargo build --release --locked -p agentcfg --target {{ target }}
+
+# `just agentcfg check` is what someone runs after editing their profile, and the
+# point is that it needs nothing installed: the published binary is static, and
+# the Go repositories have no Rust toolchain to build one with. The version
+# comes from `.agentprofile.yml`, so the cache cannot drift from the pin — a
+# bump fetches a new file rather than reusing a stale one — and `.agentcfg/` is
+# gitignored, so nothing downloaded is ever committed.
+#
+# Run the pinned agentcfg, fetching it once into a gitignored cache
+agentcfg *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ ! -f .agentprofile.yml ]; then
+        echo "no .agentprofile.yml here — this recipe is for a repository agentcfg manages" >&2
+        exit 1
+    fi
+    version=$(sed -n 's/^config_version:[[:space:]]*//p' .agentprofile.yml)
+
+    # The asset names are the rustc target triples the release publishes, and
+    # nothing else builds these URLs, so a rename here is a rename there.
+    case "$(uname -s)/$(uname -m)" in
+        Linux/x86_64)              target=x86_64-unknown-linux-musl ;;
+        Linux/aarch64 | Linux/arm64) target=aarch64-unknown-linux-musl ;;
+        Darwin/arm64)              target=aarch64-apple-darwin ;;
+        *)
+            echo "no agentcfg binary for $(uname -s)/$(uname -m) — published: linux-musl x86_64 and aarch64, darwin aarch64" >&2
+            exit 1
+            ;;
+    esac
+
+    binary=".agentcfg/agentcfg-${version}"
+    if [ ! -x "${binary}" ]; then
+        mkdir -p .agentcfg
+        curl -fsSL -o "${binary}" \
+            "https://github.com/ninoverse/agent-config-sync/releases/download/${version}/agentcfg-${target}"
+        chmod +x "${binary}"
+    fi
+
+    exec "${binary}" "$@"
 
 # Build the runtime image, stamping the current commit as an OCI label.
 # Passed explicitly rather than left to BuildKit's own VCS capture, which needs
