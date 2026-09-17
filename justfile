@@ -62,6 +62,17 @@ doc:
 release:
     cargo build --workspace --release
 
+# Consumer repositories download this file and run it: no toolchain, no glibc
+# version to match, and the Go repositories have no Rust at all. `-p agentcfg`
+# rather than `--workspace` because the example crate is scaffolding and has no
+# business in a release. `rustup target add` is a no-op once the target is
+# installed, so this is the same command on a laptop and on a release runner.
+#
+# One statically linked agentcfg for one target — what a release publishes
+dist target:
+    rustup target add {{ target }}
+    cargo build --release --locked -p agentcfg --target {{ target }}
+
 # Build the runtime image, stamping the current commit as an OCI label.
 # Passed explicitly rather than left to BuildKit's own VCS capture, which needs
 # a working client-side git and silently yields nothing when it does not have
