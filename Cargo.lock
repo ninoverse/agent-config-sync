@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "agentcfg"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "clap",
  "globset",
@@ -160,7 +160,7 @@ dependencies = [
 
 [[package]]
 name = "example"
-version = "0.17.0"
+version = "0.17.1"
 
 [[package]]
 name = "fastrand"
