@@ -142,11 +142,11 @@ this is the short list.
 ## Layout
 
 ```
-fragments/          the rules — one directory per axis, one per value inside it
-crates/agentcfg/    the composer: lib + bin, no markdown parser
-docs/plan.md        build sequence, decisions, glossary
-docs/authoring.md   how to write a fragment
-docs/profile.md     the .agentprofile.yml schema
+fragments/                  the rules — one directory per axis, one per value inside it
+crates/agentcfg/            the composer: lib + bin, no markdown parser
+docs/plan.md                build sequence, decisions, glossary
+docs/fragment-authoring.md  how to write a fragment
+docs/profile-schema.md      the .agentprofile.yml schema
 ```
 
 ## Commands
