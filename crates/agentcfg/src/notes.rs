@@ -13,6 +13,12 @@
 //! Every file counts, not only the markdown. A release whose entire content is
 //! one line of `settings.partial.json` changes what a repository gets, and
 //! notes that said "no fragment changed" would be lying about it.
+//!
+//! What this cannot see is the tool. The fragments are the source, but the
+//! binary composing them is an input too: v0.13.0 changed no fragment and still
+//! added `.claude/skills/why/SKILL.md` to every Claude repository. So a release
+//! with nothing to list says where a change could still have come from, rather
+//! than letting "no fragment changed" be read as "nothing changed".
 
 use std::collections::BTreeMap;
 
@@ -50,11 +56,10 @@ impl Kind {
 ///
 /// let tree = FragmentSet::embedded()?;
 ///
-/// // A release that changed no fragment says so, which is the useful answer
-/// // for every repository reading the bump: this one is code only.
-/// assert_eq!(
-///     notes(&tree, &tree).trim_end(),
-///     "### Fragments\n\nNo fragment changed in this release."
+/// // A release that changed no fragment says so — and says where a change
+/// // could still come from, since composing is the tool's job too.
+/// assert!(
+///     notes(&tree, &tree).contains("No fragment changed in this release.")
 /// );
 /// # Ok::<(), agentcfg::FragmentError>(())
 /// ```
@@ -84,7 +89,7 @@ pub fn notes(previous: &FragmentSet, current: &FragmentSet) -> String {
     }
 
     if groups.is_empty() {
-        return "### Fragments\n\nNo fragment changed in this release.\n".to_owned();
+        return "### Fragments\n\nNo fragment changed in this release. Anything this bump changes in your repository comes from the tool rather than from the rules.\n".to_owned();
     }
 
     let mut out = String::from("### Fragments\n");
@@ -161,7 +166,7 @@ The branch → commit → PR loop.
 
         assert_eq!(
             notes(&set, &set),
-            "### Fragments\n\nNo fragment changed in this release.\n"
+            "### Fragments\n\nNo fragment changed in this release. Anything this bump changes in your repository comes from the tool rather than from the rules.\n"
         );
     }
 
