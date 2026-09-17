@@ -15,8 +15,9 @@
 //! The binary drives it. `sync`, `plan` and `check` run the one computation in
 //! [`Composition`] and differ only in what they do with the answer, which is
 //! why drift detection costs nothing extra. `why` is a lookup over that same
-//! selection, and `init` and `eject` are the two ends of a repository's life
-//! under the tool.
+//! selection, `notes` diffs two releases of the tree for the summary every
+//! bump pull request carries, and `init` and `eject` are the two ends of a
+//! repository's life under the tool.
 //!
 //! ```
 //! use agentcfg::{FragmentSet, Meta, Profile, Scope};
@@ -60,6 +61,7 @@ mod error;
 mod fragment;
 mod globs;
 mod marker;
+mod notes;
 mod profile;
 mod repo;
 mod selection;
@@ -74,6 +76,7 @@ pub use emit::{
 pub use error::{EmitError, Error, FragmentError, ProfileError, RepoError, SelectionError};
 pub use fragment::{Fragment, Invocation, Meta, RulesMeta, Scope, TaskMeta};
 pub use globs::{UnusedRule, unused_rules};
+pub use notes::notes;
 pub use profile::Profile;
 pub use repo::{Change, ChangeKind, Plan, Repo};
 pub use selection::Selection;

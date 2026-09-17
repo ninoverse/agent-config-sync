@@ -49,6 +49,19 @@ enum Command {
         #[arg(value_name = "PHRASE")]
         phrase: String,
     },
+    /// List what this release adds to, changes in and removes from the tree.
+    ///
+    /// Written into the body of the GitHub release, which Renovate then embeds
+    /// in every bump pull request it opens. One summary per release, rather
+    /// than the same diff read in every repository that pins it.
+    Notes {
+        /// The previous release's `fragments/` directory.
+        #[arg(long, value_name = "PATH")]
+        previous: PathBuf,
+        /// Compare it against this directory instead of the embedded release.
+        #[arg(long, value_name = "PATH")]
+        fragments: Option<PathBuf>,
+    },
     /// Write a profile for a repository that does not have one.
     Init(Init),
     /// Stop managing this repository, keeping every composed file.
@@ -204,6 +217,20 @@ fn run() -> Result<ExitCode, Failure> {
             } else {
                 ExitCode::SUCCESS
             })
+        }
+        Command::Notes {
+            previous,
+            fragments,
+        } => {
+            let previous = FragmentSet::from_dir(&previous).map_err(agentcfg::Error::from)?;
+            let current = match &fragments {
+                Some(directory) => FragmentSet::from_dir(directory),
+                None => FragmentSet::embedded(),
+            }
+            .map_err(agentcfg::Error::from)?;
+
+            print!("{}", agentcfg::notes(&previous, &current));
+            Ok(ExitCode::SUCCESS)
         }
         Command::Init(options) => {
             init(&options)?;

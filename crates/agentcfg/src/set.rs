@@ -144,6 +144,30 @@ impl FragmentSet {
     pub fn file(&self, path: &str) -> Option<&str> {
         self.files.get(path).map(String::as_str)
     }
+
+    /// Every file in the tree, path and contents, ordered by path.
+    ///
+    /// Markdown files appear here as well as parsed in
+    /// [`fragments`](Self::fragments). This is the whole tree, including the
+    /// `values.yml` and `settings.partial.json` that carry no frontmatter and
+    /// are therefore not fragments — a release can change what a repository
+    /// gets through either.
+    ///
+    /// ```
+    /// use agentcfg::FragmentSet;
+    ///
+    /// let set = FragmentSet::embedded()?;
+    /// let paths: Vec<_> = set.files().map(|(path, _)| path).collect();
+    ///
+    /// assert!(paths.contains(&"core/git-flow.md"));
+    /// assert!(paths.contains(&"language/rust/values.yml"));
+    /// # Ok::<(), agentcfg::FragmentError>(())
+    /// ```
+    pub fn files(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.files
+            .iter()
+            .map(|(path, contents)| (path.as_str(), contents.as_str()))
+    }
 }
 
 /// Every file under `dir`, as `(path relative to `root`, contents)`.
