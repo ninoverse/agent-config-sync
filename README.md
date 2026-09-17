@@ -156,6 +156,7 @@ agentcfg sync     compose and write
 agentcfg check    exit 1 on drift or budget overrun
 agentcfg plan     what would change, and why
 agentcfg why      which fragment states this
+agentcfg notes    what a release adds, changes and removes
 agentcfg init     scaffold a profile
 agentcfg eject    stop being managed, keep the files
 ```
