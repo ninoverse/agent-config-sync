@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cargo check --workspace --all-targets --quiet 2>/dev/null || printf '%s' '{\"systemMessage\":\"cargo check --workspace is failing - the workspace does not compile. See CLAUDE.md: never leave the build broken.\"}'",
+            "command": "cargo check --workspace --all-targets --quiet 2>/dev/null || printf '%s' '{\"systemMessage\":\"cargo check --workspace is failing - the workspace does not compile. See AGENTS.md: never leave the build broken.\"}'",
             "statusMessage": "cargo check",
             "timeout": 120
           }

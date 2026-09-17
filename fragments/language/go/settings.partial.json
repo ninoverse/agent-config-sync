@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "go build ./... 2>/dev/null || printf '%s' '{\"systemMessage\":\"go build ./... is failing - the module does not compile. See CLAUDE.md: never leave the build broken.\"}'",
+            "command": "go build ./... 2>/dev/null || printf '%s' '{\"systemMessage\":\"go build ./... is failing - the module does not compile. See AGENTS.md: never leave the build broken.\"}'",
             "statusMessage": "go build",
             "timeout": 120
           }

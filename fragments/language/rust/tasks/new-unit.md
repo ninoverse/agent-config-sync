@@ -4,13 +4,12 @@ title: Adding a crate
 when: Adding or modifying a crate
 description: Add a crate to the workspace following the 9-step crate workflow
 argument-hint: "<crate-name> [one-line description of what it does]"
-arguments: [name]
 ---
 
 The exact procedure for adding or modifying a single crate in this Cargo
 workspace. Follow every step in order; do not skip or reorder.
 
-The crate: `$name`. Full request: $ARGUMENTS
+The crate to add: $ARGUMENTS
 
 ---
 
