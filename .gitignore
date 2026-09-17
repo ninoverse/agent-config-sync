@@ -11,6 +11,10 @@
 *.pem
 *.key
 
+# The agentcfg binary `just agentcfg` fetches. Downloaded per pin, never
+# committed — the pin in .agentprofile.yml is the thing under version control.
+/.agentcfg/
+
 # Coverage artefacts from `cargo llvm-cov`.
 *.profraw
 *.profdata
