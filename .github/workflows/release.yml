@@ -1,11 +1,14 @@
 name: Release
 
-# Unlike every other workflow here, this one is not a thin caller into
-# ninoverse/.github. There is no reusable Rust release workflow there, and this
-# is the only repository in the organization that publishes binaries, so it was
-# written in place rather than blocking the rest of Stage 4 on it. Lifting it
-# into ninoverse/.github/.github/workflows/rust-release.yml@v1 is the intended
-# end state; docs/plan.md records that under *Deferred on purpose*.
+# Unlike every other workflow here, this one is not *yet* a thin caller into
+# ninoverse/.github. It was written in place because no reusable Rust release
+# workflow existed there and that repository could not be reached at the time.
+#
+# Stage 4 now builds one. This file becomes a caller of
+# ninoverse/.github/.github/workflows/rust-release.yml@v1, which generates the
+# conventional-commit changelog, plus a job of its own computing the fragment
+# summary below for that workflow's `extra-notes` input. See *A shared release
+# path with one slot* in docs/plan.md. Until then it publishes on its own.
 #
 # The tag this watches for is the one bump-version.yml pushes. That only works
 # because that workflow pushes with a GitHub App token: a tag pushed with
