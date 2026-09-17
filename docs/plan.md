@@ -4,12 +4,17 @@ Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse re
 
 **34** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
-> **Status:** design settled; Stages 0 to 3 complete, Stage 4 next.
+> **Status:** design settled; Stages 0 to 3 complete, Stage 4 part built.
 > Every decision below was reached deliberately; the *Decisions locked in* section
 > exists so they are not relitigated. Four questions remain genuinely open, each
 > tied to the stage that closes it — see *What could go wrong*.
 >
-> **Start here:** Stage 4. Stage 0 is recorded in `docs/stage-0-spec-read.md`;
+> **Start here:** Stage 4, which is half done. `agentcfg notes`, the release
+> workflow, the `just agentcfg` recipe and a first live consumer are all merged:
+> `claude-mit-rust-template` carries a profile, the composed tree and a `check`
+> gate. What remains is the Renovate half, which lives in `ninoverse/.github` —
+> `docs/stage-4-preset-handoff.md` says what it is and which session can do it.
+> Stage 0 is recorded in `docs/stage-0-spec-read.md`;
 > Stage 1's fragments are in `fragments/`, their format in
 > `docs/fragment-authoring.md`, and the account of every source line in
 > `docs/extraction-ledger.md`. Stage 2's binary is `crates/agentcfg/`, and the
@@ -201,6 +206,8 @@ Then `claude-mit-rust-agent-template`, which is the interesting one: it carries 
 
 Each rollout PR deletes that repo's old `.claude/*.md` in the same commit that adds the generated tree, so no window exists where both are live and disagreeing.
 
+A rollout is larger than adding a profile, which the first one established. Four things ride along every time: the `agentcfg check` job, which goes *inside* that repo's existing `ci.yml` so no consumer gains a workflow file; `.agentcfg/` in its `.gitignore`, without which Renovate commits a three-megabyte binary into a pull request about prose; the fetch recipe, which is `make agentcfg` in the Go repository since it has no `just`; and the cross-references deleting the rule files orphans — see *Adoption orphans what points at the old files*.
+
 > **Done when** — All three repos carry only `.agentprofile.yml` plus generated files, `agentcfg check` is green in each, and the agent-template's local content survived regeneration untouched.
 
 ### Stage 6 · ~half day — Close the loop — agent-config adopts itself
@@ -331,6 +338,12 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 **A generated PR has to stay reviewable** — Two halves of one answer. Every emitted block is labelled with the fragment and version it came from, and every bump PR opens with the release's own fragment-level summary, which Renovate embeds from the GitHub release. Written once per release rather than computed in seventy-five repos — and sufficient, because on a version bump the profile is not changing, so the difference is purely upstream. The other case, "you dropped a concern last week", now surfaces where it belongs: `check` failing in the PR of whoever edited the profile. Without both, the Monday PR is 180 lines of reflowed prose, and by week four it gets merged unread. That failure mode is the normal outcome for generated-code PRs, not a pessimistic one.
 
 **A shared release path with one slot** — Added in Stage 4. The release workflow moves to `ninoverse/.github` as `rust-release.yml@v1`, like every other workflow in these repositories, and generates the conventional-commit changelog centrally. What it cannot generate is what a repository knows about itself, so it takes an `extra-notes` input: markdown the caller computes in a job of its own and passes through `$GITHUB_OUTPUT`. agent-config fills it with `agentcfg notes`; a repository with nothing to add omits the job and gets the changelog alone. An input rather than a script the shared workflow runs out of the caller repo — the same reasoning that keeps `allowedCommands` global-only, since a shared workflow executing repo-supplied code inside the run holding the org token widens the blast radius to every repository at once. Prepended rather than appended, because Renovate embeds the whole body in seventy-five bump PRs and the rules are what a consumer is reading for.
+
+**Adoption orphans what points at the old files** — Added in Stage 4, found by the first rollout rather than anticipated. Deleting the nine `.claude/*.md` files left thirty references to them in files agentcfg does not manage: a README table listing all nine, six links in `CONTRIBUTING.md`, three in the pull request template, two lint comments in `Cargo.toml`, four justfile comments, and `CODEOWNERS`, which guarded `/.claude/` as "the product here". They belong in the rollout commit rather than a follow-up — a repository whose README cites deleted files is not adopted, it is half adopted. Most are path swaps. A table listing the rule files is not: it describes a structure that no longer exists, and what replaces it is a short account of the composed one, plus how to trace a rule, change it for everyone, or override it locally. `CODEOWNERS` gains `.agentprofile.yml`, which is what decides the whole tree now.
+
+**The notes diff the source, not the output** — Added in Stage 4. `agentcfg notes` compares two fragment trees, so a release that changed only the binary lists nothing — and says where a change could still have come from, because the tool is an input too: v0.12.0 to v0.13.0 changed no fragment and still added `.claude/skills/why/SKILL.md` to every Claude repository. Diffing the *composed output* instead would enumerate that, and is the better measure: it is what a repository actually experiences, and it subsumes the fragment diff, since a changed fragment shows up as changed output. It is also a different command, needing the previous release's binary at hand rather than just its tree, so it stays a decision to take deliberately. The notes point a reader at the diff; they do not replace reading it.
+
+**The fetch is not checksum-verified** — Added in Stage 4, deliberately. `just agentcfg` downloads over HTTPS from the same origin that publishes `SHA256SUMS`, so a checksum fetched from there proves nothing an attacker able to alter the binary could not also alter. What it would catch is a truncated download, and `curl -f` already covers the common failures. Worth adding the day a corrupt fetch actually happens, and not before.
 
 **The budget is a gate, not an intention** — The always-on set staying small is the assumption the whole composition rests on — it is why the glossary went to a file and why concerns are path-scoped. Stated in a plan and enforced by nobody, it decays: four fragments added over a year degrade every session in every repo with no one noticing. So `check` measures it and fails past a central threshold, and the fix when it trips is moving content behind `scope: paths`, never deleting a rule. What counts is everything loaded unconditionally, which includes the description line of every model-invocable skill — otherwise the cheapest way to evade the gate would be to move rules into a surface it does not measure. What does not count is what never reaches context: `invocation: user` descriptions, and HTML comment lines, which Claude Code strips. Counting either would push authors toward the wrong choice just to pass the gate.
 
