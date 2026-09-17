@@ -189,6 +189,8 @@ Six pieces, and not one of them is a sync workflow in a consumer repository. The
 
 No new schedule either — the central run is already on `before 6am on monday`.
 
+Four of those pieces land in `ninoverse/.github`, which a session cannot attach: `add_repo` refuses a repository whose name begins with a dot, because its clone would land at a hidden path. `docs/stage-4-preset-handoff.md` is what a session that does have it reads — the strings that cross the boundary, what each pull request is, and which parts are inference rather than observation about a repository nobody here has opened.
+
 > **Done when** — A deliberate one-word edit to a core fragment, released as a new tag, produces a *single* Renovate PR in the pilot repo carrying both the bumped pin and the regenerated files, its body naming the fragment that changed — and no consumer repository has gained a workflow file.
 
 ### Stage 5 · ~half day — Roll out and decommission
