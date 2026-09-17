@@ -4,16 +4,17 @@ Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse re
 
 **34** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
-> **Status:** design settled; Stages 0, 1 and 2 complete, Stage 3 next.
+> **Status:** design settled; Stages 0 to 3 complete, Stage 4 next.
 > Every decision below was reached deliberately; the *Decisions locked in* section
 > exists so they are not relitigated. Four questions remain genuinely open, each
 > tied to the stage that closes it — see *What could go wrong*.
 >
-> **Start here:** Stage 3. Stage 0 is recorded in `docs/stage-0-spec-read.md`;
+> **Start here:** Stage 4. Stage 0 is recorded in `docs/stage-0-spec-read.md`;
 > Stage 1's fragments are in `fragments/`, their format in
 > `docs/fragment-authoring.md`, and the account of every source line in
 > `docs/extraction-ledger.md`. Stage 2's binary is `crates/agentcfg/`, and the
-> profile it reads is specified in `docs/profile-schema.md`.
+> profile it reads is specified in `docs/profile-schema.md`. Stage 3 ran both
+> against `claude-mit-rust-template` and fixed what the diff turned up.
 >
 > A rendered version of this document lives at
 > <https://claude.ai/artifact/2iMBD8bNNRRuC7gzVB7o1d>. This file is the canonical
@@ -166,6 +167,14 @@ The cleanest of the three — no repo-specific extras to confuse the signal. Run
 Then iterate the *fragments*, not the emitter, until every remaining difference is one you intended. This is where Stage 1's editorial work is actually validated; expect to spend most of the half day here, not in code.
 
 > **Done when** — The diff contains only intended changes and `agentcfg check` is green, budget included — Stage 2 measures the always-on set, so this stage does not count lines by hand.
+
+> **Result** — Landed as two PRs: the fragment drift, and the overview `init` now asks for. The pilot's generated tree passes `check` with the always-on set at 88 of 200 lines, and its `.claude/settings.json` parses equal to the template's hand-written copy but for the one line this stage changed on purpose — the keys come out in a different order because the serialiser sorts them, which is deterministic and is what `check` verifies against.
+>
+> Two fixes, both in fragments and neither in the emitter, which is the whole point of the stage. The `Stop` hook in the rust and go settings partials sent a broken build to `CLAUDE.md`, which after rollout is a two-line `@AGENTS.md` import. And the `new-unit` tasks opened with `` `$name` ``, which binds from the skill frontmatter for Claude and is literal text in `.agents/` — sitting eight lines above `cargo new --lib crates/<name>` in a document that is mostly bash, where an agent resolving it the shell way writes `crates/$name`.
+>
+> Of the template's 463 distinct non-blank source lines, 102 are not byte-identical in the generated tree, and each one was read: a heading that became a `title:`, a `.claude/` path that became a title in the pointer index, prose rewrapped to a different line width, vocabulary that became `{{ unit }}`, frontmatter the emitter now YAML-quotes, the `$1` argument reference Stage 0 had already found wrong, or a drift resolution recorded in `docs/extraction-ledger.md`. Nothing is unaccounted for, which is the claim that matters; the count itself is a proxy, since moving a line break makes a line differ without changing a word.
+>
+> One finding was not drift at all: the composed AGENTS.md described the workflow perfectly and the project not at all, because composition supplies rules and never context. That became `init`'s second question and a decision of its own. Two others were looked at and deliberately left. `$ARGUMENTS` reads as an unfilled slot to an agent that cannot bind it, which is what `docs/fragment-authoring.md` chose. And a task body exists twice for Claude — once as a skill, once in `.agents/` — which costs nothing against the budget, is regenerated from one fragment, and is proved identical by `check`; making the index point Claude at the skill instead would mean a second copy of the index inside `CLAUDE.md`, which is more machinery than the context it would save.
 
 ### Stage 4 · ~half day — Distribution — the update rides Renovate
 
@@ -361,6 +370,8 @@ The real exposure is structural: every repo's agent config now depends on a self
 ### Neutralised prose reading as vague
 
 Largely solved rather than mitigated, now that `{{ gate_command }}` renders to `just ci` in the repo that reads it — the composed output names things instead of gesturing at them. What survives is the residue: a sentence whose *structure* assumes a language, not just its nouns. "Add the crate to the workspace members list" has no Go reading however the noun is substituted, and no variable catches that. It stays an editorial hazard in Stage 1, just a much smaller one.
+
+Stage 3 could not close it, and that is worth saying plainly: a sentence that assumes Rust reads perfectly well in the Rust template, so the pilot is the wrong instrument. Composing the go profile and reading it turned up no Rust vocabulary and no Rust-shaped structure outside the go language fragments themselves, which write from the Go side ("there is no per-package manifest", "the analog of an MSRV"). That narrows it. The test is Stage 5, which rolls out `claude-mit-go-template` first for exactly this reason.
 
 ### Concerns and architecture arguing over the same rule
 
