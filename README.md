@@ -160,8 +160,10 @@ agentcfg init     scaffold a profile
 agentcfg eject    stop being managed, keep the files
 ```
 
-Everything but `init` is non-interactive by design; `init` prompts only on a TTY
-with something genuinely missing.
+Everything but `init` is non-interactive by design. `init` prompts only on a
+TTY: for a required value it was not given, and for the one thing composition
+cannot supply — a sentence on what this repository is, which it writes above the
+composed region in `AGENTS.md`.
 
 ## What this is not
 

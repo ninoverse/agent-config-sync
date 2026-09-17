@@ -100,6 +100,10 @@ struct Init {
     /// Repeatable. Defaults to every emitter.
     #[arg(long = "emit", value_name = "NAME")]
     emit: Vec<String>,
+    /// A sentence or two on what this repository is, for the top of
+    /// `AGENTS.md`. Asked for at a terminal when not given.
+    #[arg(long, value_name = "TEXT")]
+    overview: Option<String>,
     /// Fail on a missing value rather than asking for it.
     #[arg(long)]
     non_interactive: bool,
@@ -344,6 +348,21 @@ fn init(options: &Init) -> Result<(), Failure> {
     })?;
 
     println!("Wrote {}:\n\n{yaml}", profile_path.display());
+
+    let agents_md = options.repo.join("AGENTS.md");
+    if let Some(text) = overview(options, &agents_md) {
+        std::fs::write(&agents_md, format!("{text}\n")).map_err(|source| {
+            agentcfg::Error::from(agentcfg::RepoError::Io {
+                path: agents_md.display().to_string(),
+                source,
+            })
+        })?;
+        println!(
+            "Wrote {} — `sync` composes its region below it.",
+            agents_md.display()
+        );
+    }
+
     println!("Run `agentcfg sync` to compose it.");
     Ok(())
 }
@@ -390,7 +409,46 @@ fn ask(axis: &'static str, tree: &FragmentSet, non_interactive: bool) -> Result<
     }
 }
 
-/// A rule nothing in this repository would ever trigger./// A rule nothing in this repository would ever trigger.
+/// What this repository is, in the author's own words.
+///
+/// Composition supplies rules and never context: what a repository is *for* is
+/// the one thing no fragment can know, and `init` is the only moment someone is
+/// present to say it. `sync` then appends its region below whatever this
+/// leaves, and never touches it again.
+///
+/// Optional, so an empty answer, a pipe and `--non-interactive` all mean skip
+/// rather than fail — an overview improves AGENTS.md, it is not a precondition
+/// for composing one.
+fn overview(options: &Init, agents_md: &std::path::Path) -> Option<String> {
+    // A repository that already has an AGENTS.md already has its own opening,
+    // and `sync` splices below it. Nothing to ask about.
+    if agents_md.exists() {
+        return None;
+    }
+
+    if let Some(given) = &options.overview {
+        let given = given.trim();
+        return (!given.is_empty()).then(|| given.to_owned());
+    }
+
+    if options.non_interactive || !std::io::stdin().is_terminal() {
+        return None;
+    }
+
+    println!("AGENTS.md opens with whatever sits above the composed region.");
+    print!("overview (one or two sentences, blank to skip): ");
+    let _ = std::io::stdout().flush();
+
+    let mut answer = String::new();
+    if std::io::stdin().read_line(&mut answer).is_err() {
+        return None;
+    }
+
+    let answer = answer.trim();
+    (!answer.is_empty()).then(|| answer.to_owned())
+}
+
+/// A rule nothing in this repository would ever trigger.
 fn describe(warning: &UnusedRule) -> String {
     format!(
         "{} will never load here — nothing matches {}. Either the rule does not apply to this repository, or its code lives somewhere unexpected.",
@@ -575,7 +633,7 @@ mod tests {
 
     use agentcfg::Budget;
 
-    use super::{Format, check_report, render, summary};
+    use super::{Format, Init, check_report, init, render, summary};
 
     /// A repository with a profile and nothing generated yet.
     fn sandbox() -> (tempfile::TempDir, Repo) {
@@ -771,5 +829,65 @@ mod tests {
         assert!(line.starts_with("Would write 1 file,"), "{line}");
         assert!(line.contains("already current"), "{line}");
         assert!(!line.contains("1 files"), "{line}");
+    }
+
+    /// The flags `init` needs, with every optional axis left off.
+    fn onboarding(repo: &std::path::Path, overview: Option<&str>) -> Init {
+        Init {
+            repo: repo.to_path_buf(),
+            language: Some("rust".to_owned()),
+            framework: None,
+            architecture: None,
+            deployment: Some("tag-only".to_owned()),
+            concerns: Vec::new(),
+            sensitivity: None,
+            emit: vec!["agents-md".to_owned()],
+            overview: overview.map(str::to_owned),
+            non_interactive: true,
+        }
+    }
+
+    #[test]
+    fn an_overview_lands_above_the_region_and_survives_composing() {
+        let dir = tempfile::tempdir().unwrap();
+        init(&onboarding(dir.path(), Some("A tool that composes X."))).unwrap();
+
+        let repo = Repo::at(dir.path());
+        repo.apply(&compose(&repo).plan).unwrap();
+
+        let agents_md = std::fs::read_to_string(dir.path().join("AGENTS.md")).unwrap();
+        assert!(
+            agents_md.starts_with("A tool that composes X.\n"),
+            "{agents_md}"
+        );
+        assert!(
+            agents_md.find("A tool that composes X.") < agents_md.find("<!-- agentcfg:start -->"),
+            "the overview belongs above the region, not inside it"
+        );
+    }
+
+    #[test]
+    fn an_agents_md_that_already_exists_is_left_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("AGENTS.md"), "Written by hand.\n").unwrap();
+
+        init(&onboarding(dir.path(), Some("Would overwrite."))).unwrap();
+
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join("AGENTS.md")).unwrap(),
+            "Written by hand.\n"
+        );
+    }
+
+    #[test]
+    fn no_overview_and_nobody_to_ask_is_not_a_failed_init() {
+        let dir = tempfile::tempdir().unwrap();
+        init(&onboarding(dir.path(), None)).unwrap();
+
+        assert!(dir.path().join(".agentprofile.yml").exists());
+        assert!(
+            !dir.path().join("AGENTS.md").exists(),
+            "the overview is optional, and `sync` writes AGENTS.md either way"
+        );
     }
 }
