@@ -1,0 +1,5 @@
+config_version: v1.0.0
+language: rust
+deployment: cli
+concerns: [fragment-authoring]
+emit: [agents-md, claude]
