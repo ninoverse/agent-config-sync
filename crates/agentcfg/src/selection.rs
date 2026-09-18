@@ -227,18 +227,27 @@ mod tests {
     }
 
     #[test]
-    fn every_reference_resolves_for_both_languages() {
-        for language in ["rust", "go"] {
-            let selection = resolve(&format!(
-                "language: {language}\ndeployment: service\narchitecture: ddd\nconcerns: [data-access, sync, template]\n"
-            ));
+    fn every_reference_resolves_in_every_combination() {
+        // Read off the tree rather than listed here, so a value added to an
+        // axis is covered the moment its directory ships. A hand-written list
+        // would leave the newest value — the one most likely to reference a
+        // name that does not exist — as the one nothing composes.
+        let tree = tree();
+        let concerns = tree.values("concerns").join(", ");
 
-            for fragment in selection.fragments() {
-                assert!(
-                    !fragment.body().contains("{{"),
-                    "{} left a reference unsubstituted",
-                    fragment.path()
-                );
+        for language in tree.values("language") {
+            for deployment in tree.values("deployment") {
+                let selection = resolve(&format!(
+                    "language: {language}\ndeployment: {deployment}\narchitecture: ddd\nconcerns: [{concerns}]\n"
+                ));
+
+                for fragment in selection.fragments() {
+                    assert!(
+                        !fragment.body().contains("{{"),
+                        "{} left a reference unsubstituted under {language}/{deployment}",
+                        fragment.path()
+                    );
+                }
             }
         }
     }

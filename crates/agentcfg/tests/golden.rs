@@ -140,6 +140,13 @@ fn two_concerns() {
     assert_fixture("two-concerns");
 }
 
+/// This repository's own profile: the two values Stage 6 added, composed
+/// together before anything selects them for real.
+#[test]
+fn rust_cli() {
+    assert_fixture("rust-cli");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped
