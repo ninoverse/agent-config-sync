@@ -86,6 +86,16 @@ git log origin/main -5 --format='%h %s'
 Then delete the stale local branch (`git branch -D <branch>`) and start the next
 one. Do not assume a merge; if `main` has not moved, ask.
 
+`main` moving is not the same as the change having landed. A merge here starts
+work the pull request never ran — the version bump, the tag, and whatever
+watches for that tag — under different triggers and a different token, so a
+green pull request says nothing about any of it. Where the merge triggered
+something, check that it produced the right thing rather than that it went
+green: a release with no assets, or notes describing the wrong range, is a
+success as far as the workflow is concerned. What a merge sets off varies with
+this repository's deployment, and its rules say which; where it sets off
+nothing, there is nothing to check.
+
 ## Splitting work
 
 Work too large for one commit is split into a **sequence** of PRs, not a stack.
