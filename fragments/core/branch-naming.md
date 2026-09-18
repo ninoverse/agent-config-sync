@@ -20,7 +20,7 @@ when: Creating branches
 |--------|-------------|
 | `feat/` | New feature |
 | `fix/` | Bug fix |
-| `refactor/` | Refactor with no behaviour change |
+| `refactor/` | Refactor with no behavior change |
 | `chore/` | Tooling, deps, CI, config |
 | `docs/` | Documentation only |
 | `wip/` | Exploratory / work-in-progress (not for PRs) |
