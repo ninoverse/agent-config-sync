@@ -240,6 +240,74 @@ The stage that decides whether this survives a year of nobody touching it. Every
 
 > **Done when** — `agentcfg check` is green against agent-config itself, and someone who has never seen the repo can add a language value working only from `/new-value` and the guide.
 
+## Beyond coding agents
+
+A direction rather than a stage, recorded because Stage 6 adds a value that only
+makes sense against it. Nothing here is committed and none of it is blocked by
+anything built so far.
+
+**The machinery is already general.** Nothing in `agentcfg` knows what `rust`
+means: valid values are a directory listing, substitution resolves names against
+whatever the selected values declare, emitters translate a file layout, and the
+budget counts lines. A `tone` axis, or a `research` value, composes today with no
+code change. That is a property of the single-axis design rather than luck, and
+it is why extending to agents that do not write code is a content question and
+not a rewrite.
+
+**What is not general is `core/`.** It is the one directory with no cardinality —
+always included, nothing to pick — and six of its seven fragments assume a git
+repository with branches, pull requests and merge gates:
+
+| fragment | lines about git or PRs | lines about code |
+| --- | --- | --- |
+| `git-flow.md` | 44 | 2 |
+| `execution-order.md` | 15 | 13 |
+| `pr-guidelines.md` | 13 | 2 |
+| `commit-conventions.md` | 10 | 5 |
+| `branch-naming.md` | 5 | 1 |
+| `code-review.md` | 1 | 6 |
+| `behavior.md` | 0 | 7 |
+
+Only `behavior.md` is close to agent-general — think before acting, simplicity
+first, surgical changes, goal-driven — and it still says *codebase*. A research
+or support agent inherits none of the rest.
+
+**The vocabulary contract points the same way.** Core fragments make 35
+`{{ name }}` references across 12 distinct names — `unit` 11 times,
+`gate_command` 3, `unit_container` 3 — and *every one* is supplied by a language
+value. `language` is cardinality exactly 1, and an unresolved name is a hard
+error by design, so a profile without a language does not degrade gracefully; it
+fails to compose. Dropping the axis for non-coding agents is therefore not a
+one-line change.
+
+**Two shapes would work.** Split `core/` into a genuinely universal remainder
+plus a new axis — `domain`, cardinality exactly 1 — whose `code` value carries
+git flow, branch naming, commits, PRs, execution order and review, leaving
+`research`, `support` and `ops` as siblings; `language` then becomes 0 or 1,
+meaningful only under `domain: code`. Or make `core/` itself that axis,
+defaulting to `code`, which reads worse but moves less. Either is a **v2 schema
+change**: every existing profile gains a required field, so `config_version`
+goes major and every consumer edits one line. That cost is the reason this is a
+direction and not a stage.
+
+**Same repository or a separate project is not yet decidable, and does not have
+to be.** The fragments and the binary are shared either way; the real fork is
+whether one `fragments/` tree serves both domains or two trees share one tool.
+One tree is simpler to operate and means a non-coding consumer pins releases
+mostly about Rust and Go. Two trees give independent release cadence and make
+`agentcfg` a published tool in its own right, with the versioning and support
+that implies. The answer follows from whether the second domain's fragments
+turn out to share anything with the first — which is knowable only once some
+exist.
+
+**What Stage 6 does about it, and what it does not.** It adds
+`concerns/fragment-authoring/`, holding the `/new-value` checklist. Under
+today's tree that is a value with one consumer, which *central first* would
+normally refuse. It earns its place against this section: a repository that
+authors agent configuration is a category rather than a description of this one,
+and the category has members the moment a second domain exists. Nothing else
+here is built, and the axes below are unchanged.
+
 ## Fragment extraction map
 
 Where each existing file lands. Derived from diffing the three repos rather than guessed — the notes column records what the diff actually showed.
