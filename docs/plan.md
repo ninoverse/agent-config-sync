@@ -92,7 +92,7 @@ Sensitivity is the opposite case: no content today, but declaring `sensitivity: 
 
 ## Stages
 
-Sequenced by dependency, and shaped to the no-stacked-PRs rule in `.claude/execution-order.md`: each stage is one branch, one PR, merged before the next is cut.
+Sequenced by dependency, and shaped to the no-stacked-PRs rule in `.agents/execution-order.md`: each stage is one branch, one PR, merged before the next is cut.
 
 ### Stage 0 · ~30 min — Read the AGENTS.md spec directly
 

@@ -1,9 +1,13 @@
-# PR Guidelines
+<!-- agentcfg:start -->
+<!-- core/pr-guidelines.md · v0.18.0 -->
+# PR instructions
 
 ## Title
 
 Follow the same format as commit messages: `<type>(<scope>): <description>`.  
-Keep it under 72 characters.
+Keep it under 72 characters. Keep it identical to the branch's single commit
+subject: either can become the squash commit's subject on `main`, which picks the
+release — see *Commit message guidelines*.
 
 ## Description template
 
@@ -26,7 +30,7 @@ Keep it under 72 characters.
 - One logical change per PR, in **one commit**; split unrelated work into separate PRs
 - Branch from an up-to-date `main`, so no rebase is needed before review
 - `just ci` must pass before the branch is pushed — all four gates, zero warnings
-- Link to the relevant section in CLAUDE.md or a `.claude/` rule file if the PR establishes a new pattern
+- Link to the relevant section of AGENTS.md or a rule file if the PR establishes a new pattern
 
 ## Size guidance
 
@@ -39,7 +43,8 @@ Keep it under 72 characters.
 ## Who opens the PR
 
 Claude pushes the branch and outputs the title and description, then stops. The
-user opens and merges the PR. See `.claude/git-flow.md` for the full loop.
+user opens and merges the PR. See *Git flow* for the full loop.
 
 Because a branch is only pushed once the gates already pass, there is no
 work-in-progress state to represent — draft PRs are not used.
+<!-- agentcfg:end -->

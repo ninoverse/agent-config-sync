@@ -1,7 +1,7 @@
 # Task runner for this workspace. Install: cargo install --locked just
 #
-# These recipes are the canonical form of every command in CLAUDE.md, the README
-# and the .claude/ rule files. Change a command here, not in five places.
+# These recipes are the canonical form of every command in AGENTS.md, the README
+# and the .agents/ rule files. Change a command here, not in five places.
 
 # `just agentcfg why "a phrase"` has to reach the binary as one argument, and a
 # variadic parameter joins its arguments with spaces. This passes them through
@@ -48,7 +48,7 @@ test:
 deny:
     cargo deny check
 
-# All four merge gates, in the order .claude/testing-requirements.md lists them
+# All four merge gates, in the order .agents/rust-testing.md lists them
 ci: fmt-check lint test deny
 
 # Known CVEs in the dependency tree
@@ -135,12 +135,12 @@ docker-build bin="example":
         --tag {{ bin }}:latest \
         .
 
-# Scaffold a crate, then follow .claude/crate-workflow.md for the rest
+# Scaffold a crate, then follow .agents/new-crate.md for the rest
 new-crate name:
     cargo new --lib crates/{{ name }}
     @echo "Now: add '[lints]\\nworkspace = true' to crates/{{ name }}/Cargo.toml"
     @echo "and switch its [package] keys to '<key>.workspace = true'."
-    @echo "See .claude/crate-workflow.md — 9 steps, do not skip."
+    @echo "See .agents/new-crate.md — 9 steps, do not skip."
 
 # Install the auxiliary tooling the gates need (once per machine)
 setup:

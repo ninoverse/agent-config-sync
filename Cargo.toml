@@ -30,14 +30,14 @@ thiserror = "2.0.20"
 # Enforced in every build and in rust-analyzer, not just when someone remembers
 # `-D warnings`. Crates opt in with `[lints] workspace = true` in their manifest.
 [workspace.lints.rust]
-# Opt in per crate with a justified `#![allow(unsafe_code)]`; see .claude/code-review.md.
+# Opt in per crate with a justified `#![allow(unsafe_code)]`; see .agents/rust-code-review.md.
 unsafe_code = "deny"
 missing_docs = "warn"
 missing_debug_implementations = "warn"
 unreachable_pub = "warn"
 
 [workspace.lints.clippy]
-# Warn, not deny: .claude/code-review.md exempts test code, which allows these
+# Warn, not deny: .agents/rust-code-review.md exempts test code, which allows these
 # back in via the `#![allow(...)]` in the test-module template.
 unwrap_used = "warn"
 expect_used = "warn"

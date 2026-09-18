@@ -1,0 +1,24 @@
+{
+  "files": [
+    ".agents/branch-naming.md",
+    ".agents/cli-conventions.md",
+    ".agents/code-review.md",
+    ".agents/commit-conventions.md",
+    ".agents/execution-order.md",
+    ".agents/gates.md",
+    ".agents/git-flow.md",
+    ".agents/new-crate.md",
+    ".agents/new-value.md",
+    ".agents/pr-guidelines.md",
+    ".agents/rust-code-review.md",
+    ".agents/rust-file-naming.md",
+    ".agents/rust-testing.md",
+    ".claude/settings.json",
+    ".claude/skills/gates/SKILL.md",
+    ".claude/skills/new-crate/SKILL.md",
+    ".claude/skills/new-value/SKILL.md",
+    ".claude/skills/why/SKILL.md",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ]
+}

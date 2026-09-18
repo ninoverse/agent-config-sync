@@ -1,6 +1,6 @@
 <!--
 Title format: <type>(<scope>): <description>, under 72 characters.
-See .claude/pr-guidelines.md and .claude/commit-conventions.md.
+See .agents/pr-guidelines.md and .agents/commit-conventions.md.
 
 Note: the subject line of the merged commit decides the next version — `feat` is
 a minor bump, `fix`/`perf`/`refactor`/`chore`/`docs` a patch, `!` or
@@ -22,6 +22,6 @@ BREAKING CHANGE a major. Get it right here.
 ---
 
 - [ ] `just ci` passes — all four gates, zero warnings
-- [ ] One logical change, in one commit (see `.claude/git-flow.md`)
+- [ ] One logical change, in one commit (see `.agents/git-flow.md`)
 - [ ] New crates declare `[lints] workspace = true`
 - [ ] Public items have `///` docs; MSRV in `Cargo.toml` not bumped incidentally

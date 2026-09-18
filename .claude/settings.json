@@ -1,5 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.rs) rustfmt \"$f\";; esac; } 2>/dev/null || true",
+            "statusMessage": "rustfmt",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "cargo check --workspace --all-targets --quiet 2>/dev/null || printf '%s' '{\"systemMessage\":\"cargo check --workspace is failing - the workspace does not compile. See AGENTS.md: never leave the build broken.\"}'",
+            "statusMessage": "cargo check",
+            "timeout": 120,
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(cargo build:*)",
@@ -29,33 +56,6 @@
       "Bash(cargo login:*)",
       "Read(./.env)",
       "Read(./.env.*)"
-    ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.rs) rustfmt \"$f\";; esac; } 2>/dev/null || true",
-            "statusMessage": "rustfmt",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cargo check --workspace --all-targets --quiet 2>/dev/null || printf '%s' '{\"systemMessage\":\"cargo check --workspace is failing - the workspace does not compile. See CLAUDE.md: never leave the build broken.\"}'",
-            "statusMessage": "cargo check",
-            "timeout": 120
-          }
-        ]
-      }
     ]
   }
 }
