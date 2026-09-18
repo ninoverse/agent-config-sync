@@ -4,16 +4,18 @@ Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse re
 
 **34** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
-> **Status:** design settled; Stages 0 to 4 complete.
+> **Status:** design settled; Stages 0 to 5 complete.
 > Every decision below was reached deliberately; the *Decisions locked in* section
 > exists so they are not relitigated. Three questions remain genuinely open, each
 > tied to the stage that closes it — see *What could go wrong*.
 >
-> **Start here:** Stage 5, the rollout. Distribution works end to end: a one-word
-> edit to a core fragment, released as `v0.17.4`, reached
-> `claude-mit-rust-template` as a single Renovate pull request carrying the
-> bumped pin and the regenerated files in one commit, and that repository has
-> gained no workflow file. What remains is the other two repos.
+> **Start here:** Stage 6, the last one — agent-config adopting its own output.
+> All three consumer repositories are composed rather than hand-written, each
+> carrying only `.agentprofile.yml` plus generated files, each green on
+> `agentcfg check`, and none of them has gained a workflow file. Distribution
+> works end to end: a one-word edit to a core fragment, released as `v0.17.4`,
+> reached `claude-mit-rust-template` as a single Renovate pull request carrying
+> the bumped pin and the regenerated files in one commit.
 > `docs/stage-4-preset-handoff.md` records the boundary Stage 4 crossed and is
 > now history rather than instructions.
 > Stage 0 is recorded in `docs/stage-0-spec-read.md`;
@@ -62,21 +64,21 @@ fragments/
 
 So v1 authors **34 fragments** — 7 core, 8 each for rust and go, 4 for `ddd`, 4 across the deployment values, 3 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
 
-The whole per-repo footprint is one file. This is what `claude-mit-rust-agent-template`'s would actually say today — note the empty framework pick, which is what "0 or 1" looks like in practice:
+The whole per-repo footprint is one file. This is `claude-mit-rust-agent-template`'s, verbatim, with the two optional axes shown as comments — an unnamed axis is simply absent, which is what "0 or 1" looks like in practice:
 
 ```yaml
 # .agentprofile.yml
-config_version: v1.0.0
+config_version: v0.17.6
 language:    rust          # exactly 1
-framework:   ~             # 0 or 1 — none yet
-architecture: ddd           # 0 or 1
+                           # framework:    0 or 1 — no value exists yet
+                           # architecture: 0 or 1 — no repo declares one
 deployment:  service       # exactly 1
 concerns:  [template]    # any number
-sensitivity: none          # exactly 1, defaulted
+                           # sensitivity: exactly 1, defaults to none
 emit:        [agents-md, claude]
 ```
 
-That profile composes **21 fragments**: 7 core + 8 rust + 4 ddd + 1 deployment + 1 concern. Drop the `architecture` line and it is 17. `claude-mit-rust-template` composes 17 too — same core, same rust, same concern — differing in exactly one fragment, `tag-only/release.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
+That profile composes **17 fragments**: 7 core + 8 rust + 1 deployment + 1 concern. Adding `architecture: ddd` would make it 21 — Stage 5 considered it for this repository and left it off, because the crates carry no domain, application or infrastructure layer for those rules to govern. `claude-mit-rust-template` composes 17 too — same core, same rust, same concern — differing in exactly one fragment, `tag-only/release.md` instead of `service/release.md`. That single fragment is the difference between a stray push to `main` costing a junk tag and a stray push deploying to Cloud Run, which is the clearest argument for deployment being an axis at all.
 
 ### Why deployment is an axis and concurrency is not
 
@@ -216,9 +218,17 @@ Then `claude-mit-rust-agent-template`, which is the interesting one: it carries 
 
 Each rollout PR deletes that repo's old `.claude/*.md` in the same commit that adds the generated tree, so no window exists where both are live and disagreeing.
 
-A rollout is larger than adding a profile, which the first one established. Four things ride along every time: the `agentcfg check` job, which goes *inside* that repo's existing `ci.yml` so no consumer gains a workflow file; `.agentcfg/` in its `.gitignore`, without which Renovate commits a three-megabyte binary into a pull request about prose; the fetch recipe, which is `make agentcfg` in the Go repository since it has no `just`; and the cross-references deleting the rule files orphans — see *Adoption orphans what points at the old files*.
+A rollout is larger than adding a profile, which the first one established. Five things ride along every time: the `agentcfg check` job, which goes *inside* that repo's existing `ci.yml` so no consumer gains a workflow file; `.agentcfg/` in its `.gitignore`, without which Renovate commits a three-megabyte binary into a pull request about prose; the fetch recipe, which is `make agentcfg` in the Go repository since it has no `just`; the cross-references deleting the rule files orphans — see *Adoption orphans what points at the old files*; and stripping the hand-written `CLAUDE.md` above the region `sync` appends, which is the one step every automated check passes without — see *A pre-existing file is not replaced*.
 
 > **Done when** — All three repos carry only `.agentprofile.yml` plus generated files, `agentcfg check` is green in each, and the agent-template's local content survived regeneration untouched.
+
+> **Result** — Landed as two PRs, one per repository. All three consumers now carry only `.agentprofile.yml` plus generated files, `check` is green in each — 88, 89 and 88 of 200 always-on lines — and no consumer has gained a workflow file. The agent template's MSRV rationale survived: it sits below the marker region at the foot of `.agents/rust-testing.md`, and a full `sync` was run afterwards and left it alone.
+>
+> The Go rollout was the language-neutrality test, and the core fragments passed it. Nothing Rust survived into the composition — no vocabulary, and no sentence whose *structure* assumes Rust with Go nouns substituted in. One imprecision did surface, in the template concern rather than in core: it says the toolchain fails on an empty `{{ unit_container }}`, which is exactly true of a cargo workspace and not of a Go module, where `go build` succeeds and it is `vet` and `test` that fail on matching no packages. The conclusion an agent draws is unchanged, so it is wording rather than a rule, and it is fixed as its own patch.
+>
+> The escape hatch is narrower than this plan claimed. Of the three things listed above as the agent template's local content, only the MSRV rationale ever was: its clippy lints are byte-identical to the Rust template's, so the `panic_in_result_fn` allow is not extra and the composed crate workflow already carries it, and the reusable-workflow sentence is in the fragment verbatim because every repository calls `rust-ci.yml`. One genuinely local passage across three repositories — which is the number that makes centralising worth doing, and still not zero.
+>
+> Two things join *Decisions locked in*: that `sync` cannot strip a hand-written file it did not write, and that the fetch recipe depends on a `justfile` setting the first rollout happened to have.
 
 ### Stage 6 · ~half day — Close the loop — agent-config adopts itself
 
@@ -363,6 +373,10 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 **`allowedCommands` is JSON5 from the environment** — Added in Stage 4. Renovate parses an array-typed variable as JSON5 before falling back to splitting on commas, so the patterns are a JSON array in `renovate.yml` and their backslashes are doubled. The escaping is load-bearing in a way that fails quietly: a single backslash makes the JSON invalid, and a `\+` that loses its escape stops being a literal plus and becomes a quantifier, so the pattern silently stops matching `chmod +x` and the task is refused rather than erroring. Also, the patterns are matched unanchored against the compiled command, so each one anchors itself.
 
+**A pre-existing file is not replaced** — Added in Stage 5, and the one rollout step every automated check passes without. `sync` preserves whatever sits outside its markers, which is what makes the escape hatch work; the cost is that a hand-written `CLAUDE.md` with no markers is preserved too, and `sync` appends its region *below* it. Both rollouts came out with a hundred-odd lines of superseded rules sitting above a correct generated region, and `check` was green in both cases, because the region matched. Nothing detects this: the file is well-formed, the composition is right, and the repository simply carries two sets of rules, the stale one first. Adoption has to delete the old content by hand, and a rollout is not done until someone has read the file rather than the check output.
+
+**The fetch recipe needs `set positional-arguments`** — Added in Stage 5. A `just` shebang recipe receives its parameters as `"$@"` only when the justfile sets it, and the recipe is copied between repositories as a block that looks self-contained. Without the setting `just agentcfg check` runs `agentcfg` with no subcommand: it prints help and exits 2, which reads like a broken binary rather than a missing one-line setting. The first two repositories happened to set it already, which is exactly why the third found it.
+
 **The budget is a gate, not an intention** — The always-on set staying small is the assumption the whole composition rests on — it is why the glossary went to a file and why concerns are path-scoped. Stated in a plan and enforced by nobody, it decays: four fragments added over a year degrade every session in every repo with no one noticing. So `check` measures it and fails past a central threshold, and the fix when it trips is moving content behind `scope: paths`, never deleting a rule. What counts is everything loaded unconditionally, which includes the description line of every model-invocable skill — otherwise the cheapest way to evade the gate would be to move rules into a surface it does not measure. What does not count is what never reaches context: `invocation: user` descriptions, and HTML comment lines, which Claude Code strips. Counting either would push authors toward the wrong choice just to pass the gate.
 
 **Reversible on purpose** — `agentcfg eject` strips the markers, leaves the composed files as ordinary checked-in content, and deletes the profile and manifest. It costs almost nothing to build and it answers the only fair objection to centralising 75 repos — "what if this turns out to be wrong in a year". A repo can leave without a rewrite, which is also what makes adopting it a small decision rather than a large one.
@@ -410,6 +424,8 @@ The real exposure is structural: every repo's agent config now depends on a self
 Largely solved rather than mitigated, now that `{{ gate_command }}` renders to `just ci` in the repo that reads it — the composed output names things instead of gesturing at them. What survives is the residue: a sentence whose *structure* assumes a language, not just its nouns. "Add the crate to the workspace members list" has no Go reading however the noun is substituted, and no variable catches that. It stays an editorial hazard in Stage 1, just a much smaller one.
 
 Stage 3 could not close it, and that is worth saying plainly: a sentence that assumes Rust reads perfectly well in the Rust template, so the pilot is the wrong instrument. Composing the go profile and reading it turned up no Rust vocabulary and no Rust-shaped structure outside the go language fragments themselves, which write from the Go side ("there is no per-package manifest", "the analog of an MSRV"). That narrows it. The test is Stage 5, which rolls out `claude-mit-go-template` first for exactly this reason.
+
+**Closed at Stage 5, and it held.** The composed Go tree carries no Rust vocabulary and no Rust-shaped sentence: the substitution renders package, module, `make ci` and `golangci-lint` throughout, and the template concern speaks of placeholder packages and an empty module. One sentence was imprecise rather than vague — the claim that the toolchain fails on an empty container, true of a cargo workspace and not of a Go module — which is the residue this entry predicted, at one occurrence in 89 always-on lines.
 
 ### Concerns and architecture arguing over the same rule
 
