@@ -1,24 +1,18 @@
 name: Release
 
-# Unlike every other workflow here, this one is not *yet* a thin caller into
-# ninoverse/.github. It was written in place because no reusable Rust release
-# workflow existed there and that repository could not be reached at the time.
+# A caller into ninoverse/.github, like every other workflow here. It was the
+# one exception until Stage 4 built the shared Rust release path: no reusable
+# release workflow existed, so this one was written in place.
 #
-# Stage 4 now builds one. This file becomes a caller of
-# ninoverse/.github/.github/workflows/rust-release.yml@v1, which generates the
-# conventional-commit changelog, plus a job of its own computing the fragment
-# summary below for that workflow's `extra-notes` input. See *A shared release
-# path with one slot* in docs/plan.md. Until then it publishes on its own.
+# The shared workflow builds one static binary per target, attaches them to the
+# tag's release with a SHA256SUMS, and generates the conventional-commit
+# changelog. What it cannot generate is what this repository knows about itself,
+# which is what the notes job below supplies through `extra-notes`.
 #
 # The tag this watches for is the one bump-version.yml pushes. That only works
 # because that workflow pushes with a GitHub App token: a tag pushed with
 # GITHUB_TOKEN deliberately does not trigger other workflows, so this would
 # never fire.
-#
-# What it publishes is one static binary per target, named after that target and
-# nothing else — the tag is already in the download URL, and the `just agentcfg`
-# recipe and Renovate's post-upgrade task both build that URL by hand. Renaming
-# an asset breaks both, in every consumer repository at once.
 
 on:
   push:
@@ -33,56 +27,22 @@ permissions:
 
 # A re-run of the same tag must not race the first. Queue rather than cancel:
 # cancelling between the upload and the release leaves a tag with some of its
-# assets and no release to hold them.
+# assets and no release to hold them. It belongs here rather than in the called
+# workflow, where `github.workflow` would still resolve to this caller's name.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: ${{ matrix.target }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        include:
-          # Every row builds for the architecture it runs on, so there is no
-          # cross-linker, no `cross`, and no zig. musl is still a target add on
-          # the Linux rows — static linking is the point, and the dependency set
-          # is pure Rust, so rustc's own self-contained musl objects link it
-          # with nothing installed.
-          - target: x86_64-unknown-linux-musl
-            runner: ubuntu-latest
-          - target: aarch64-unknown-linux-musl
-            runner: ubuntu-24.04-arm
-          - target: aarch64-apple-darwin
-            runner: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # The build command itself lives in the justfile, like every other command
-      # in this repository. `just dist <target>` is the same line here and on a
-      # laptop, which is what makes a release reproducible by hand.
-      - name: Install just
-        run: cargo install --locked just
-
-      - name: Build
-        run: just dist ${{ matrix.target }}
-
-      - name: Name it after its target
-        run: mv target/${{ matrix.target }}/release/agentcfg agentcfg-${{ matrix.target }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: agentcfg-${{ matrix.target }}
-          path: agentcfg-${{ matrix.target }}
-          if-no-files-found: error
-
-  release:
-    needs: build
+  # Renovate embeds a release's body in the bump pull request it opens in every
+  # repository that pins us, so this summary is written once here instead of
+  # being computed seventy-five times. The shared workflow prepends it above the
+  # changelog, because the rules are what a consumer is reading for.
+  notes:
+    name: Summarize the fragment changes
     runs-on: ubuntu-latest
-    permissions:
-      # To create the release and attach the binaries to it.
-      contents: write
+    outputs:
+      extra: ${{ steps.notes.outputs.extra }}
     steps:
       # Full history: the notes are a diff against the previous tag, and
       # `git describe` cannot find one in the shallow clone checkout defaults to.
@@ -90,16 +50,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: agentcfg-*
-          merge-multiple: true
+      - uses: dtolnay/rust-toolchain@stable
 
-      # Written by the very binary this release publishes, so the summary and
-      # the artifact can never describe different trees. Renovate embeds this
-      # body in every bump pull request it opens, which is what keeps the Monday
-      # pull request readable in every repository that pins us.
-      - name: Write the release notes
+      - uses: Swatinem/rust-cache@v2
+
+      # Built from this tag rather than downloaded, and a debug build because
+      # only the output matters. build.rs embeds `fragments/` whatever the
+      # profile, so the tree this describes is the tree the published binaries
+      # carry — the summary and the artifacts cannot disagree.
+      - name: Diff this tag's fragments against the previous release
+        id: notes
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -111,30 +71,32 @@ jobs:
           git archive "${previous}" fragments \
             | tar -x -C previous-fragments --strip-components=1
 
-          chmod +x agentcfg-*
-          ./agentcfg-x86_64-unknown-linux-musl \
+          cargo run --quiet --locked -p agentcfg -- \
             notes --previous previous-fragments > notes.md
           cat notes.md
 
-      - name: Checksum the binaries
-        run: sha256sum agentcfg-* > SHA256SUMS
+          # A random delimiter because the value is multi-line: a fixed one
+          # appearing in the notes would let the value break out of its own
+          # heredoc and corrupt every later output in the file.
+          delimiter=$(openssl rand -hex 16)
+          {
+            echo "extra<<${delimiter}"
+            cat notes.md
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
 
-      # Creating and re-running are the same command as far as a maintainer is
-      # concerned, so both work. Without the second branch the manual re-run
-      # above would be decoration: a run that died mid-upload leaves the release
-      # already created, and `gh release create` refuses to touch it.
-      - name: Publish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          if gh release view "${TAG}" > /dev/null 2>&1; then
-            gh release upload "${TAG}" --clobber agentcfg-* SHA256SUMS
-            gh release edit "${TAG}" --notes-file notes.md
-          else
-            gh release create "${TAG}" \
-              --title "${TAG}" \
-              --notes-file notes.md \
-              agentcfg-* SHA256SUMS
-          fi
+  release:
+    needs: notes
+    # Required here, on the calling job. A called workflow can only downgrade
+    # the permissions it is given, never raise them, so the `contents: write`
+    # its release job asks for is capped by whatever this grants — and the
+    # workflow-level `contents: read` above would cap it at read.
+    permissions:
+      contents: write
+    # Pinned to a tag, not @main — a change to @main would land here with no
+    # pull request in this repository.
+    uses: ninoverse/.github/.github/workflows/rust-release.yml@v1
+    with:
+      binary: agentcfg
+      targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl,aarch64-apple-darwin
+      extra-notes: ${{ needs.notes.outputs.extra }}
