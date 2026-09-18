@@ -5,6 +5,14 @@
 //! repository that pins it. What a maintainer wants from it is one question
 //! answered: *does this affect me.*
 //!
+//! The heading says so outright, because the section does not sit alone: the
+//! release workflow appends a conventional-commit changelog beneath it. Every
+//! release here is one commit, by git-flow, so whenever that commit touches a
+//! fragment both sections describe it and a heading of "Fragments" reads as the
+//! same line twice. They are different questions — this one is what a consumer's
+//! repository will change, the changelog is what happened in this one — and the
+//! heading is what makes that legible.
+//!
 //! So the grouping is by axis value rather than by kind of change — a
 //! repository on `language: go` can skip the `language/rust` block whole — and
 //! each entry is named by its `title:`, which is the heading that will appear
@@ -89,10 +97,10 @@ pub fn notes(previous: &FragmentSet, current: &FragmentSet) -> String {
     }
 
     if groups.is_empty() {
-        return "### Fragments\n\nNo fragment changed in this release. Anything this bump changes in your repository comes from the tool rather than from the rules.\n".to_owned();
+        return "### What this changes in your repository\n\nNo fragment changed in this release. Anything this bump changes in your repository comes from the tool rather than from the rules.\n".to_owned();
     }
 
-    let mut out = String::from("### Fragments\n");
+    let mut out = String::from("### What this changes in your repository\n");
     for ((_, group), mut entries) in groups {
         entries.sort();
         out.push_str(&format!("\n**{group}**\n"));
@@ -166,7 +174,7 @@ The branch → commit → PR loop.
 
         assert_eq!(
             notes(&set, &set),
-            "### Fragments\n\nNo fragment changed in this release. Anything this bump changes in your repository comes from the tool rather than from the rules.\n"
+            "### What this changes in your repository\n\nNo fragment changed in this release. Anything this bump changes in your repository comes from the tool rather than from the rules.\n"
         );
     }
 
