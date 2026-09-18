@@ -1,5 +1,11 @@
 # Stage 4 handoff — the `ninoverse/.github` half
 
+> **Done.** All four pull requests below are merged, and Stage 4's own test
+> passed — see the Stage 4 *Result* in `docs/plan.md`. This file is kept as the
+> record of what crossed the repository boundary and why, not as work
+> outstanding. Its two inferences about a repository nobody had opened,
+> `default.json` and `renovate.yml`, both turned out to be right.
+
 Four of Stage 4's pull requests land in `ninoverse/.github`, which the session
 that built the rest could not attach: `add_repo` refuses a repository whose name
 begins with a dot, because its clone would land at a hidden path. Nothing is
