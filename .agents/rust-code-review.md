@@ -1,11 +1,12 @@
-# Code Review Guidelines
+<!-- agentcfg:start -->
+<!-- language/rust/code-review.md · v0.18.0 -->
+# Rust code review
+
+Read alongside *Code review*, which holds the checks every language shares.
 
 ## What to check
 
 ### Lint and format
-- `just fmt-check` passes — no formatting drift.
-- `just lint` passes with zero `#[allow(...)]` attributes added without a
-  justifying comment.
 - Every new crate's `Cargo.toml` has `[lints] workspace = true`. Without it the
   crate opts out of the workspace lints and the gate cannot catch anything.
 
@@ -31,15 +32,14 @@
   `///` doc comment.
 - Public functions have a runnable doc-test example unless behavior is trivially
   obvious from the signature.
-- Breaking changes to a published crate bump the major version in `Cargo.toml`.
 
 ### Dependencies
-- New dependencies have a one-line justification in the PR description.
 - `just deny` passes — licenses allowed, no known advisories,
   no unknown sources.
-- MSRV in `clippy.toml` and `[workspace.package].rust-version` not bumped
-  unless the change explicitly intends to.
+- A change that does raise the MSRV edits every place it is declared — see
+  *Build and test commands*.
 
 ### Tests
-- New behavior is covered by at least one unit or integration test.
-- `just test` passes — unit, integration and doc-tests.
+- New behavior is covered by a unit or integration test; `just test` runs both,
+  plus doc-tests.
+<!-- agentcfg:end -->

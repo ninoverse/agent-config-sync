@@ -5,6 +5,7 @@ target/
 
 .git/
 .github/
+.agents/
 .claude/
 .devcontainer/
 .vscode/
@@ -13,6 +14,7 @@ Dockerfile
 .dockerignore
 compose.yaml
 README.md
+AGENTS.md
 CLAUDE.md
 LICENSE
 

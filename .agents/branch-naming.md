@@ -1,4 +1,6 @@
-# Branch Naming
+<!-- agentcfg:start -->
+<!-- core/branch-naming.md · v0.18.0 -->
+# Branch naming
 
 ## Format
 
@@ -16,7 +18,7 @@
 |--------|-------------|
 | `feat/` | New feature |
 | `fix/` | Bug fix |
-| `refactor/` | Refactor with no behaviour change |
+| `refactor/` | Refactor with no behavior change |
 | `chore/` | Tooling, deps, CI, config |
 | `docs/` | Documentation only |
 | `wip/` | Exploratory / work-in-progress (not for PRs) |
@@ -34,6 +36,7 @@ wip/spike-new-api
 
 ## Rules
 
-- Branch off `main` unless working on a dependent feature; in that case branch off the parent feature branch.
+- Branch off an up-to-date `main`, never off another branch — see *Git flow*.
 - Delete branches after merging.
 - Never commit directly to `main`.
+<!-- agentcfg:end -->

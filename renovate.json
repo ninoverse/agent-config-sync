@@ -1,4 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>ninoverse/.github"]
+  "extends": ["github>ninoverse/.github"],
+  "packageRules": [
+    {
+      "description": "This repository publishes agentcfg and consumes it, so its release version and its pinned config_version are one number line. A bump pull request here merges as `chore(deps): ...`, which bump-version.yml reads and releases from — leaving the pin one patch behind again, forever. The pin therefore moves by hand, in the change that warrants it, which is step 8 of /new-value. Consumers are unaffected: this rule is local to this repository.",
+      "matchDepNames": ["ninoverse/agent-config-sync"],
+      "enabled": false
+    }
+  ]
 }

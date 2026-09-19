@@ -3,7 +3,7 @@
 //! A Cargo workspace whose `members` glob matches nothing is a hard error, so
 //! `cargo check`, `cargo clippy`, `cargo fmt` and `cargo test` all fail on a
 //! workspace with no crates. This crate exists so the merge gates in
-//! `.claude/testing-requirements.md` pass on a fresh clone.
+//! `.agents/rust-testing.md` pass on a fresh clone.
 //!
 //! It also demonstrates the conventions every crate here follows: crate-level
 //! `//!` docs, a `///` doc comment with a runnable example on each public item,
@@ -26,7 +26,7 @@ pub fn greet(name: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    // Test code is exempt from the unwrap/expect ban; see .claude/code-review.md.
+    // Test code is exempt from the unwrap/expect ban; see .agents/rust-code-review.md.
     #![allow(clippy::unwrap_used, clippy::expect_used)]
 
     use super::*;

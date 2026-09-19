@@ -1,4 +1,6 @@
-# Testing Requirements
+<!-- agentcfg:start -->
+<!-- language/rust/testing.md · v0.18.0 -->
+# Testing instructions
 
 ## Before merging any change
 
@@ -18,15 +20,18 @@ in the `justfile`; call the recipe rather than copying them.
 
 ## What CI adds
 
-`.github/workflows/ci.yml` runs the same four recipes as separate jobs, so a red
-build names the gate that broke. Running `just ci` locally first is still the
-rule — CI is the backstop, not the first place you find out.
+`.github/workflows/ci.yml` calls the organization's reusable `rust-ci.yml`,
+which runs the same four recipes as separate jobs, so a red build names the gate
+that broke. Running `just ci` locally first is still the rule — CI is the
+backstop, not the first place you find out.
 
 Two things CI checks that a local run does not:
 
-- **MSRV.** A job pinned to 1.85 (via `RUSTUP_TOOLCHAIN`, which overrides
+- **MSRV.** A job pinned to the MSRV (via `RUSTUP_TOOLCHAIN`, which overrides
   `rust-toolchain.toml`) proves the workspace still builds on the `rust-version`
-  in `Cargo.toml`. Locally you are on stable, so you would never notice.
+  in `Cargo.toml`. Locally you are on stable, so you would never notice. The
+  MSRV is declared in `Cargo.toml`, `clippy.toml` and the `msrv` input in
+  `ci.yml`, and this job is what catches a partial bump.
 - **Advisories over time.** `.github/workflows/audit.yml` runs weekly, because a
   new advisory lands against dependencies you already have, with no commit to
   trigger a push build.
@@ -58,3 +63,4 @@ cargo test --test <integration_file>          # one integration file
 ```bash
 cargo watch -x 'nextest run --workspace'
 ```
+<!-- agentcfg:end -->

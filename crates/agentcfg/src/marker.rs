@@ -102,7 +102,7 @@ fn locate<'a>(path: &str, text: &'a str) -> Result<Option<(&'a str, &'a str)>, R
 
 #[cfg(test)]
 mod tests {
-    // Test code is exempt from the unwrap/expect ban; see .claude/code-review.md.
+    // Test code is exempt from the unwrap/expect ban; see .agents/rust-code-review.md.
     #![allow(clippy::unwrap_used, clippy::expect_used)]
 
     use super::*;

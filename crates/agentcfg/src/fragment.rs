@@ -377,7 +377,7 @@ fn emitters(
 
 #[cfg(test)]
 mod tests {
-    // Test code is exempt from the unwrap/expect ban; see .claude/code-review.md.
+    // Test code is exempt from the unwrap/expect ban; see .agents/rust-code-review.md.
     #![allow(clippy::unwrap_used, clippy::expect_used)]
 
     use super::*;

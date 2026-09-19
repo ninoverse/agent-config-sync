@@ -1,10 +1,12 @@
 # Contributing
 
-The rules that govern this repository live in [`CLAUDE.md`](CLAUDE.md) and
-[`.claude/`](.claude/). They are written for Claude Code but they are not
-agent-specific — they are the conventions, and they apply to humans identically.
-This file is the short version and points at the authoritative one for each
-topic.
+The rules that govern this repository live in [`AGENTS.md`](AGENTS.md) and
+[`.agents/`](.agents/). They are composed by `agentcfg` from the fragments in
+`fragments/` and the profile in [`.agentprofile.yml`](.agentprofile.yml), so they
+are not edited where you read them — a correction goes into the fragment it came
+from. They are written for coding agents but they are not agent-specific — they
+are the conventions, and they apply to humans identically. This file is the short
+version and points at the authoritative one for each topic.
 
 ## Setup
 
@@ -24,14 +26,14 @@ is already built into the image.
 ## The loop
 
 One branch, one commit, one PR, merged before the next begins. No stacked PRs.
-Full rules in [`.claude/git-flow.md`](.claude/git-flow.md).
+Full rules in [`.agents/git-flow.md`](.agents/git-flow.md).
 
 ```bash
 git switch main && git pull --ff-only
-git switch -c <type>/<short-description>     # .claude/branch-naming.md
+git switch -c <type>/<short-description>     # .agents/branch-naming.md
 # ... change ...
 just ci                                      # must pass before you push
-git commit                                   # .claude/commit-conventions.md
+git commit                                   # .agents/commit-conventions.md
 git push -u origin <branch>
 ```
 
@@ -46,12 +48,12 @@ just ci
 
 `fmt-check` · `lint` · `test` · `deny`. All four, zero warnings, before you push.
 CI runs the same recipes, one job per gate, plus an MSRV job.
-See [`.claude/testing-requirements.md`](.claude/testing-requirements.md).
+See [`.agents/rust-testing.md`](.agents/rust-testing.md).
 
 ## Adding a crate
 
 Follow the nine steps in
-[`.claude/crate-workflow.md`](.claude/crate-workflow.md) — or run `/new-crate
+[`.agents/new-crate.md`](.agents/new-crate.md) — or run `/new-crate
 <name>` in Claude Code, which executes them.
 
 Two things that are easy to miss and that the gates will catch:
@@ -63,10 +65,10 @@ Two things that are easy to miss and that the gates will catch:
 
 ## What gets declined
 
-This template biases toward simplicity. Additions that only serve one downstream
-project, abstractions with a single caller, and configuration for situations that
-have not happened yet are likely to be turned down — see the Behavioral
-Guidelines in [`CLAUDE.md`](CLAUDE.md).
+This repository biases toward simplicity. Additions that only serve one
+downstream project, abstractions with a single caller, and configuration for
+situations that have not happened yet are likely to be turned down — see
+*Behavioral guidelines* in [`AGENTS.md`](AGENTS.md).
 
 ## Releases
 
@@ -74,13 +76,15 @@ Merging to `main` bumps `[workspace.package].version` from the subject of the
 merged commit and pushes a matching tag — `feat` minor,
 `fix`/`perf`/`refactor`/`chore`/`docs` patch, `!` or `BREAKING CHANGE` major.
 Anything else bumps nothing. So the commit convention in
-[`.claude/commit-conventions.md`](.claude/commit-conventions.md) is not only
+[`.agents/commit-conventions.md`](.agents/commit-conventions.md) is not only
 documentation: it picks the version number.
 
-Nothing deploys on that tag. This is a template; the tag exists so someone can
-point at the version of it they copied. The workflow is not defined here — it
-calls [`ninoverse/.github`](https://github.com/ninoverse/.github) and needs
-organization-level app credentials.
+That tag is what ships the binary. `release.yml` builds one `agentcfg` per
+published target, attaches them to the tag's GitHub release with a `SHA256SUMS`,
+and prepends a summary of what the release changes in a consuming repository.
+Neither workflow is defined here — both call
+[`ninoverse/.github`](https://github.com/ninoverse/.github), and the tag push
+needs organization-level app credentials.
 
 Tagging by hand competes with it rather than complementing it. Don't.
 

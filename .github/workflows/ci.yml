@@ -7,6 +7,14 @@ name: CI
 # The reusable workflow's contract is the justfile: it invokes `just fmt-check`,
 # `just lint`, `just test` and `just deny`, so the cargo invocation behind each
 # gate keeps exactly one definition, here in the justfile.
+#
+# The agentcfg job below is not part of that. It is written in place because
+# `agentcfg check` is not a Rust gate — the Go repositories run the same check
+# with no Rust in sight — and because being managed should cost a repository no
+# workflow file of its own. This repository is managed like the others: the
+# binary it fetches is the one its own `.agentprofile.yml` pins, not the one
+# this workspace builds, so a fragment edited here reaches these files only
+# through a release.
 
 on:
   push:
@@ -32,3 +40,23 @@ jobs:
       # catches a change that breaks it, because rust-toolchain.toml pins the
       # channel to `stable`.
       msrv: "1.85"
+
+  # The other direction from the Monday bump pull request: when someone edits
+  # .agentprofile.yml — adds a concern, changes the deployment — the composed
+  # files go stale, and this fails in their own pull request rather than a bot
+  # regenerating them afterwards. The person making the change sees the result,
+  # and the fix is `just agentcfg sync` locally.
+  agentcfg:
+    name: agentcfg check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The fetch-and-run lives in the justfile, like every other command here.
+      # `just agentcfg check` is the same line a contributor types locally,
+      # which is what stops CI and a laptop from disagreeing about the version.
+      - name: Install just
+        run: cargo install --locked just
+
+      - name: Check the composed files against the pinned version
+        run: just agentcfg check

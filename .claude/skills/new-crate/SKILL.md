@@ -1,7 +1,16 @@
-# Crate Workflow
+---
+name: "new-crate"
+description: "Add a crate to the workspace following the 9-step crate workflow"
+argument-hint: "<crate-name> [one-line description of what it does]"
+---
+
+<!-- language/rust/tasks/new-unit.md · v0.18.0 -->
+# Adding a crate
 
 The exact procedure for adding or modifying a single crate in this Cargo
 workspace. Follow every step in order; do not skip or reorder.
+
+The crate to add: $ARGUMENTS
 
 ---
 
@@ -41,7 +50,7 @@ Inherit shared metadata from the workspace:
 ```toml
 [package]
 name = "<name>"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -58,6 +67,10 @@ workspace = true
 The `[lints]` table is **not** optional. Without it the crate silently opts out
 of the workspace lints in `Cargo.toml` and `-D warnings` will not catch a
 missing doc comment or an `unwrap()` in a non-test path.
+
+`version.workspace = true` is not optional either. `cargo new` writes
+`version = "0.1.0"`; replace it. `bump-version.yml` bumps the workspace version
+and refuses to tag when crate versions diverge.
 
 ### 3. `crates/<name>/src/lib.rs` (or `main.rs`)
 
@@ -77,8 +90,8 @@ Inline at the bottom of the file under test:
 ```rust
 #[cfg(test)]
 mod tests {
-    // Test code is exempt from the unwrap/expect ban; see .claude/code-review.md.
-    #![allow(clippy::unwrap_used, clippy::expect_used)]
+    // Test code asserts rather than propagating; see Rust code review.
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic_in_result_fn)]
 
     use super::*;
 
@@ -89,9 +102,11 @@ mod tests {
 }
 ```
 
-The inner `#![allow(...)]` is what makes the exemption real. `unwrap_used` and
-`expect_used` are set workspace-wide and fire in test targets too, so without it
-a `.unwrap()` in a test fails the clippy gate.
+The inner `#![allow(...)]` is what makes the exemption real. All three are set
+workspace-wide and fire in test targets too, so without it a `.unwrap()` in a
+test fails the clippy gate. The third is needed the moment a test returns
+`Result` — an `assert!` inside one is exactly what `panic_in_result_fn` is for,
+and every async test in this workspace has that shape.
 
 ### 6. Integration tests + doc tests
 
@@ -128,8 +143,30 @@ feat(<crate>): add <name> crate
 One crate per commit, one commit per branch. Never batch multiple crates.
 
 - Push the branch: `git push -u origin feat/<name>`.
-- Output the PR title and description (`.claude/pr-guidelines.md`). Do not open
+- Output the PR title and description (*PR instructions*). Do not open
   the PR — the user does that.
 - **Stop.** Wait for the merge, then start the next crate from a fresh `main`.
 
-The full loop is in `.claude/git-flow.md`.
+The full loop is in *Git flow*.
+
+---
+
+## Before committing
+
+Points that are easy to get wrong, so verify each one:
+
+- `[lints] workspace = true` in the crate manifest. Without it the crate opts
+  out of the workspace lints and the clippy gate cannot catch anything.
+- Package keys inherit from the workspace: `edition.workspace = true`, and the
+  same for `version`, `license`, `repository` and `rust-version`.
+- Every `pub` item has a `///` doc comment, and public functions have a runnable
+  doc-test — `missing_docs` is a workspace lint and the gate runs with
+  `-D warnings`.
+- Every public type is `Debug`. `missing_debug_implementations` is on, and a
+  derive will not do for a type holding a `dyn` trait object or an unbounded
+  generic — write the impl out.
+- The test module carries
+  `#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic_in_result_fn)]`.
+  Without it an `.unwrap()` in a test fails the clippy gate, and so does an
+  `assert!` in a test that returns `Result`.
+- `just ci` passes before you commit.

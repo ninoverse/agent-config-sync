@@ -1,4 +1,6 @@
-# Directories and File Naming
+<!-- agentcfg:start -->
+<!-- language/rust/file-naming.md · v0.18.0 -->
+# Directories and file naming
 
 ## Workspace layout
 
@@ -52,3 +54,4 @@ crates/data-store/src/
 ├── repository.rs
 └── error.rs
 ```
+<!-- agentcfg:end -->
