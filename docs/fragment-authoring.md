@@ -1,24 +1,54 @@
 # Fragment Authoring Guide
 
-> **Draft.** Started in Stage 1 while the fragments are extracted; Stage 6 edits
-> it into shape. Where this file and `docs/plan.md` disagree, the plan is
-> canonical and this file is wrong.
-
 A fragment is one markdown file of agent instructions that belongs to exactly
 one axis value, or to `core/`. `agentcfg` selects fragments by a repo's profile,
 substitutes `{{ name }}` references, and hands the result to the emitters. It
 never parses the markdown, so everything it needs is in the frontmatter.
 
+This file is the reference for writing one. The *procedure* for adding a value
+to an axis is `/new-value`, which carries the release and pin steps this one
+does not. The profile the fragments compose against is specified in
+`docs/profile-schema.md`. `docs/plan.md` holds the design and the reasoning
+behind it, and is canonical where it and this file disagree about intent.
+
 ## Layout
 
 ```text
 fragments/
-├── core/<name>.md
+├── core/<name>.md                  always selected — no axis, no cardinality
 └── <axis>/<value>/
-    ├── values.yml
-    ├── <name>.md
-    └── tasks/<name>.md
+    ├── values.yml                  the vocabulary this value declares
+    ├── settings.partial.json       the Claude settings it contributes
+    ├── <name>.md                   a rules fragment
+    └── tasks/<name>.md             a task fragment — a skill for Claude
 ```
+
+`values.yml` and `settings.partial.json` are files rather than fragments: they
+carry no frontmatter, nothing emits them on their own, and only `language` values
+ship them today.
+
+## What a value contains
+
+Whatever its siblings contain. That parity is the rule, because a value shipping
+fewer fragments than the values beside it composes a repository with a silent gap
+where the others have a rule. `language` is the fullest axis, and a new language
+value is this list:
+
+| File | Scope | Role |
+|------|-------|------|
+| `tooling.md` | `always` | *Build and test commands* — the command table and the layout rules. `order: -1`, so it leads. |
+| `automation.md` | `always`, `emit: [claude]` | What the settings hooks already do, so Claude does not redo it by hand. |
+| `code-review.md` | `on-demand` | This language's own review rules — error handling, unsafe code, public API docs. Read alongside core's *Code review*. |
+| `testing.md` | `on-demand` | *Testing instructions* — what the gates run, and what CI adds on top of them. |
+| `file-naming.md` | `on-demand` | Directory layout and file naming. |
+| `tasks/gates.md` | — | `/gates`: runs the gates and reports which passed. |
+| `tasks/new-unit.md` | — | `/new-crate`, `/new-package`: the checklist for adding one unit. Its `name:` substitutes. |
+| `values.yml` | — | The twelve names listed under `values.yml` below. |
+| `settings.partial.json` | — | The permission allowlist and hooks for this language, merged by the claude emitter into `.claude/settings.json`. |
+
+Seven fragments, then, and two files that are not. A `deployment` or `concerns`
+value is far smaller — one or two fragments and usually no `values.yml` — because
+it answers a narrower question.
 
 ## Frontmatter
 
@@ -42,7 +72,7 @@ AGENTS.md. It keeps `title` and `when`, which label that pointer, takes no
 | `name` | yes | The skill name, typed as `/name`. May use substitution: `name: "new-{{ unit }}"`. |
 | `description` | yes | The condition the model tests to decide whether to load it. Counts against the budget unless `invocation: user`. |
 | `invocation` | no | `model` (default) or `user`. A `user` skill's description never enters context. |
-| `argument-hint`, `arguments`, `allowed-tools` | no | Passed to the claude emitter unchanged; the agents-md emitter drops them. Name arguments with `arguments` rather than indexing `$0` / `$1`. |
+| `argument-hint`, `arguments`, `allowed-tools` | no | Passed to the claude emitter unchanged; the agents-md emitter drops all three, so a body must never depend on them — see *Body* on `$ARGUMENTS`. |
 
 ## Body
 
@@ -54,10 +84,13 @@ AGENTS.md. It keeps `title` and `when`, which label that pointer, takes no
 - Keep the body agent-neutral. Claude-only mechanics — hooks, settings, skill
   fields — live in `settings.partial.json`, task frontmatter, or a fragment with
   `emit: [claude]`.
-- In a task body, Claude replaces `$name` and `$ARGUMENTS`; every other agent
-  reads them literally. Write so the sentence works either way — "The crate:
-  `$name`." — and keep `<name>` placeholders in commands, where a literal `$name`
-  would be pasted into a shell.
+- In a task body, take arguments through `$ARGUMENTS` and nothing else, on a
+  line that reads as a label a reader can skip: "The crate to add: $ARGUMENTS".
+  Claude binds it; every other agent prints it. A named `arguments:` entry or a
+  `$name` binds for Claude too and stays literal text in `.agents/` — which is
+  how one came to sit a few lines above `cargo new --lib crates/<name>` in a
+  document that is mostly bash, where an agent resolving it the shell way writes
+  `crates/$name`. Placeholders inside commands are `<name>`, never a `$`.
 
 ## Substitution
 
@@ -97,8 +130,8 @@ Core references these, so every `language` value defines all of them:
 ## Choosing a scope
 
 - **`always`** loads every session in every repo that selects it, and every line
-  counts against the always-on budget (200 lines). Reserve it for what an agent
-  needs before it knows what it is doing: how to behave, how to build and test.
+  counts against the always-on budget below. Reserve it for what an agent needs
+  before it knows what it is doing: how to behave, how to build and test.
 - **`on-demand`** loads when the agent reaches the activity named in `when`. Only
   its index line counts. Most rules belong here — git flow, commits, reviews. It
   is the pattern the source repos already used, as a hand-written list of
@@ -108,13 +141,45 @@ Core references these, so every `language` value defines all of them:
   not fire when the agent *creates* the first matching file, only when it reads
   one.
 
+## The always-on budget
+
+200 lines, declared centrally and enforced by `check` rather than remembered. It
+is the assumption the whole composition rests on: `always` content loads in every
+session of every repository that selects it, so one fragment added here is a tax
+on all of them at once, and four added over a year degrade every session with
+nobody noticing.
+
+What counts is everything that loads unconditionally — every non-blank,
+non-comment line the generated regions of `AGENTS.md` and `CLAUDE.md` actually
+render, plus one line per model-invocable skill description, since a description
+the model tests is loaded whether or not the skill runs. What does not count is
+what never reaches a session: an `invocation: user` description, and HTML comment
+lines, which Claude Code strips before loading.
+
+`check` prints the figure on every run, so the cost of a fragment is one command
+away:
+
+```
+Up to date. Always-on set: 78 of 200 lines.
+```
+
+When it trips, the fix is moving content behind `scope: on-demand` or
+`scope: paths`. Never delete a rule to fit, and never trim one until it is vague
+— a rule nobody can act on costs the budget and buys nothing. The failure lists
+the always-on fragments largest first, so the one to move is the first line you
+read.
+
 ## Single-axis discipline
+
+Every fragment belongs to exactly one axis value, and what decides which is not
+what the fragment is about but **what would have to change for it to stop being
+true**. If the answer is a noun or a command, it is core, and the noun becomes a
+variable. If the answer is the shape of the sentence — "add the crate to the
+workspace members list" has no Go reading however the nouns are substituted — it
+belongs to the language value. One source file often splits across both.
 
 Judgement calls made so far, so the next extraction makes the same ones:
 
-- **Neutralise the noun, not the sentence.** If only a word is language-specific,
-  it becomes a variable. If the sentence's structure assumes a language, it is
-  not core.
 - **Command strings are vocabulary.** A command a core rule names goes in
   `values.yml` (`unit_test_command`) rather than becoming "run the tests".
 - **Examples take a variable only at the language-specific point.** The commit
