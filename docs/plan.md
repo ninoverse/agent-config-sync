@@ -2,20 +2,22 @@
 
 Centralising Claude, Codex, Copilot and Cursor instructions for the ninoverse repositories into single-axis fragments, composed per repo by a Rust binary and synced as ordinary committed files. Seven stages, sequenced so nothing is built before the thing it depends on is proven.
 
-**34** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
+**33** fragments in v1 · **~75** repos they compose into · **6** axes, one declared empty · **2** emitters in v1 · **1** new file per consumer repo · **30+** agents reading the output
 
-> **Status:** design settled; Stages 0 to 5 complete.
+> **Status:** design settled; all seven stages complete.
 > Every decision below was reached deliberately; the *Decisions locked in* section
-> exists so they are not relitigated. Three questions remain genuinely open, each
-> tied to the stage that closes it — see *What could go wrong*.
+> exists so they are not relitigated. What is still open is recorded under
+> *What could go wrong*, and the direction past coding agents under
+> *Beyond coding agents*.
 >
-> **Start here:** Stage 6, the last one — agent-config adopting its own output.
-> All three consumer repositories are composed rather than hand-written, each
-> carrying only `.agentprofile.yml` plus generated files, each green on
-> `agentcfg check`, and none of them has gained a workflow file. Distribution
-> works end to end: a one-word edit to a core fragment, released as `v0.17.4`,
-> reached `claude-mit-rust-template` as a single Renovate pull request carrying
-> the bumped pin and the regenerated files in one commit.
+> **Where it stands:** four repositories are composed rather than hand-written —
+> the three consumers and agent-config itself — each carrying only
+> `.agentprofile.yml` plus generated files, each green on `agentcfg check` at 88,
+> 89, 88 and 78 of 200 always-on lines, and none of them has gained a workflow
+> file. Distribution works end to end: a one-word edit to a core fragment,
+> released as `v0.17.4`, reached `claude-mit-rust-template` as a single Renovate
+> pull request carrying the bumped pin and the regenerated files in one commit.
+> Extending the tree is `/new-value` plus `docs/fragment-authoring.md`.
 > `docs/stage-4-preset-handoff.md` records the boundary Stage 4 crossed and is
 > now history rather than instructions.
 > Stage 0 is recorded in `docs/stage-0-spec-read.md`;
@@ -59,10 +61,10 @@ fragments/
 | framework | 0 or 1 — `framework: ~` | **none yet** | — | Axum, Dioxus and the rest. The schema accepts the axis; no value is written until a repo needs one. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
 | deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli. |
-| concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template | 1 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files; `template` is the always-on exception, the rules for a repository others copy. Heavy-calc and fetching deferred. |
+| concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template, / fragment-authoring | 1 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files. Two are not hazards: `template`, the always-on rules for a repository others copy, and `fragment-authoring`, which carries `/new-value` and earns its place against *Beyond coding agents*. Heavy-calc and fetching deferred. |
 | sensitivity | exactly 1, defaulted — `sensitivity: none` | **none only** | 0 | Payload logging, error-message contents, retention, encryption at rest, audit trail. Declared now because retrofitting it across dozens of repos later is the expensive case. |
 
-So v1 authors **34 fragments** — 7 core, 8 each for rust and go, 4 for `ddd`, 4 across the deployment values, 3 concerns. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
+So v1 authors **33 fragments** — 7 core, 7 each for rust and go, 4 for `ddd`, 4 across the deployment values, 4 concerns. Each language value also ships a `values.yml` and a `settings.partial.json`, which carry no frontmatter and are therefore files rather than fragments; counting them is what made this number 34 until Stage 6 checked it. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
 
 The whole per-repo footprint is one file. This is `claude-mit-rust-agent-template`'s, verbatim, with the two optional axes shown as comments — an unnamed axis is simply absent, which is what "0 or 1" looks like in practice:
 
@@ -234,11 +236,19 @@ A rollout is larger than adding a profile, which the first one established. Five
 
 The stage that decides whether this survives a year of nobody touching it. Everything before produces configuration for other repositories; this one makes agent-config an ordinary consumer of its own output and writes down how to extend it.
 
-- **agent-config gets a profile** — `language: rust`, `deployment: cli`. Which means writing `deployment/cli/conventions.md`, the value no repo needed until now: exit codes, stdout versus stderr, `--help` quality, and the non-interactive rule this plan already locked. Its own `AGENTS.md` is composed rather than hand-written, with the authoring guide in its marker region.
-- **`/new-value <axis> <name>`** — a numbered checklist in the shape of the existing `/new-crate`: create the directory, write the fragments that axis's other values carry, add a golden fixture, bump minor, release, then bump the consumer's pin. Adding F# becomes a command instead of an archaeology exercise, and the same command serves a new concern or architecture.
+- **agent-config gets a profile** — `language: rust`, `deployment: cli`, `concerns: [fragment-authoring]`. Which means writing `deployment/cli/conventions.md`, the value no repo needed until now: what a merge releases, then exit codes, stdout versus stderr, `--help` quality, and the non-interactive rule this plan already locked. Its own `AGENTS.md` is composed rather than hand-written, with the repository's own overview above the marker region; the authoring guide stays a document in `docs/`.
+- **`/new-value <axis> <name>`** — a numbered checklist in the shape of the existing `/new-crate`: create the directory, write the fragments that axis's other values carry, declare the vocabulary a `language` value owes, add a golden fixture, run the gates and the budget check, commit as `feat` so the release is minor, then move the consumer's pin. Adding F# becomes a command instead of an archaeology exercise, and the same command serves a new concern or architecture.
 - **The fragment-authoring guide** — drafted during Stage 1 while the editorial judgement is actually being made, edited into shape here. Single-axis discipline, vocabulary neutralisation, core versus language, choosing `scope`, the always-on budget, and the profile schema reference from Stage 2.
 
 > **Done when** — `agentcfg check` is green against agent-config itself, and someone who has never seen the repo can add a language value working only from `/new-value` and the guide.
+
+> **Result** — Landed as four PRs: the two new values with a golden fixture; the adoption; the authoring guide; and this note. `check` is green against agent-config at 78 of 200 always-on lines — the lowest of the four managed repositories, since it declares no `template` concern and `cli` carries one fragment. Its `.claude/` is four skills and `settings.json`; the eleven hand-written rule files are gone, every one of them diffed against its composed counterpart first, and the single line with no counterpart was a claim that a breaking change bumps `Cargo.toml` by hand, which `bump-version.yml` had already made false.
+>
+> The second half of the Done-when was worked rather than asserted. Walking `/new-value language fsharp` against the shipped checklist found three holes in the guide — no account of what a value actually contains, no mention of `settings.partial.json` anywhere including the layout diagram, and the always-on budget as a parenthetical rather than a section — plus two pieces of guidance that had gone stale against Stage 3, still recommending the `$name` binding that stage removed for rendering as literal text above a bash block.
+>
+> Three decisions join *Decisions locked in*, and all three are consequences of this repository being the publisher rather than an ordinary consumer: a deployment value has to say what a merge sets off, which is why the cli fragment carries one item more than the bullet above listed; adoption means pinning rather than tracking, which is what separates it from a build loop; and a repository that publishes what it consumes ratchets its own version forever unless it opts out of its own bump. The last was found by asking before merging rather than by merging, and it was the only thing in this stage that would have been expensive to discover later.
+>
+> Three counts in this document were wrong and are corrected above: the fragment total was 34 because it counted two files that carry no frontmatter, `tooling.md` is `order: -1` rather than `order: 0`, and the concerns axis has gained a fourth value.
 
 ## Beyond coding agents
 
@@ -321,7 +331,7 @@ Where each existing file lands. Derived from diffing the three repos rather than
 | core | execution-order.md | execution-order.md | Universal once crate/package becomes the unit noun defined by the language fragment. |
 | core | code-review.md | code-review.md **split** | Only the review *process* is universal. The language idioms below are a separate fragment, not a rendering of this one. |
 | core | behavior.md | CLAUDE.md | **byte-identical in all three** The Behavioral Guidelines block, plus the "Maintain the Build" rule. `scope: always`. Added in Stage 1: `CLAUDE.md` becomes an `@AGENTS.md` import, so its content needs fragments too. |
-| language | tooling.md + values.yml **order: 0** | CLAUDE.md **Commands & Tooling** | The command table and the workspace or module rules from `CLAUDE.md`, plus the `values.yml` declaring unit noun, gate command and formatter for every core fragment to reference. `order: 0` is now presentation — substitution means nothing depends on reading it first. |
+| language | tooling.md + values.yml **order: -1** | CLAUDE.md **Commands & Tooling** | The command table and the workspace or module rules from `CLAUDE.md`, plus the `values.yml` declaring unit noun, gate command and formatter for every core fragment to reference. `order: -1` is now presentation — substitution means nothing depends on reading it first, and it leads only because a composed document reads better with its command table near the top. |
 | language | code-review.md | code-review.md | The unwrap/expect ban and unsafe policy for Rust; the errcheck and wrapping rules for Go. Genuinely different rules, not different words. |
 | language | testing.md | testing-requirements.md | The one file that already differs between the two Rust repos. The agent-template's extra MSRV rationale goes to its local region, not here. |
 | language | file-naming.md | file-naming.md | **~95% language-specific** Layout and naming tables throughout. Goes entirely to language — no core half worth extracting. |
@@ -336,9 +346,10 @@ Where each existing file lands. Derived from diffing the three repos rather than
 | deployment | service/release.md | new | What a merge to `main` actually costs when the tag deploys to Cloud Run, the injected `PORT`, and a service that is public by default. Shares its trigger with *Git flow*. Graceful shutdown and health checks wait until a service implements them. |
 | deployment | library/api-stability.md | new | Semver discipline, public-API stability, deprecation path, doc coverage on exported items. |
 | deployment | tag-only/release.md | new | The tag is a marker rather than a release: nothing deploys. The plan's `template` value, renamed in Stage 1 when the template rules became a concern. |
-| deployment | cli/conventions.md | new | Written at Stage 6, because agent-config is itself a CLI and becomes the first repo to declare the value. Exit codes, stdout versus stderr, `--help` quality, and the non-interactive rule. |
+| deployment | cli/conventions.md | new | Written at Stage 6, because agent-config is itself a CLI and becomes the first repo to declare the value. What the tag ships, then exit codes, stdout versus stderr, `--help` quality, and the non-interactive rule. Shares its trigger with *Git flow*, which is what makes the release half reachable. |
 | concerns | data-access/rules.md | new | Language-neutral, `scope: paths`. Transactions, N+1, forward-only migrations, lock discipline. |
 | concerns | sync/rules.md | new | Idempotency keys, ordering guarantees, at-least-once semantics, conflict resolution. |
+| concerns | fragment-authoring/tasks/new-value.md | new | Task-shaped, `invocation: model`. The checklist for adding a value to an axis — the half of Stage 6's Done-when that is not the guide. One consumer today, which *central first* would normally refuse; it earns its place against *Beyond coding agents*. |
 | concerns | template/rules.md | READMEs, placeholder docs | `scope: always`. Keep the example minimal, no real business logic, placeholders removed only once real code covers them, and a copy drops the concern from its profile. This is what all three current repos actually are. |
 | concerns | heavy-calc/ · fetching/ · … | new | **deferred** Write them when a repo needs them. The schema already supports the axis. |
 
@@ -445,6 +456,12 @@ Settled during Phase 2, recorded here so Stage 2 does not relitigate them.
 
 **The fetch recipe needs `set positional-arguments`** — Added in Stage 5. A `just` shebang recipe receives its parameters as `"$@"` only when the justfile sets it, and the recipe is copied between repositories as a block that looks self-contained. Without the setting `just agentcfg check` runs `agentcfg` with no subcommand: it prints help and exits 2, which reads like a broken binary rather than a missing one-line setting. The first two repositories happened to set it already, which is exactly why the third found it.
 
+**A deployment value says what a merge sets off** — Added in Stage 6. `core/git-flow.md` closes by telling a reader that this repository's deployment rules say what the merge triggered, so `deployment/cli/conventions.md` opens with what the tag ships and only then reaches exit codes and streams — one item more than the Stage 6 bullet listed, because that bullet predates the paragraph. A second fragment for the release was the alternative and was rejected: `library/api-stability.md` already folds its versioning rules into a fragment named for something else, and one fragment per deployment value is the shape of the axis. The general form: every deployment value answers "what does a merge do here", or that cross-reference lands on nothing in every repository selecting it.
+
+**Adoption pins, it does not track** — Added in Stage 6. agent-config's `check` gate fetches the binary its own `.agentprofile.yml` pins, exactly as every consumer's does, rather than the one its workspace builds. A fragment edited here therefore reaches this repository's own composed files through a release and a pin bump, not immediately. Running the working tree's binary was the alternative, and it is not adoption: it would couple every fragment pull request to regenerating this repository's configuration and quietly reverse *central first* in the one repository that defines it. The cost is that agent-config is the last repository still reading the old wording after a change ships, which is the right cost for the one that publishes it.
+
+**A publisher that consumes itself ratchets** — Added in Stage 6, found by asking before merging rather than by merging. A repository that publishes agentcfg and pins it puts its release version and its `config_version` on one number line: Renovate's bump pull request merges as `chore(deps): …`, `bump-version.yml` reads that subject and releases from it, and the pin is a patch behind again — one pull request a week, forever, of nothing but rewritten provenance stamps. Observed rather than predicted, in `claude-mit-rust-template`, where pull requests 17 and 18 cut v0.4.1 and v0.4.2; harmless there because the two versions are unrelated number lines. The fix is local, in agent-config's own `renovate.json`, which disables the agentcfg update so the pin moves by hand in the change that warrants it — step 8 of `/new-value`. Not in `bump-version.yml`, where it would stop bump merges cutting releases in seventy-five repositories that want them to.
+
 **The budget is a gate, not an intention** — The always-on set staying small is the assumption the whole composition rests on — it is why the glossary went to a file and why concerns are path-scoped. Stated in a plan and enforced by nobody, it decays: four fragments added over a year degrade every session in every repo with no one noticing. So `check` measures it and fails past a central threshold, and the fix when it trips is moving content behind `scope: paths`, never deleting a rule. What counts is everything loaded unconditionally, which includes the description line of every model-invocable skill — otherwise the cheapest way to evade the gate would be to move rules into a surface it does not measure. What does not count is what never reaches context: `invocation: user` descriptions, and HTML comment lines, which Claude Code strips. Counting either would push authors toward the wrong choice just to pass the gate.
 
 **Reversible on purpose** — `agentcfg eject` strips the markers, leaves the composed files as ordinary checked-in content, and deletes the profile and manifest. It costs almost nothing to build and it answers the only fair objection to centralising 75 repos — "what if this turns out to be wrong in a year". A repo can leave without a rewrite, which is also what makes adopting it a small decision rather than a large one.
@@ -537,9 +554,9 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **single-axis refactor** — The Stage 1 editorial pass: rewriting each existing file so it belongs to exactly one axis. It is what removes the crate/package and `just`/`make` vocabulary problem without control flow — the words move into the language value, and the core fragment references them as variables instead of choosing between them.
 
-**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-four. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
+**values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-three. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
 
-**value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library` and `tag-only` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
+**value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library`, `tag-only` and `cli` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
 
 ### Borrowed from elsewhere
 
