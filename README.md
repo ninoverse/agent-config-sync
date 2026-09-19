@@ -9,11 +9,11 @@ Read by any agent that reads `AGENTS.md`, which is most of them: Codex, Copilot,
 Cursor, Gemini CLI, Jules, Zed, Aider and others. Claude Code gets a generated
 `CLAUDE.md` and `.claude/` tree alongside.
 
-> **Status: nothing is built yet.** This repository is at Stage 0 of
-> [`docs/plan.md`](docs/plan.md), which carries the seven-stage build sequence and
-> the reasoning behind every decision. The README below describes the design in the
-> present tense because that is how a README stays useful; the plan is what says
-> when each part arrives.
+> **Status: built.** All seven stages of [`docs/plan.md`](docs/plan.md) have
+> landed. Four repositories are composed rather than hand-written — the three
+> `claude-mit-*` templates and this one — each carrying `.agentprofile.yml` plus
+> generated files and nothing else, and each green on `agentcfg check`. The plan
+> carries the reasoning behind every decision and the result of every stage.
 
 ## Why this exists
 
@@ -44,8 +44,9 @@ fragments/
 ├── language/             pick exactly 1     rust/  go/
 ├── framework/            pick 0 or 1        (none yet)
 ├── architecture/         pick 0 or 1        ddd/
-├── deployment/           pick exactly 1     service/  library/  template/  cli/
-├── concerns/             pick any number    data-access/  sync/
+├── deployment/           pick exactly 1     service/  library/  tag-only/  cli/
+├── concerns/             pick any number    data-access/  sync/  template/
+│                                            fragment-authoring/
 └── sensitivity/          pick exactly 1     none/  (declared, no content yet)
 ```
 
@@ -63,8 +64,8 @@ emit:         [agents-md, claude]
 ```
 
 `agentcfg` selects the fragments inside those values, substitutes the vocabulary
-each value declares, and writes the result. That profile composes 18 fragments.
-Drop the `architecture` line and it composes 14.
+each value declares, and writes the result. That profile composes 19 fragments.
+Drop the `architecture` line and it composes 15.
 
 Updates arrive through the central Renovate run in `ninoverse/.github`: it bumps
 `config_version`, regenerates the files in the same commit, and opens one pull
