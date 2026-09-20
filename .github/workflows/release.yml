@@ -93,9 +93,9 @@ jobs:
     # workflow-level `contents: read` above would cap it at read.
     permissions:
       contents: write
-    # Pinned to a tag, not @main — a change to @main would land here with no
-    # pull request in this repository.
-    uses: ninoverse/.github/.github/workflows/rust-release.yml@v1
+    # Pinned to a released version, not @main or a short @v1: @main lands here
+    # with no pull request, and @v1 never moves. Renovate opens the bump.
+    uses: ninoverse/.github/.github/workflows/rust-release.yml@v1.1.1
     with:
       binary: agentcfg
       targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl,aarch64-apple-darwin
