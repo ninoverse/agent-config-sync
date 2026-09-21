@@ -34,9 +34,9 @@ concurrency:
 
 jobs:
   bump:
-    # Pinned to a tag, not @main — a change to @main would land here with no
-    # pull request in this repository.
-    uses: ninoverse/.github/.github/workflows/rust-bump-version.yml@v1
+    # Pinned to a released version, not @main or a short @v1: @main lands here
+    # with no pull request, and @v1 never moves. Renovate opens the bump.
+    uses: ninoverse/.github/.github/workflows/rust-bump-version.yml@v1.1.1
     with:
       app-id: ${{ vars.RELEASE_APP_ID }}
     secrets:
