@@ -36,7 +36,7 @@ jobs:
   bump:
     # Pinned to a released version, not @main or a short @v1: @main lands here
     # with no pull request, and @v1 never moves. Renovate opens the bump.
-    uses: ninoverse/.github/.github/workflows/rust-bump-version.yml@v1.1.1
+    uses: ninoverse/.github/.github/workflows/rust-bump-version.yml@v1.2.2
     with:
       app-id: ${{ vars.RELEASE_APP_ID }}
     secrets:
