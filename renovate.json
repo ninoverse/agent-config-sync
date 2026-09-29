@@ -6,6 +6,11 @@
       "description": "This repository publishes agentcfg and consumes it, so its release version and its pinned config_version are one number line. A bump pull request here merges as `chore(deps): ...`, which bump-version.yml reads and releases from — leaving the pin one patch behind again, forever. The pin therefore moves by hand, in the change that warrants it, which is step 8 of /new-value. Consumers are unaffected: this rule is local to this repository.",
       "matchDepNames": ["ninoverse/agent-config-sync"],
       "enabled": false
+    },
+    {
+      "description": "globset 0.4.20 needs Rust 1.88, above this workspace's rust-version of 1.85. Cargo.toml leaves globset open so the MSRV-aware resolver picks the newest release that builds on 1.85, but Renovate writes an exact version into Cargo.lock, which bypasses that choice. This holds globset where the resolver would. Remove it in the change that raises the MSRV.",
+      "matchDepNames": ["globset"],
+      "allowedVersions": "<0.4.20"
     }
   ]
 }
