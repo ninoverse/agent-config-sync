@@ -109,6 +109,11 @@ AGENTS.md. It keeps `title` and `when`, which label that pointer, takes no
   how one came to sit a few lines above `cargo new --lib crates/<name>` in a
   document that is mostly bash, where an agent resolving it the shell way writes
   `crates/$name`. Placeholders inside commands are `<name>`, never a `$`.
+- A task that adds something, named `new-…`, opens its verification-gate step
+  with "If `.agents/<name>.local.md` exists, follow it now, before the gate."
+  That file is how a repository adds its own steps to a skill it cannot edit,
+  since the composed skill is owned whole. The tree's tests fail a `new-…` task
+  whose gate step does not say it.
 
 ## Substitution
 

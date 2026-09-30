@@ -114,6 +114,10 @@ blesses just as cleanly as one that is right.
 
 ### 6. Verification gate
 
+If `.agents/new-value.local.md` exists, follow it now, before the gate. It holds
+the steps this repository adds to this checklist; it is written by hand, and
+`agentcfg` leaves it alone.
+
 Run {{ gates }}, with {{ gates_clean }}, before committing:
 
 ```bash

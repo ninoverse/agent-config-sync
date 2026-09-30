@@ -90,6 +90,35 @@ fn every_task_names_a_skill_and_the_condition_that_loads_it() {
 }
 
 #[test]
+fn every_new_thing_task_follows_the_repositorys_own_steps_before_its_gate() {
+    // A composed skill is owned whole, so a repository adds its own steps
+    // through a file beside it. The task has to be the one that reads it.
+    for fragment in tree().fragments() {
+        let Meta::Task(meta) = fragment.meta() else {
+            continue;
+        };
+        if !meta.name.starts_with("new-") {
+            continue;
+        }
+
+        let body = fragment.body();
+        let gate = body
+            .find("Verification gate")
+            .unwrap_or_else(|| panic!("{}: no verification gate", fragment.path()));
+        let step_end = body[gate..]
+            .find("\n### ")
+            .map_or(body.len(), |offset| gate + offset);
+        let local = format!("`.agents/{}.local.md`", meta.name);
+
+        assert!(
+            body[gate..step_end].contains(&local),
+            "{}: the gate step never follows {local}",
+            fragment.path()
+        );
+    }
+}
+
+#[test]
 fn no_two_skills_in_one_value_would_collide() {
     let tree = tree();
     let mut seen: BTreeSet<(String, &str)> = BTreeSet::new();
