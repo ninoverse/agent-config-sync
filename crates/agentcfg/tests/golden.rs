@@ -147,6 +147,12 @@ fn rust_cli() {
     assert_fixture("rust-cli");
 }
 
+/// The library value, composed before anything selects it for real.
+#[test]
+fn rust_library() {
+    assert_fixture("rust-library");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped

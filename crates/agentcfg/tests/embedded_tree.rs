@@ -119,6 +119,34 @@ fn every_new_thing_task_follows_the_repositorys_own_steps_before_its_gate() {
 }
 
 #[test]
+fn every_deployment_value_says_what_a_merge_sets_off() {
+    // Git flow closes by sending the reader to this repository's deployment
+    // rules for what the merge triggered. A value with nothing on Git flow's own
+    // trigger leaves that pointer landing on nothing.
+    let tree = tree();
+    let git_flow = tree
+        .fragments()
+        .iter()
+        .find(|fragment| fragment.path() == "core/git-flow.md")
+        .expect("core ships Git flow");
+    let Meta::Rules(git_flow) = git_flow.meta() else {
+        panic!("Git flow is a rules fragment");
+    };
+
+    for value in tree.values("deployment") {
+        let prefix = format!("deployment/{value}/");
+        let answers = tree.fragments().iter().any(|fragment| {
+            fragment.path().starts_with(&prefix)
+                && matches!(fragment.meta(), Meta::Rules(meta) if meta.when == git_flow.when)
+        });
+        assert!(
+            answers,
+            "deployment/{value} never says what a merge sets off"
+        );
+    }
+}
+
+#[test]
 fn no_two_skills_in_one_value_would_collide() {
     let tree = tree();
     let mut seen: BTreeSet<(String, &str)> = BTreeSet::new();

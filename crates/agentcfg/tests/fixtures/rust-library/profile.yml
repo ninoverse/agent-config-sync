@@ -1,0 +1,4 @@
+config_version: v1.0.0
+language: rust
+deployment: library
+emit: [agents-md, claude]
