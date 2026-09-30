@@ -10,6 +10,7 @@ use crate::{Fragment, FragmentSet, Meta, Profile, Selection, error::EmitError};
 
 pub use agents_md::AgentsMd;
 pub(crate) use agents_md::INDEX;
+use agents_md::RULES_DIR;
 pub use claude::Claude;
 pub(crate) use claude::IMPORT;
 
@@ -184,6 +185,54 @@ pub(crate) fn receives(emitter: EmitterName, fragment: &Fragment) -> bool {
     filter.is_none_or(|emitters| emitters.contains(&emitter))
 }
 
+/// The files a task ships beside it, written once whichever emitters the
+/// profile selects.
+///
+/// A file in `tasks/<task>/`, beside `tasks/<task>.md`, lands in
+/// `.agents/<skill>/` under the same relative path, where the skill and its
+/// `.agents/<skill>.md` copy for other agents both reach it by one path. It is
+/// owned whole and shipped verbatim, with no substitution, and nothing sets an
+/// executable bit on it, so a script is started through its interpreter.
+/// Markdown is never a companion: every `.md` under `tasks/` is a task.
+///
+/// A task no selected emitter receives has nothing that would call its files,
+/// so they are not written.
+pub(crate) fn companions(input: EmitInput<'_>) -> Vec<OutputFile> {
+    let mut files = Vec::new();
+
+    for fragment in input.selection.fragments() {
+        let Meta::Task(meta) = fragment.meta() else {
+            continue;
+        };
+        if !input
+            .profile
+            .emit
+            .iter()
+            .any(|emitter| receives(*emitter, fragment))
+        {
+            continue;
+        }
+
+        let source = fragment.path();
+        let directory = format!("{}/", source.strip_suffix(".md").unwrap_or(source));
+        for (path, contents) in input.tree.files() {
+            let Some(relative) = path.strip_prefix(&directory) else {
+                continue;
+            };
+            if path.ends_with(".md") {
+                continue;
+            }
+            files.push(OutputFile {
+                path: format!("{RULES_DIR}/{}/{relative}", meta.name),
+                content: contents.to_owned(),
+                ownership: Ownership::Whole,
+            });
+        }
+    }
+
+    files
+}
+
 /// The filename a fragment's body gets, without extension.
 ///
 /// Keyed on the source path rather than the file stem, because three fragments
@@ -341,5 +390,103 @@ mod tests {
 
         assert!(matches!(error, EmitError::DuplicatePath { .. }));
         assert!(error.to_string().contains(".agents/rules.md"), "{error}");
+    }
+
+    /// The companions `profile` gets from the real tree plus `extra`. No task
+    /// in the real tree ships one yet, so each test writes its own.
+    fn companions_of(extra: &[(&'static str, &'static str)], profile: &str) -> Vec<OutputFile> {
+        let mut files = crate::embedded::FILES.to_vec();
+        files.extend_from_slice(extra);
+        let tree = FragmentSet::build(&files, crate::embedded::AXES).unwrap();
+        let profile = Profile::parse(profile, &tree).unwrap();
+        let selection = Selection::resolve(&profile, &tree).unwrap();
+
+        companions(EmitInput {
+            selection: &selection,
+            profile: &profile,
+            tree: &tree,
+            version: "v1.0.0",
+        })
+    }
+
+    const RUST: &str =
+        "config_version: v1.0.0\nlanguage: rust\ndeployment: tag-only\nemit: [agents-md]\n";
+
+    #[test]
+    fn a_companion_lands_beside_its_skill_verbatim_and_owned_whole() {
+        let files = companions_of(
+            &[
+                (
+                    "language/rust/tasks/new-unit/scaffold.sh",
+                    "echo 'a {{ unit }}'\n",
+                ),
+                (
+                    "language/rust/tasks/new-unit/templates/lib.rs",
+                    "//! Docs.\n",
+                ),
+            ],
+            RUST,
+        );
+
+        // Named for the skill, as `.agents/new-crate.md` is, and nested files
+        // keep their place. `{{ unit }}` is left alone: a script is not prose.
+        assert_eq!(
+            files,
+            [
+                OutputFile {
+                    path: ".agents/new-crate/scaffold.sh".to_owned(),
+                    content: "echo 'a {{ unit }}'\n".to_owned(),
+                    ownership: Ownership::Whole,
+                },
+                OutputFile {
+                    path: ".agents/new-crate/templates/lib.rs".to_owned(),
+                    content: "//! Docs.\n".to_owned(),
+                    ownership: Ownership::Whole,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn only_a_selected_task_ships_its_files() {
+        let files = companions_of(
+            &[("language/go/tasks/new-unit/scaffold.sh", "echo\n")],
+            RUST,
+        );
+
+        assert!(files.is_empty(), "{files:?}");
+    }
+
+    #[test]
+    fn markdown_beside_a_task_is_a_task_not_a_companion() {
+        let files = companions_of(
+            &[(
+                "language/rust/tasks/new-unit/notes.md",
+                "---\nname: notes\ntitle: Notes\nwhen: Reading notes\ndescription: Read the notes\n---\n\nBody.\n",
+            )],
+            RUST,
+        );
+
+        assert!(files.is_empty(), "{files:?}");
+    }
+
+    #[test]
+    fn a_task_no_selected_emitter_receives_ships_nothing() {
+        let task = (
+            "concerns/template/tasks/claude-only.md",
+            "---\nname: claude-only\ntitle: Claude only\nwhen: Using Claude\ndescription: For Claude\nemit: [claude]\n---\n\nBody.\n",
+        );
+        let script = ("concerns/template/tasks/claude-only/run.sh", "echo\n");
+        let profile = |emit: &str| {
+            format!(
+                "config_version: v1.0.0\nlanguage: rust\ndeployment: tag-only\nconcerns: [template]\nemit: {emit}\n"
+            )
+        };
+
+        assert!(companions_of(&[task, script], &profile("[agents-md]")).is_empty());
+        assert_eq!(
+            companions_of(&[task, script], &profile("[agents-md, claude]"))[0].path,
+            ".agents/claude-only/run.sh"
+        );
     }
 }

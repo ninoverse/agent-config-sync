@@ -16,7 +16,7 @@ pub struct Composition {
     pub profile: Profile,
     /// The fragments that answers, substituted and ordered.
     pub selection: Selection,
-    /// What every selected emitter would write.
+    /// What every selected emitter would write, and the files beside its tasks.
     pub files: Vec<OutputFile>,
     /// What writing it would change.
     pub plan: Plan,
@@ -69,7 +69,11 @@ impl Composition {
             }
         }
 
-        let files: Vec<OutputFile> = claimed.into_iter().map(|(_, file)| file).collect();
+        let mut files: Vec<OutputFile> = claimed.into_iter().map(|(_, file)| file).collect();
+        // One copy, whichever emitters asked for its task. Each lives under
+        // `.agents/<skill>/`, a directory no emitter writes into, and a skill
+        // name taken twice already failed above as `.agents/<skill>.md`.
+        files.extend(crate::emit::companions(input));
         let plan = repo.plan(&files)?;
 
         Ok(Self {
