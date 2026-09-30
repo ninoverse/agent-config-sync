@@ -127,6 +127,10 @@ other-crate = { path = "../other-crate" }
 
 ### 8. Verification gate
 
+If `.agents/new-crate.local.md` exists, follow it now, before the gate. It holds
+the steps this repository adds to this checklist; it is written by hand, and
+`agentcfg` leaves it alone.
+
 All four gates must pass, with zero warnings, before committing:
 
 ```bash

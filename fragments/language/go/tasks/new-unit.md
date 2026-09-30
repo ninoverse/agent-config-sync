@@ -104,6 +104,10 @@ New third-party dependencies are added with `go get <module>` and land in
 
 ### 8. Verification gate
 
+If `.agents/new-package.local.md` exists, follow it now, before the gate. It
+holds the steps this repository adds to this checklist; it is written by hand,
+and `agentcfg` leaves it alone.
+
 ```bash
 make ci
 ```
