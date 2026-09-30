@@ -27,6 +27,13 @@ fragments/
 carry no frontmatter, nothing emits them on their own, and only `language` values
 ship them today.
 
+Where several selected values ship a `settings.partial.json`, the claude emitter
+merges them in composition order: objects combine key by key, arrays
+concatenate, and anything else takes the later value. A framework or concern
+that allows its own command therefore extends its language's allowlist and hooks
+rather than replacing them. The profile's `settings_extra:` merges last and
+replaces arrays instead — see [the profile schema](profile-schema.md#settings_extra).
+
 ## What a value contains
 
 Whatever its siblings contain. That parity is the rule, because a value shipping

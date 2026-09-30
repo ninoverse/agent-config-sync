@@ -232,12 +232,12 @@ fn settings(input: EmitInput<'_>) -> Result<Option<OutputFile>, EmitError> {
 
         let partial: Map<String, Value> = serde_json::from_str(contents)
             .map_err(|source| EmitError::Settings { path, source })?;
-        merge(&mut settings, &partial);
+        merge(&mut settings, &partial, Arrays::Concatenate);
     }
 
     // Repo-local additions go in the profile, and land last.
     if let Some(extra) = &input.profile.settings_extra {
-        merge(&mut settings, extra);
+        merge(&mut settings, extra, Arrays::Replace);
     }
 
     if settings.is_empty() {
@@ -257,11 +257,31 @@ fn settings(input: EmitInput<'_>) -> Result<Option<OutputFile>, EmitError> {
     }))
 }
 
-/// Deep-merges `extra` over `base`: objects combine, everything else replaces.
-fn merge(base: &mut Map<String, Value>, extra: &Map<String, Value>) {
+/// What [`merge`] does when both sides hold an array under the same key.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Arrays {
+    /// Between value partials, in composition order. A framework or concern
+    /// that allows its own command extends its language's allowlist and hooks
+    /// rather than dropping them.
+    Concatenate,
+    /// From the profile's `settings_extra:`, so a repository can remove an
+    /// entry as well as add one.
+    Replace,
+}
+
+/// Deep-merges `extra` over `base`: objects combine, arrays concatenate or
+/// replace as `arrays` says, and everything else replaces.
+fn merge(base: &mut Map<String, Value>, extra: &Map<String, Value>, arrays: Arrays) {
     for (key, value) in extra {
         match (base.get_mut(key), value) {
-            (Some(Value::Object(existing)), Value::Object(incoming)) => merge(existing, incoming),
+            (Some(Value::Object(existing)), Value::Object(incoming)) => {
+                merge(existing, incoming, arrays);
+            }
+            (Some(Value::Array(existing)), Value::Array(incoming))
+                if arrays == Arrays::Concatenate =>
+            {
+                existing.extend(incoming.iter().cloned());
+            }
             _ => {
                 base.insert(key.clone(), value.clone());
             }
@@ -280,7 +300,7 @@ mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used)]
 
     use super::*;
-    use crate::{Fragment, TaskMeta};
+    use crate::{Fragment, FragmentSet, Profile, Selection, TaskMeta};
 
     fn task(frontmatter: &str) -> Fragment {
         Fragment::parse(
@@ -368,6 +388,7 @@ mod tests {
         merge(
             &mut base,
             &json(r#"{"permissions": {"allow": ["b"]}, "env": {"K": "v"}}"#),
+            Arrays::Replace,
         );
 
         // A sibling key inside a merged object survives.
@@ -383,9 +404,97 @@ mod tests {
     #[test]
     fn the_partial_is_composed_before_the_profiles_own_additions() {
         let mut base = json(r#"{"env": {"A": "from-partial", "B": "kept"}}"#);
-        merge(&mut base, &json(r#"{"env": {"A": "from-profile"}}"#));
+        merge(
+            &mut base,
+            &json(r#"{"env": {"A": "from-profile"}}"#),
+            Arrays::Replace,
+        );
 
         assert_eq!(base["env"]["A"].to_string(), r#""from-profile""#);
         assert_eq!(base["env"]["B"].to_string(), r#""kept""#);
+    }
+
+    #[test]
+    fn between_partials_arrays_concatenate_and_everything_else_still_replaces() {
+        let mut base = json(r#"{"permissions": {"allow": ["a"]}, "model": "first"}"#);
+        merge(
+            &mut base,
+            &json(r#"{"permissions": {"allow": ["b"]}, "model": "second"}"#),
+            Arrays::Concatenate,
+        );
+
+        assert_eq!(base["permissions"]["allow"].to_string(), r#"["a","b"]"#);
+        assert_eq!(base["model"].to_string(), r#""second""#);
+    }
+
+    /// `.claude/settings.json` for a language and a framework that each ship a
+    /// partial. No framework or concern in the real tree ships one yet, so this
+    /// is a tree written for the purpose.
+    fn composed_from_two_partials(extra: &str) -> Value {
+        let tree = FragmentSet::build(
+            &[
+                (
+                    "language/typescript/settings.partial.json",
+                    r#"{"permissions": {"allow": ["Bash(pnpm run ci)"]}, "hooks": {"Stop": [{"hooks": [{"type": "command", "command": "tsc -b"}]}]}}"#,
+                ),
+                (
+                    "framework/lit/settings.partial.json",
+                    r#"{"permissions": {"allow": ["Bash(pnpm cem)"]}, "hooks": {"Stop": [{"hooks": [{"type": "command", "command": "pnpm cem"}]}]}}"#,
+                ),
+            ],
+            &[
+                ("deployment", &["library"]),
+                ("framework", &["lit"]),
+                ("language", &["typescript"]),
+                ("sensitivity", &["none"]),
+            ],
+        )
+        .unwrap();
+        let profile = Profile::parse(
+            &format!(
+                "config_version: v1.0.0\nlanguage: typescript\nframework: lit\ndeployment: library\nemit: [agents-md, claude]\n{extra}"
+            ),
+            &tree,
+        )
+        .unwrap();
+        let selection = Selection::resolve(&profile, &tree).unwrap();
+        let file = settings(EmitInput {
+            selection: &selection,
+            profile: &profile,
+            tree: &tree,
+            version: "v1.0.0",
+        })
+        .unwrap()
+        .unwrap();
+
+        serde_json::from_str(&file.content).unwrap()
+    }
+
+    #[test]
+    fn a_second_partial_extends_the_first_in_composition_order() {
+        let settings = composed_from_two_partials("");
+
+        assert_eq!(
+            settings["permissions"]["allow"].to_string(),
+            r#"["Bash(pnpm run ci)","Bash(pnpm cem)"]"#
+        );
+        // Hooks are arrays too, so the framework's runs beside the language's.
+        let stop = settings["hooks"]["Stop"].as_array().unwrap();
+        assert_eq!(stop.len(), 2);
+        assert_eq!(stop[0]["hooks"][0]["command"], "tsc -b");
+    }
+
+    #[test]
+    fn the_profile_can_still_remove_what_the_partials_composed() {
+        let settings = composed_from_two_partials(
+            "settings_extra:\n  permissions:\n    allow: [\"Bash(pnpm run ci)\"]\n",
+        );
+
+        assert_eq!(
+            settings["permissions"]["allow"].to_string(),
+            r#"["Bash(pnpm run ci)"]"#
+        );
+        // Only the array it names is replaced.
+        assert_eq!(settings["hooks"]["Stop"].as_array().unwrap().len(), 2);
     }
 }
