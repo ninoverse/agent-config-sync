@@ -16,7 +16,7 @@ use super::{EmitInput, Emitter, EmitterName, OutputFile, Ownership, file_stem, r
 use crate::{Fragment, Meta, Scope, error::EmitError};
 
 /// Where the bodies an agent reads on demand live.
-const RULES_DIR: &str = ".agents";
+pub(super) const RULES_DIR: &str = ".agents";
 
 /// Names the index in its provenance comment, so the always-on budget can
 /// attribute its lines to something other than the fragment above it.

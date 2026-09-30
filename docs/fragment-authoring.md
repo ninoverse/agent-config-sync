@@ -20,7 +20,8 @@ fragments/
     ├── values.yml                  the vocabulary this value declares
     ├── settings.partial.json       the Claude settings it contributes
     ├── <name>.md                   a rules fragment
-    └── tasks/<name>.md             a task fragment — a skill for Claude
+    ├── tasks/<name>.md             a task fragment — a skill for Claude
+    └── tasks/<name>/<file>         a file the task ships beside it
 ```
 
 `values.yml` and `settings.partial.json` are files rather than fragments: they
@@ -33,6 +34,16 @@ concatenate, and anything else takes the later value. A framework or concern
 that allows its own command therefore extends its language's allowlist and hooks
 rather than replacing them. The profile's `settings_extra:` merges last and
 replaces arrays instead — see [the profile schema](profile-schema.md#settings_extra).
+
+A task can ship files beside it, such as a script it runs or a template it
+copies. They go in `tasks/<name>/`, next to `tasks/<name>.md`, and agentcfg
+writes them to `.agents/<skill>/` under the same relative path: one copy,
+whichever emitters the profile names, owned whole, listed in the manifest and
+verified by `check`. The skill and its `.agents/<skill>.md` copy call them by
+that path. They ship verbatim, with no substitution, and as text, since the tree
+is compiled in with `include_str!`. Nothing sets an executable bit, so a task
+starts a script through its interpreter, as `sh …` or `node …`. A companion
+can't be markdown: every `.md` under `tasks/` is a task.
 
 ## What a value contains
 
