@@ -101,7 +101,9 @@ It merges **last**, over the selected values' partials, and merges **deeply**:
 objects combine key by key, so adding `env:` leaves `permissions:` alone.
 Anything else replaces — an array in `settings_extra` takes the place of the
 array it lands on rather than extending it, so a repository can remove an entry
-as well as add one. The result is written whole and verified byte-for-byte,
+as well as add one. That is the difference from the partials, whose arrays
+concatenate: what several values allow accumulates, and only the profile takes
+an entry away. The result is written whole and verified byte-for-byte,
 so a merge that did something unexpected fails `check` in the PR that caused it.
 
 Keys come out sorted, which is a property of how the file is serialised rather
