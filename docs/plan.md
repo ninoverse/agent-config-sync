@@ -44,7 +44,8 @@ fragments/
 │   ├── rust/              ← a value   8 fragments inside
 │   │   ├── tooling.md     ← a fragment
 │   │   └── …
-│   └── go/                8 fragments inside
+│   ├── go/                8 fragments inside
+│   └── typescript/        8 fragments inside
 ├── architecture/          ← an axis   pick 0 or 1
 │   └── ddd/               4 fragments inside
 ├── deployment/            ← an axis   pick exactly 1
@@ -53,11 +54,11 @@ fragments/
     ├── data-access/  sync/  template/
 ```
 
-`core/` is not an axis — it has no values and is always included, which is why it has no cardinality. The six real axes each have a cardinality: how many of that axis's values a single repo may name in its profile. Two languages exist, but a repo declares exactly one of them; five concerns will exist, and a repo may declare none, one or all five. That is what the schema enforces:
+`core/` is not an axis — it has no values and is always included, which is why it has no cardinality. The six real axes each have a cardinality: how many of that axis's values a single repo may name in its profile. Three languages exist, but a repo declares exactly one of them; five concerns will exist, and a repo may declare none, one or all five. That is what the schema enforces:
 
 | Axis | How many values / one repo declares | Values that exist / to choose from | Fragments / per value | Covers |
 | --- | --- | --- | --- | --- |
-| language | exactly 1 — `language: rust` | rust, go | 8 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
+| language | exactly 1 — `language: rust` | rust, go, typescript | 8 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
 | framework | 0 or 1 — `framework: ~` | **none yet** | — | Axum, Dioxus and the rest. The schema accepts the axis; no value is written until a repo needs one. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
 | deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli. |

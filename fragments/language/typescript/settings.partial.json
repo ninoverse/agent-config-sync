@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm format:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm --filter:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm why:*)",
+      "Bash(pnpm outdated:*)",
+      "Bash(pnpm audit:*)",
+      "Bash(pnpm exec biome:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm exec vitest:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm install --frozen-lockfile)",
+      "Bash(pnpm --version)",
+      "Bash(node --version)"
+    ],
+    "deny": [
+      "Bash(pnpm publish:*)",
+      "Bash(pnpm login:*)",
+      "Bash(npm publish:*)",
+      "Bash(npm login:*)",
+      "Bash(npm token:*)",
+      "Bash(npm install:*)",
+      "Bash(npm ci:*)",
+      "Bash(yarn:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./.npmrc)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.ts|*.tsx|*.mts|*.cts|*.js|*.jsx|*.mjs|*.cjs|*.json|*.jsonc|*.css) \"$CLAUDE_PROJECT_DIR/node_modules/.bin/biome\" format --write \"$f\";; esac; } >/dev/null 2>&1 || true",
+            "statusMessage": "biome format",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --porcelain --untracked-files=all 2>/dev/null | grep -qE '\\.(ts|tsx|mts|cts)\"?$' || exit 0; pnpm typecheck >/dev/null 2>&1 || printf '%s' '{\"systemMessage\":\"pnpm typecheck is failing - the types do not check. See AGENTS.md: never leave the build broken.\"}'",
+            "statusMessage": "pnpm typecheck",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

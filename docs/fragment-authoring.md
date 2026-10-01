@@ -135,20 +135,20 @@ verbatim, so they may carry markdown.
 
 Core references these, so every `language` value defines all of them:
 
-| Name | rust | go |
-|------|------|----|
-| `unit` | `crate` | `package` |
-| `units` | `crates` | `packages` |
-| `unit_container` | `workspace` | `module` |
-| `gate_command` | `just ci` | `make ci` |
-| `gates` | `all four gates` | `every gate` |
-| `gates_clean` | `zero warnings` | `zero findings` |
-| `unit_lint_command` | `cargo clippy -p <crate> --all-targets -- -D warnings` | `golangci-lint run ./internal/<pkg>/...` |
-| `unit_test_command` | `cargo nextest run -p <crate>` | `gotestsum -- -race ./internal/<pkg>/...` |
-| `version_floor` | `MSRV` | `Go version` |
-| `lint_suppression` | ``` `#[allow(...)]` attribute ``` | ``` `//nolint:...` directive ``` |
-| `dependency_bump_example` | `tokio to 1.40` | `golang.org/x/sync to v0.10.0` |
-| `breaking_change_example` | `bump MSRV to 1.85` | `drop support for Go 1.24` |
+| Name | rust | go | typescript |
+|------|------|----|------------|
+| `unit` | `crate` | `package` | `package` |
+| `units` | `crates` | `packages` | `packages` |
+| `unit_container` | `workspace` | `module` | `workspace` |
+| `gate_command` | `just ci` | `make ci` | `pnpm run ci` |
+| `gates` | `all four gates` | `every gate` | `every gate` |
+| `gates_clean` | `zero warnings` | `zero findings` | `zero warnings` |
+| `unit_lint_command` | `cargo clippy -p <crate> --all-targets -- -D warnings` | `golangci-lint run ./internal/<pkg>/...` | `pnpm --filter <package> run lint` |
+| `unit_test_command` | `cargo nextest run -p <crate>` | `gotestsum -- -race ./internal/<pkg>/...` | `pnpm --filter <package> test` |
+| `version_floor` | `MSRV` | `Go version` | ``` `engines.node` floor ``` |
+| `lint_suppression` | ``` `#[allow(...)]` attribute ``` | ``` `//nolint:...` directive ``` | ``` `biome-ignore` or `@ts-expect-error` suppression ``` |
+| `dependency_bump_example` | `tokio to 1.40` | `golang.org/x/sync to v0.10.0` | `vite to 7.1.0` |
+| `breaking_change_example` | `bump MSRV to 1.85` | `drop support for Go 1.24` | `drop support for Node 20` |
 
 ## Choosing a scope
 

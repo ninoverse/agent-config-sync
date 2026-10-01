@@ -130,7 +130,7 @@ in `ninoverse/.github`. A setting the deciding tool cannot read is decoration.
 | Missing `language`, `deployment`, `config_version` or `emit` | `missing field ...` |
 | An unknown key | `unknown field ...` |
 | `config_version` that is not a release tag | ``expected `v<major>.<minor>.<patch>` `` |
-| An axis naming a value this release does not ship | `unknown language ... — this release ships: go, rust` |
+| An axis naming a value this release does not ship | `unknown language ... — this release ships: go, rust, typescript` |
 | An axis that ships nothing yet | `unknown framework ... — this release ships no values for that axis yet` |
 | The same concern listed twice | ``listed twice under `concerns:` `` |
 | An unknown emitter name | `unknown emitter ... — expected one of: agents-md, claude` |
