@@ -1,0 +1,52 @@
+name: Screenshot smoke test
+
+# The take-screenshot scripts ship into every repository that selects
+# concerns/browser-ui, and none of their CI runs them, so a Playwright release
+# that broke one would show up only when a repository next captured a page.
+# This runs the dispatcher and each entry against tests/browser-ui/fixture.html
+# instead, on changes to the concern or to the test, and Rust-only changes skip
+# it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "fragments/concerns/browser-ui/**"
+      - "tests/browser-ui/**"
+      - ".github/workflows/screenshot-smoke.yml"
+  pull_request:
+    paths:
+      - "fragments/concerns/browser-ui/**"
+      - "tests/browser-ui/**"
+      - ".github/workflows/screenshot-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: take-screenshot
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/browser-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck the dispatcher and the test
+        run: shellcheck ../../fragments/concerns/browser-ui/tasks/take-screenshot/screenshot.sh check.sh
+
+      # Each entry brings its own runtime to this job. Playwright is pinned in
+      # package.json, where Renovate keeps it current.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run the dispatcher and each entry in every mode
+        run: sh check.sh

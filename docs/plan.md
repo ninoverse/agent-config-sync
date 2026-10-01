@@ -53,7 +53,7 @@ fragments/
 ├── deployment/            ← an axis   pick exactly 1
 │   ├── service/  library/  tag-only/  cli/
 └── concerns/             ← an axis   pick any number
-    ├── data-access/  sync/  template/
+    ├── data-access/  sync/  template/  fragment-authoring/  browser-ui/
 ```
 
 `core/` is not an axis — it has no values and is always included, which is why it has no cardinality. The six real axes each have a cardinality: how many of that axis's values a single repo may name in its profile. Three languages exist, but a repo declares exactly one of them; five concerns will exist, and a repo may declare none, one or all five. That is what the schema enforces:
@@ -64,7 +64,7 @@ fragments/
 | framework | 0 or 1 — `framework: lit` | lit | 9 | What the framework adds to activities core and the language already cover, and its own unit of work: for Lit, elements, their styles, forms and overlays, tests, review, files, sequencing and the PR's API table, with `/new-element`. Axum, Dioxus and the rest await a repo that needs them. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
 | deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli. |
-| concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template, / fragment-authoring | 1 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files. Two are not hazards: `template`, the always-on rules for a repository others copy, and `fragment-authoring`, which carries `/new-value` and earns its place against *Beyond coding agents*. Heavy-calc and fetching deferred. |
+| concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template, / fragment-authoring, / browser-ui | 1–2 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files. Three are not hazards: `template`, the always-on rules for a repository others copy; `fragment-authoring`, which carries `/new-value` and earns its place against *Beyond coding agents*; and `browser-ui`, for a repository that renders UI in a browser, which carries `/take-screenshot` with its scripts and the visual-check record a PR keeps. Heavy-calc and fetching deferred. |
 | sensitivity | exactly 1, defaulted — `sensitivity: none` | **none only** | 0 | Payload logging, error-message contents, retention, encryption at rest, audit trail. Declared now because retrofitting it across dozens of repos later is the expensive case. |
 
 So v1 authors **33 fragments** — 7 core, 7 each for rust and go, 4 for `ddd`, 4 across the deployment values, 4 concerns. Each language value also ships a `values.yml` and a `settings.partial.json`, which carry no frontmatter and are therefore files rather than fragments; counting them is what made this number 34 until Stage 6 checked it. At full spread (five languages, a dozen frameworks, five concerns, a handful of architectures) it lands near 70, still serving ~75 repos.
