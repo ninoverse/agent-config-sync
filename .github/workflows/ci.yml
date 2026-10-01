@@ -41,6 +41,11 @@ jobs:
       # channel to `stable`.
       msrv: "1.85"
 
+  # actionlint over the files in this directory, with ShellCheck on their
+  # `run:` blocks. Its check reads `workflows / actionlint`. Pinned like `ci`.
+  workflows:
+    uses: ninoverse/.github/.github/workflows/actionlint.yml@v1.4.0
+
   # The other direction from the Monday bump pull request: when someone edits
   # .agentprofile.yml — adds a concern, changes the deployment — the composed
   # files go stale, and this fails in their own pull request rather than a bot
