@@ -78,7 +78,7 @@ intended" half of the version-floor rule; test coverage.
 - Verbatim: the `[lints] workspace = true` bullet, Error handling, Unsafe code,
   Public API, and the `just deny` bullet.
 - "Breaking changes to a published crate bump the major version in `Cargo.toml`"
-  → `deployment/library/api-stability.md`, corrected. The version is set by
+  → `deployment/library/release.md`, corrected. The version is set by
   `bump-version.yml` from a `!` or `BREAKING CHANGE` in the merged commit; a hand
   edit to `Cargo.toml` would be bumped again on merge.
 - MSRV bullet: its "not bumped" half is in core; "in `clippy.toml` and
@@ -182,7 +182,7 @@ These fragments have no rule file to extract from. Their facts come from:
 |----------|--------|
 | `deployment/service/release.md` | AT and GT `release.yml`; `release-cloudrun.yml` and `*-bump-version.yml` in `ninoverse/.github@v1`. Graceful shutdown and health checks, which the plan listed, are left out: neither service handles SIGTERM, and only agent-server has a probe (`GET /`). |
 | `deployment/tag-only/release.md` | RT `bump-version.yml`: "There is no deploy watching for that tag." The plan's `template` value, renamed so it does not collide with the concern. |
-| `deployment/library/api-stability.md` | The plan's map, plus the corrected Rust breaking-change rule above. No source repo is a library. |
+| `deployment/library/release.md` | The plan's map, plus the corrected Rust breaking-change rule above. No source repo is a library. Its release half came later, from hmi-components, the first library to select it. |
 | `concerns/template/rules.md` | RT `crates/example/src/lib.rs` docs, RT and GT README placeholder rows, GT `commands/new-package.md` placeholder paragraph. |
 | `architecture/ddd/*`, `concerns/data-access/rules.md`, `concerns/sync/rules.md` | The plan's map. No source repo uses them yet. |
 
