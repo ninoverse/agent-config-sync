@@ -392,8 +392,8 @@ mod tests {
         assert!(error.to_string().contains(".agents/rules.md"), "{error}");
     }
 
-    /// The companions `profile` gets from the real tree plus `extra`. No task
-    /// in the real tree ships one yet, so each test writes its own.
+    /// The companions `profile` gets from the real tree plus `extra`. Each test
+    /// writes its own, so the real tree's companions can change without them.
     fn companions_of(extra: &[(&'static str, &'static str)], profile: &str) -> Vec<OutputFile> {
         let mut files = crate::embedded::FILES.to_vec();
         files.extend_from_slice(extra);

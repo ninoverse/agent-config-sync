@@ -30,10 +30,7 @@ impl FragmentSet {
     ///
     /// let set = FragmentSet::embedded()?;
     /// assert_eq!(set.values("language"), ["go", "rust", "typescript"]);
-    ///
-    /// // An axis with no directory yet has no legal values, so naming one is
-    /// // an error rather than a silent pick.
-    /// assert!(set.values("framework").is_empty());
+    /// assert_eq!(set.values("framework"), ["lit"]);
     /// # Ok::<(), agentcfg::FragmentError>(())
     /// ```
     pub fn embedded() -> Result<Self, FragmentError> {
@@ -289,6 +286,7 @@ mod tests {
                 "architecture",
                 "concerns",
                 "deployment",
+                "framework",
                 "language",
                 "sensitivity"
             ]

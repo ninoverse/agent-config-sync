@@ -160,6 +160,13 @@ fn typescript_library() {
     assert_fixture("typescript-library");
 }
 
+/// The first framework value, on the TypeScript library hmi-components will
+/// compose it with, before anything selects it for real.
+#[test]
+fn typescript_lit_library() {
+    assert_fixture("typescript-lit-library");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped

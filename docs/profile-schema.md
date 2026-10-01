@@ -65,11 +65,10 @@ an axis is the value directories inside it, embedded at build time, so
 release, and is a hard error before that. There is no hand-written list to
 keep in step.
 
-Two axes ship without content today. `framework` has no directory at all, so
-naming any framework is an error until one exists. `sensitivity` ships a
-single empty value, `none`, so the axis can be declared now and filled in
-later — retrofitting it across dozens of repositories is the expensive case,
-and one line today avoids it.
+One axis ships without content today. `sensitivity` ships a single empty
+value, `none`, so the axis can be declared now and filled in later —
+retrofitting it across dozens of repositories is the expensive case, and one
+line today avoids it.
 
 ## `emit` has no implicit default
 
@@ -131,7 +130,7 @@ in `ninoverse/.github`. A setting the deciding tool cannot read is decoration.
 | An unknown key | `unknown field ...` |
 | `config_version` that is not a release tag | ``expected `v<major>.<minor>.<patch>` `` |
 | An axis naming a value this release does not ship | `unknown language ... — this release ships: go, rust, typescript` |
-| An axis that ships nothing yet | `unknown framework ... — this release ships no values for that axis yet` |
+| An axis that ships nothing yet | `unknown <axis> ... — this release ships no values for that axis yet` |
 | The same concern listed twice | ``listed twice under `concerns:` `` |
 | An unknown emitter name | `unknown emitter ... — expected one of: agents-md, claude` |
 | `emit:` naming claude without agents-md | `CLAUDE.md imports AGENTS.md, so claude cannot be emitted alone` |
