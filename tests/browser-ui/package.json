@@ -1,0 +1,8 @@
+{
+    "name": "browser-ui-smoke",
+    "private": true,
+    "description": "Runs the take-screenshot scripts that concerns/browser-ui ships against fixture.html. See check.sh.",
+    "devDependencies": {
+        "playwright": "1.63.0"
+    }
+}

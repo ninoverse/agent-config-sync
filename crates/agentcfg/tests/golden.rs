@@ -167,6 +167,13 @@ fn typescript_lit_library() {
     assert_fixture("typescript-lit-library");
 }
 
+/// The browser-ui concern, on the profile hmi-components will select, before
+/// anything selects it for real.
+#[test]
+fn typescript_lit_browser_ui() {
+    assert_fixture("typescript-lit-browser-ui");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped

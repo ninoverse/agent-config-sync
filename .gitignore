@@ -15,6 +15,9 @@
 # committed — the pin in .agentprofile.yml is the thing under version control.
 /.agentcfg/
 
+# The screenshot smoke test's Playwright, which `npm ci` installs there.
+/tests/browser-ui/node_modules/
+
 # Coverage artefacts from `cargo llvm-cov`.
 *.profraw
 *.profdata
