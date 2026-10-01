@@ -5,7 +5,7 @@ argument-hint: "[optional: -p <crate> to scope to one crate]"
 allowed-tools: "Bash(just:*), Bash(cargo:*)"
 ---
 
-<!-- language/rust/tasks/gates.md · v0.18.0 -->
+<!-- language/rust/tasks/gates.md · v1.0.0 -->
 # Merge gates
 
 Run the four merge gates defined in *Testing instructions*:

@@ -1,5 +1,5 @@
 <!-- agentcfg:start -->
-<!-- core/branch-naming.md · v0.18.0 -->
+<!-- core/branch-naming.md · v1.0.0 -->
 # Branch naming
 
 ## Format
@@ -37,6 +37,8 @@ wip/spike-new-api
 ## Rules
 
 - Branch off an up-to-date `main`, never off another branch — see *Git flow*.
+- An environment may assign a branch before you start, such as `claude/<words>`.
+  Ask the user which branch to use before creating another or pushing.
 - Delete branches after merging.
 - Never commit directly to `main`.
 <!-- agentcfg:end -->
