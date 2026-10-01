@@ -153,6 +153,13 @@ fn rust_library() {
     assert_fixture("rust-library");
 }
 
+/// The TypeScript value, composed as a library the way hmi-components will
+/// select it, before anything does for real.
+#[test]
+fn typescript_library() {
+    assert_fixture("typescript-library");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped

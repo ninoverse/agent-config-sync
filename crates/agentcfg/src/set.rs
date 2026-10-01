@@ -29,7 +29,7 @@ impl FragmentSet {
     /// use agentcfg::FragmentSet;
     ///
     /// let set = FragmentSet::embedded()?;
-    /// assert_eq!(set.values("language"), ["go", "rust"]);
+    /// assert_eq!(set.values("language"), ["go", "rust", "typescript"]);
     ///
     /// // An axis with no directory yet has no legal values, so naming one is
     /// // an error rather than a silent pick.
@@ -282,7 +282,7 @@ mod tests {
 
         // Adding an axis is the expensive change the plan guards; it should not
         // pass unnoticed. Adding a *value* is cheap, so values are not pinned
-        // here beyond the two languages every core fragment substitutes from.
+        // here beyond the languages every core fragment substitutes from.
         assert_eq!(
             axes,
             [
@@ -293,7 +293,7 @@ mod tests {
                 "sensitivity"
             ]
         );
-        assert_eq!(set.values("language"), ["go", "rust"]);
+        assert_eq!(set.values("language"), ["go", "rust", "typescript"]);
         assert!(
             !set.axes().contains_key("core"),
             "core is not an axis — it has no values and is always included"

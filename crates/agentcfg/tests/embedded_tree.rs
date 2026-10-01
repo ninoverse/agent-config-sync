@@ -2,8 +2,8 @@
 //!
 //! The unit tests cover what `Fragment::parse` accepts and rejects in
 //! isolation. These cover the shape of the real tree, which parsing alone
-//! cannot see: that `core/` stayed language-neutral, that the two language
-//! values kept parity, and that no two skills in one value would collide.
+//! cannot see: that `core/` stayed language-neutral, that the language values
+//! kept parity, and that no two skills in one value would collide.
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
@@ -183,7 +183,7 @@ fn the_language_values_stay_at_parity() {
     }
 
     // Core fragments substitute vocabulary from whichever language is picked, so
-    // a rule one language ships and the other does not is a hole in composition.
+    // a rule one language ships and another does not is a hole in composition.
     let mut values = by_value.values();
     let first = values.next().expect("at least one language value");
     for other in values {
