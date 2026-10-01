@@ -21,9 +21,9 @@ See *Branch naming* for the branch name format.
 | Rename / refactor | `refactor/` | logical rename unit |
 | Docs / rules | `docs/` | change |
 
-**The loop is defined in *Git flow*** — branch from `main`, one
-commit, hand the PR to the user, wait for the merge, repeat. No stacked PRs, and
-every PR must leave `main` green on its own.
+**The loop is defined in *Git flow*** — branch from `main`, commit, open
+the PR, wait for the merge, repeat. No stacked PRs, and every PR must leave
+`main` green on its own.
 
 ---
 

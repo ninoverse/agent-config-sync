@@ -34,7 +34,7 @@ Before writing any markdown:
 
 ---
 
-## 8-step checklist (one value, one commit)
+## 8-step checklist (one value)
 
 Steps 1 to 6 all happen before the commit. Never commit a partial value.
 
@@ -134,22 +134,16 @@ An `always` fragment spends the 200-line budget of every repository that selects
 the value, and `check` is what reports the cost. If it is over, the fragment to
 move behind `scope: on-demand` is the first one the failure lists.
 
-### 7. Commit + push + hand over the PR
+### 7. Commit, then hand the PR over
 
 ```
 feat(fragments): add <axis>/<name>
 ```
 
 `feat` is what makes the release minor, which is what a new value is: additive,
-and no existing profile changes meaning. One value per commit, one commit per
-branch.
-
-- Push the branch: `git push -u origin feat/<axis>-<name>`.
-- Output the PR title and description (*PR instructions*). Do not open the PR —
-  the user does that.
-- **Stop.** Wait for the merge.
-
-The full loop is in *Git flow*.
+and no existing profile changes meaning. One value per PR. Commit and hand the
+PR over as *Git flow* and *PR instructions* say, then wait for the merge: step 8
+needs its release.
 
 ### 8. Release, then the consumer's pin
 
