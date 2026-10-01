@@ -12,7 +12,8 @@ const SCRIPT: &str = "language/rust/tasks/new-unit/scaffold.sh";
 const EMITTED: &str = ".agents/new-crate/scaffold.sh";
 
 /// The real tree, written to `dir` with `extra` beside it and read back the
-/// way `--fragments` reads one. No task in the real tree ships a companion yet.
+/// way `--fragments` reads one. The tests bring their own companion, so the
+/// real tree's can change without them.
 fn tree_with(dir: &Path, extra: &[(&str, &str)]) -> FragmentSet {
     let embedded = FragmentSet::embedded().unwrap();
     // A value may hold no files, as `sensitivity/none/` does, so the

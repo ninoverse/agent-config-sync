@@ -356,7 +356,13 @@ emit: [agents-md]
 
     #[test]
     fn an_axis_shipping_no_values_yet_says_so() {
-        let error = with("framework: axum\n").unwrap_err();
+        // Every axis in the real tree ships a value, so this one is emptied.
+        let axes: Vec<(&str, &[&str])> = crate::embedded::AXES
+            .iter()
+            .map(|&(axis, values)| (axis, if axis == "framework" { &[][..] } else { values }))
+            .collect();
+        let tree = FragmentSet::build(crate::embedded::FILES, &axes).unwrap();
+        let error = Profile::parse(&format!("{MINIMAL}framework: lit\n"), &tree).unwrap_err();
 
         assert!(matches!(
             error,

@@ -68,6 +68,14 @@ Seven fragments, then, and two files that are not. A `deployment` or `concerns`
 value is far smaller — one or two fragments and usually no `values.yml` — because
 it answers a narrower question.
 
+A `framework` value adds what the framework changes about work the language and
+core already describe. `lit`, the first, is the shape to follow: `paths` rules
+for the framework's kind of code, `on-demand` rules that join the activities
+core already indexes (sequencing, tests, review, file names, PRs), and a `new-…`
+task for its unit of work, here an element, with its templates beside it. It
+names no tool the language doesn't, so it ships no `values.yml` or settings
+partial.
+
 ## Frontmatter
 
 Every fragment except a task fragment:

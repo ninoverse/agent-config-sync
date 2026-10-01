@@ -46,6 +46,8 @@ fragments/
 │   │   └── …
 │   ├── go/                8 fragments inside
 │   └── typescript/        8 fragments inside
+├── framework/             ← an axis   pick 0 or 1
+│   └── lit/               9 fragments inside
 ├── architecture/          ← an axis   pick 0 or 1
 │   └── ddd/               4 fragments inside
 ├── deployment/            ← an axis   pick exactly 1
@@ -59,7 +61,7 @@ fragments/
 | Axis | How many values / one repo declares | Values that exist / to choose from | Fragments / per value | Covers |
 | --- | --- | --- | --- | --- |
 | language | exactly 1 — `language: rust` | rust, go, typescript | 8 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
-| framework | 0 or 1 — `framework: ~` | **none yet** | — | Axum, Dioxus and the rest. The schema accepts the axis; no value is written until a repo needs one. |
+| framework | 0 or 1 — `framework: lit` | lit | 9 | What the framework adds to activities core and the language already cover, and its own unit of work: for Lit, elements, their styles, forms and overlays, tests, review, files, sequencing and the PR's API table, with `/new-element`. Axum, Dioxus and the rest await a repo that needs them. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
 | deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli. |
 | concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template, / fragment-authoring | 1 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files. Two are not hazards: `template`, the always-on rules for a repository others copy, and `fragment-authoring`, which carries `/new-value` and earns its place against *Beyond coding agents*. Heavy-calc and fetching deferred. |
@@ -73,7 +75,7 @@ The whole per-repo footprint is one file. This is `claude-mit-rust-agent-templat
 # .agentprofile.yml
 config_version: v0.17.6
 language:    rust          # exactly 1
-                           # framework:    0 or 1 — no value exists yet
+                           # framework:    0 or 1 — no repo declares one
                            # architecture: 0 or 1 — no repo declares one
 deployment:  service       # exactly 1
 concerns:  [template]    # any number
