@@ -7,9 +7,10 @@ when: Opening PRs
 ## Title
 
 Follow the same format as commit messages: `<type>(<scope>): <description>`.  
-Keep it under 72 characters. Keep it identical to the branch's single commit
-subject: either can become the squash commit's subject on `main`, which picks the
-release — see *Commit message guidelines*.
+Keep it under 72 characters. The PR is squash-merged, so its title becomes the
+subject of the one commit that lands on `main`, which picks the release — see
+*Commit message guidelines*. If review changes what the PR does, change the
+title to match.
 
 ## Description template
 
@@ -29,7 +30,7 @@ release — see *Commit message guidelines*.
 
 ## Rules
 
-- One logical change per PR, in **one commit**; split unrelated work into separate PRs
+- One logical change per PR; split unrelated work into separate PRs
 - Branch from an up-to-date `main`, so no rebase is needed before review
 - `{{ gate_command }}` must pass before the branch is pushed — {{ gates }}, {{ gates_clean }}
 - Link to the relevant section of AGENTS.md or a rule file if the PR establishes a new pattern
@@ -44,8 +45,13 @@ release — see *Commit message guidelines*.
 
 ## Who opens the PR
 
-Claude pushes the branch and outputs the title and description, then stops. The
-user opens and merges the PR. See *Git flow* for the full loop.
+Once the gates pass and the branch is pushed, Claude opens the PR with the
+GitHub tools it has. Without them, it outputs the title and description, and
+the user opens the PR. Either way, the user merges it; Claude never does. See
+*Git flow* for the full loop.
 
 Because a branch is only pushed once the gates already pass, there is no
-work-in-progress state to represent — draft PRs are not used.
+work-in-progress state to represent, so a PR opens ready for review. The one
+exception is a finished PR that waits on a check the gates can't make, such as
+a visual approval or a decision still pending: open it as a draft, and mark it
+ready once the check is done.

@@ -33,7 +33,7 @@ one. Say so when you ask: the root keeps its own package, and gains the
 
 ---
 
-## 9-step checklist (one package, one commit)
+## 9-step checklist (one package)
 
 Complete all nine steps before committing. Never commit a partial package.
 
@@ -94,17 +94,14 @@ Every gate must pass, with zero warnings, before committing:
 pnpm run ci
 ```
 
-### 9. Commit + push, then hand the PR over
+### 9. Commit, then hand the PR over
 
 ```
 feat(<name>): add <name> package
 ```
 
-One package per commit, one commit per branch. Never batch multiple packages.
-
-Push the branch, output the PR title and description, and **stop** — the user
-opens and merges it. Wait for the merge before starting the next package. The
-full loop is in *Git flow*.
+One package per PR. Never batch multiple packages. Commit and hand the PR over
+as *Git flow* and *PR instructions* say.
 
 ---
 
