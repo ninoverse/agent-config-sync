@@ -5,7 +5,7 @@ argument-hint: "<a phrase from the rule>"
 allowed-tools: "Bash(agentcfg why:*)"
 ---
 
-<!-- agentcfg:why · v0.18.0 -->
+<!-- agentcfg:why · v1.0.0 -->
 # Why this rule
 
 Run `agentcfg why "$ARGUMENTS"` and report what it says.

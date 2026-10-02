@@ -4,7 +4,7 @@ description: "Add a crate to the workspace following the 9-step crate workflow"
 argument-hint: "<crate-name> [one-line description of what it does]"
 ---
 
-<!-- language/rust/tasks/new-unit.md · v0.18.0 -->
+<!-- language/rust/tasks/new-unit.md · v1.0.0 -->
 # Adding a crate
 
 The exact procedure for adding or modifying a single crate in this Cargo
@@ -30,7 +30,7 @@ Before writing any code:
 
 ---
 
-## 9-step checklist (one crate, one commit)
+## 9-step checklist (one crate)
 
 Complete all nine steps before committing. Never commit a partial crate.
 
@@ -128,26 +128,24 @@ other-crate = { path = "../other-crate" }
 
 ### 8. Verification gate
 
+If `.agents/new-crate.local.md` exists, follow it now, before the gate. It holds
+the steps this repository adds to this checklist; it is written by hand, and
+`agentcfg` leaves it alone.
+
 All four gates must pass, with zero warnings, before committing:
 
 ```bash
 just ci
 ```
 
-### 9. Commit + push + hand over the PR
+### 9. Commit, then hand the PR over
 
 ```
 feat(<crate>): add <name> crate
 ```
 
-One crate per commit, one commit per branch. Never batch multiple crates.
-
-- Push the branch: `git push -u origin feat/<name>`.
-- Output the PR title and description (*PR instructions*). Do not open
-  the PR — the user does that.
-- **Stop.** Wait for the merge, then start the next crate from a fresh `main`.
-
-The full loop is in *Git flow*.
+One crate per PR. Never batch multiple crates. Commit and hand the PR over as
+*Git flow* and *PR instructions* say.
 
 ---
 

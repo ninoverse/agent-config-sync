@@ -1,5 +1,5 @@
 <!-- agentcfg:start -->
-<!-- deployment/cli/conventions.md · v0.18.0 -->
+<!-- deployment/cli/conventions.md · v1.0.0 -->
 # Releases and CLI conventions
 
 A merged PR ships a binary. `bump-version.yml` tags every push to `main` whose
