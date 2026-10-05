@@ -29,4 +29,4 @@ permissions:
 
 jobs:
   audit:
-    uses: ninoverse/.github/.github/workflows/rust-audit.yml@v1.2.2
+    uses: ninoverse/.github/.github/workflows/rust-audit.yml@v1.11.1

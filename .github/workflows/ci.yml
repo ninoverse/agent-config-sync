@@ -34,7 +34,7 @@ jobs:
   ci:
     # Pinned to a released version, not @main or a short @v1: @main lands here
     # with no pull request, and @v1 never moves. Renovate opens the bump.
-    uses: ninoverse/.github/.github/workflows/rust-ci.yml@v1.2.2
+    uses: ninoverse/.github/.github/workflows/rust-ci.yml@v1.11.1
     with:
       # Must match [workspace.package].rust-version in Cargo.toml. Nothing else
       # catches a change that breaks it, because rust-toolchain.toml pins the
@@ -44,7 +44,7 @@ jobs:
   # actionlint over the files in this directory, with ShellCheck on their
   # `run:` blocks. Its check reads `workflows / actionlint`. Pinned like `ci`.
   workflows:
-    uses: ninoverse/.github/.github/workflows/actionlint.yml@v1.4.0
+    uses: ninoverse/.github/.github/workflows/actionlint.yml@v1.11.1
 
   # The other direction from the Monday bump pull request: when someone edits
   # .agentprofile.yml — adds a concern, changes the deployment — the composed
