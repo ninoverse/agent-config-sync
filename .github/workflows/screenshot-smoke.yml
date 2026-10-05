@@ -44,7 +44,7 @@ jobs:
       # package.json, where Renovate keeps it current.
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.21.0
       - run: npm ci
       - run: npx playwright install --with-deps chromium
 
