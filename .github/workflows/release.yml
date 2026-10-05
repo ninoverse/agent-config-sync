@@ -95,7 +95,7 @@ jobs:
       contents: write
     # Pinned to a released version, not @main or a short @v1: @main lands here
     # with no pull request, and @v1 never moves. Renovate opens the bump.
-    uses: ninoverse/.github/.github/workflows/rust-release.yml@v1.2.2
+    uses: ninoverse/.github/.github/workflows/rust-release.yml@v1.11.1
     with:
       binary: agentcfg
       targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl,aarch64-apple-darwin
