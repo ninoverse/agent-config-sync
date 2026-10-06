@@ -51,7 +51,7 @@ fragments/
 ├── architecture/          ← an axis   pick 0 or 1
 │   └── ddd/               4 fragments inside
 ├── deployment/            ← an axis   pick exactly 1
-│   ├── service/  library/  tag-only/  cli/
+│   ├── service/  library/  tag-only/  cli/  site/
 └── concerns/             ← an axis   pick any number
     ├── data-access/  sync/  template/  fragment-authoring/  browser-ui/
 ```
@@ -63,7 +63,7 @@ fragments/
 | language | exactly 1 — `language: rust` | rust, go, typescript | 8 | Tooling vocabulary, code-review idioms, testing, file naming, permissions, hooks |
 | framework | 0 or 1 — `framework: lit` | lit | 9 | What the framework adds to activities core and the language already cover, and its own unit of work: for Lit, elements, their styles, forms and overlays, tests, review, files, sequencing and the PR's API table, with `/new-element`. Axum, Dioxus and the rest await a repo that needs them. |
 | architecture | 0 or 1 — `architecture: ddd` | ddd | 4 | The structural discipline the code commits to: layer dependency direction, aggregate and value-object rules, where repository interfaces live, bounded contexts. Language-neutral. `hexagonal` and `event-sourced` await a repo that needs them — and a repo picks one lane, because two architectures can contradict each other in a way two concerns never can. |
-| deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli. |
+| deployment | exactly 1 — `deployment: service` | service, library, / tag-only, cli, / site | 1 | What a merge deploys and the injected `PORT` for a service; semver, API stability and doc coverage for a library; a tag that deploys nothing for tag-only; exit codes and stream discipline for a cli; a deploy to Firebase App Hosting or Hosting, and the secrets kept out of it, for a site. |
 | concerns | any number, / including none — `concerns: [sync]` | data-access, sync, / template, / fragment-authoring, / browser-ui | 1–2 | Language-neutral. Hazard concerns are path-scoped, so they load only when Claude touches matching files. Three are not hazards: `template`, the always-on rules for a repository others copy; `fragment-authoring`, which carries `/new-value` and earns its place against *Beyond coding agents*; and `browser-ui`, for a repository that renders UI in a browser, which carries `/take-screenshot` with its scripts and the visual-check record a PR keeps. Heavy-calc and fetching deferred. |
 | sensitivity | exactly 1, defaulted — `sensitivity: none` | **none only** | 0 | Payload logging, error-message contents, retention, encryption at rest, audit trail. Declared now because retrofitting it across dozens of repos later is the expensive case. |
 
@@ -569,7 +569,7 @@ Split by provenance, because it tells you which terms you can look up and which 
 
 **values.yml** — The variable declarations of one axis value, sitting beside its fragments. Not a fragment itself — nothing emits it — so it does not count toward the thirty-three. It is the other half of the single-axis refactor: fragments stop naming a language's vocabulary and reference it, and `check` fails when a value omits something a fragment asks for.
 
-**value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library`, `tag-only` and `cli` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
+**value** — One option on an axis, and one directory in the tree — `rust` and `go` are values of `language`; `service`, `library`, `tag-only`, `cli` and `site` are values of `deployment`. A value contains fragments. Picking a value is what pulls its fragments into the composition.
 
 ### Borrowed from elsewhere
 
