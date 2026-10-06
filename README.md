@@ -45,6 +45,7 @@ fragments/
 ├── framework/            pick 0 or 1        lit/
 ├── architecture/         pick 0 or 1        ddd/
 ├── deployment/           pick exactly 1     service/  library/  tag-only/  cli/
+│                                            site/
 ├── concerns/             pick any number    data-access/  sync/  template/
 │                                            fragment-authoring/  browser-ui/
 └── sensitivity/          pick exactly 1     none/  (declared, no content yet)

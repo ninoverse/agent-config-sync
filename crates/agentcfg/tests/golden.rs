@@ -174,6 +174,13 @@ fn typescript_lit_browser_ui() {
     assert_fixture("typescript-lit-browser-ui");
 }
 
+/// The site value, on the language a project made from the Next.js template is
+/// written in, before anything selects it for real.
+#[test]
+fn typescript_site() {
+    assert_fixture("typescript-site");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped
