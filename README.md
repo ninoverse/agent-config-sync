@@ -42,7 +42,7 @@ Three levels, and keeping them straight is the whole model:
 fragments/
 ├── core/                 always included — nothing to pick
 ├── language/             pick exactly 1     rust/  go/  typescript/
-├── framework/            pick 0 or 1        lit/
+├── framework/            pick 0 or 1        lit/  nextjs/
 ├── architecture/         pick 0 or 1        ddd/
 ├── deployment/           pick exactly 1     service/  library/  tag-only/  cli/
 │                                            site/

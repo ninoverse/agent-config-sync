@@ -74,7 +74,9 @@ for the framework's kind of code, `on-demand` rules that join the activities
 core already indexes (sequencing, tests, review, file names, PRs), and a `new-…`
 task for its unit of work, here an element, with its templates beside it. It
 names no tool the language doesn't, so it ships no `values.yml` or settings
-partial.
+partial. `nextjs`, the second, adds one `always` fragment, because the framework
+changes faster than an agent's training: before any Next.js code is written, it
+sends the agent to the guides the installed package ships.
 
 ## Frontmatter
 

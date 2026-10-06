@@ -30,7 +30,7 @@ impl FragmentSet {
     ///
     /// let set = FragmentSet::embedded()?;
     /// assert_eq!(set.values("language"), ["go", "rust", "typescript"]);
-    /// assert_eq!(set.values("framework"), ["lit"]);
+    /// assert_eq!(set.values("framework"), ["lit", "nextjs"]);
     /// # Ok::<(), agentcfg::FragmentError>(())
     /// ```
     pub fn embedded() -> Result<Self, FragmentError> {
