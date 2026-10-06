@@ -181,6 +181,13 @@ fn typescript_site() {
     assert_fixture("typescript-site");
 }
 
+/// The Next.js value, on the profile claude-mit-nextjs-template will select,
+/// before anything selects it for real.
+#[test]
+fn typescript_nextjs_template() {
+    assert_fixture("typescript-nextjs-template");
+}
+
 #[test]
 fn dropping_a_concern_removes_the_files_it_generated() {
     // The manifest's whole reason for existing: without it, the dropped
