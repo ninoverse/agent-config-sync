@@ -1,0 +1,46 @@
+intro = "What the project did, for a portfolio."
+
+[[section]]
+id = "brief"
+title = "Brief"
+kind = "defs"
+
+[[section.def]]
+term = "Problem"
+text = "Nobody could see the service's latency."
+
+[[section.def]]
+term = "Outcome"
+text = "A chart of it, scraped every 15 seconds."
+
+[[section]]
+id = "figures"
+title = "Figures"
+kind = "figures"
+note = "Checked on 8 October 2026."
+
+[[section.figure]]
+value = "2"
+label = "PRs, one dropped"
+
+[[section.figure]]
+value = "15 s"
+label = "between scrapes"
+
+[[section]]
+id = "notes"
+kind = "prose"
+body = "<p>Most of this came from the other phases, as <a href=\"#mx-1\">MX-1</a> shows.</p>"
+
+[[section]]
+id = "imported"
+title = "An imported page"
+kind = "prose"
+file = "imported.html"
+prefix = "old"
+wide = true
+
+[[changelog]]
+date = "8 Oct"
+text = "Written."
+changed = ["brief", "imported"]

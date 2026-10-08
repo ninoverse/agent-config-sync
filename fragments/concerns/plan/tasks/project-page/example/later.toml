@@ -1,0 +1,18 @@
+# For later: each deferred item, what it waits on, and where it goes when that
+# comes.
+[[section]]
+id = "deferred"
+title = "Deferred"
+kind = "items"
+
+[[section.item]]
+id = "T1"
+title = "The probes on the service's dashboard"
+short = "Probe dashboard"
+kind = "together"
+status = "blocked"
+waits = "the metrics stack"
+fields = [
+  ["What", "Chart each probe's failures beside the restarts they caused."],
+  ["Goes to", "A PR of its own in Plan, once the metrics stack runs."],
+]

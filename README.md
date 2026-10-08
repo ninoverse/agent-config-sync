@@ -48,6 +48,7 @@ fragments/
 │                                            site/
 ├── concerns/             pick any number    data-access/  sync/  template/
 │                                            fragment-authoring/  browser-ui/
+│                                            plan/
 └── sensitivity/          pick exactly 1     none/  (declared, no content yet)
 ```
 

@@ -1,0 +1,2 @@
+  /* A project's own rules, appended after the kit's. */
+  .imported-marker { color: var(--accent); }

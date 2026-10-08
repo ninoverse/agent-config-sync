@@ -1,0 +1,32 @@
+# Research: what exists, one numbered piece at a time, and what each raises.
+intro = "What the service has today, and what the platform expects of it."
+
+# Every section has an id, a title and a kind. "items" holds cards: each has an
+# id, a title, and its fields as [label, text] pairs.
+[[section]]
+id = "pieces"
+title = "What exists"
+kind = "items"
+
+[[section.item]]
+id = "R1"
+title = "The service's routes"
+fields = [
+  ["Today", "<code>example-service</code> serves <code>/api</code> and nothing else, so the platform's default probe asks <code>/</code> and gets a 404."],
+  ["Raises", "<a href=\"#d1\">D1</a>"],
+]
+
+[[section.item]]
+id = "R2"
+title = "What the platform does with a probe"
+fields = [
+  ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],
+  ["Raises", "<a href=\"#d2\">D2</a>"],
+]
+
+# Each change after the first publish, newest first. `changed` names the
+# sections or items it changed, by id; an item's id is its own, lowercased.
+[[changelog]]
+date = "2 Oct"
+text = "R2 says what the platform does when each probe fails."
+changed = ["r2"]

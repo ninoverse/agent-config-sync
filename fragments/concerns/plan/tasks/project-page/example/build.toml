@@ -1,0 +1,87 @@
+# Build: the live state. [status.<id>] sets the status of an item kept in
+# another phase: done, open (waiting on the user), ready, blocked (with
+# `waits`) or dropped (with `why`), and a `result` once it lands.
+intro = "Where each PR, setting and risk stands."
+
+[status.EX-1]
+status = "done"
+result = "Merged on 6 October, released 1.4.0. In staging, a process whose <code>/healthz</code> was blocked restarted 30 seconds later."
+
+[status.S1]
+status = "done"
+result = "Set on 6 October."
+
+[status.EX-2]
+status = "open"
+result = "Open and green, waiting for your merge."
+
+[status.RK1]
+status = "blocked"
+waits = "EX-2"
+
+# A board: rows by columns of chips, each an item and its status.
+[[section]]
+id = "board"
+title = "The order"
+kind = "board"
+rows_title = "Repository"
+columns = [["Wave 1", "Liveness"], ["Wave 2", "Readiness"]]
+
+[[section.row]]
+name = "example-service"
+cells = [["EX-1", "S1"], ["EX-2", "RK1"]]
+
+# Results: each item's status and result, by default every item this phase
+# sets under [status], in that order.
+[[section]]
+id = "results"
+title = "Results"
+kind = "results"
+
+[[section]]
+id = "questions"
+title = "Questions"
+kind = "items"
+
+[[section.item]]
+id = "Q1"
+title = "The probe's timeout in production"
+status = "open"
+ask = "Answer"
+fields = [
+  ["Question", "Staging allows five seconds. Production's database is slower at night: keep five, or allow ten?"],
+  ["Recommendation", "Ten. A false failure takes the process out of service, and a slow answer costs nothing."],
+]
+
+[[section]]
+id = "checks"
+title = "Checks"
+kind = "table"
+head = ["Check", "Known now", "Settled by"]
+rows = [
+  ["A process whose <code>/healthz</code> stops answering is restarted", "Seen in staging on 6 October.", "Done."],
+  ["A process without its database gets no traffic", "Nothing yet.", "EX-2, in staging."],
+]
+
+[[section]]
+id = "log"
+title = "Log"
+kind = "log"
+
+[[section.entry]]
+date = "7 Oct"
+text = "EX-2 opened, green. Question 1 asks for the production timeout."
+
+[[section.entry]]
+date = "6 Oct"
+text = "EX-1 merged and released 1.4.0. You set S1."
+
+[[changelog]]
+date = "7 Oct"
+text = "EX-2 is open, and question 1 is new."
+changed = ["results", "q1"]
+
+[[changelog]]
+date = "6 Oct"
+text = "EX-1 merged, and S1 is set."
+changed = ["results"]
