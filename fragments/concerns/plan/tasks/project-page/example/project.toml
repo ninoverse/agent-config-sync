@@ -1,0 +1,55 @@
+# A project's data: this file, and a <phase>.toml beside it for each phase with
+# content. Render it with:
+#
+#   python3 .agents/project-page/render.py <this directory> <out directory>
+#
+# Text is HTML, written as the page shows it. This example is a small project
+# in its Build phase; copy the directory to start a real one.
+
+# The page's title is <repo>-<objective>: the main repository, then the
+# objective in kebab-case.
+repo = "example-service"
+objective = "health-checks"
+summary = "An example project: give <code>example-service</code> the liveness and readiness probes its platform asks for, in two PRs."
+# When the statuses below were read. Read them again before each publish.
+read_at = "7 October 2026 at 18:00 UTC"
+
+# Every phase, in order. A phase is done, now, to-come or not-needed, and one
+# that is not needed says why. A phase left out is to-come.
+[phases.research]
+status = "done"
+
+[phases.analysis]
+status = "done"
+
+[phases.plan]
+status = "done"
+
+[phases.build]
+status = "now"
+
+[phases.templating]
+status = "not-needed"
+why = "Two routes are too little to copy into a template. The service template's README links this project instead."
+
+[phases.retrospective]
+status = "to-come"
+
+[phases.later]
+status = "now"
+
+# One glossary for the project: terms coined for it, and terms borrowed.
+[[glossary]]
+term = "Liveness probe"
+text = "The request the platform makes to decide whether to restart a process."
+source = "borrowed"
+
+[[glossary]]
+term = "Readiness probe"
+text = "The request the platform makes to decide whether to send a process traffic."
+source = "borrowed"
+
+[[glossary]]
+term = "Wave"
+text = "PRs that can be open at the same time, at most one in each repository."
+source = "coined"

@@ -147,6 +147,13 @@ fn rust_cli() {
     assert_fixture("rust-cli");
 }
 
+/// The plan concern, on the profile this repository will select it with, before
+/// it does for real.
+#[test]
+fn rust_cli_plan() {
+    assert_fixture("rust-cli-plan");
+}
+
 /// The library value, composed before anything selects it for real.
 #[test]
 fn rust_library() {

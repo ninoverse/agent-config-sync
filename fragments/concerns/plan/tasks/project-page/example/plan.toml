@@ -1,0 +1,68 @@
+# Plan: the PRs as approved, the settings only the user can change, and the
+# risk register. Their statuses live in build.toml, under [status], so this
+# phase keeps the plan as it was approved.
+intro = "Two PRs, one at a time, and one setting only you can change."
+
+[[section]]
+id = "prs"
+title = "The PRs"
+kind = "items"
+
+# `kind` is what a merge releases (major, minor, patch), or you or together.
+# `short` labels the item on the board and in Waiting on you. `ask` says what
+# the user does when the item is open.
+[[section.item]]
+id = "EX-1"
+title = "<code>feat: add the liveness probe</code>"
+short = "Liveness probe"
+kind = "minor"
+fields = [
+  ["Branch", "<code>feat/liveness-probe</code>"],
+  ["Changes", "A <code>/healthz</code> route that answers 200 while the process runs."],
+  ["Waits on", "Nothing."],
+  ["Releases", "A minor version."],
+  ["Done when", "In staging, a process whose <code>/healthz</code> stops answering is restarted."],
+]
+
+[[section.item]]
+id = "EX-2"
+title = "<code>feat: add the readiness probe</code>"
+short = "Readiness probe"
+kind = "minor"
+ask = "Merge"
+fields = [
+  ["Branch", "<code>feat/readiness-probe</code>"],
+  ["Changes", "A <code>/readyz</code> route that answers 200 only while the database connection is up."],
+  ["Waits on", "<a href=\"#ex-1\">EX-1</a> merged."],
+  ["Releases", "A minor version."],
+  ["Done when", "In staging, a process that loses its database gets no traffic until the connection is back."],
+]
+
+[[section]]
+id = "settings"
+title = "Settings only you can change"
+kind = "items"
+
+[[section.item]]
+id = "S1"
+title = "Point the platform's probes at the new routes"
+short = "Probe routes"
+kind = "you"
+ask = "Set"
+fields = [
+  ["Where", "The service's deployment settings."],
+  ["When", "After <a href=\"#ex-1\">EX-1</a> merges."],
+]
+
+[[section]]
+id = "risks"
+title = "Risk register"
+kind = "items"
+
+[[section.item]]
+id = "RK1"
+title = "A slow database fails readiness and takes every process out of service at once"
+short = "Slow database"
+fields = [
+  ["Closes at", "<a href=\"#ex-2\">EX-2</a>, whose probe allows five seconds."],
+]

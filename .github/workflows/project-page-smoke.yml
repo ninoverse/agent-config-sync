@@ -1,0 +1,43 @@
+name: Project page smoke test
+
+# The project-page kit ships into every repository that selects concerns/plan,
+# and none of their CI runs it, so a change that broke the renderer would show
+# up only when a project next built its page. This renders the kit's example,
+# tests/plan/full/ and broken copies of the example, on the oldest Python the
+# kit supports, on changes to the concern or to the test, and Rust-only changes
+# skip it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "fragments/concerns/plan/**"
+      - "tests/plan/**"
+      - ".github/workflows/project-page-smoke.yml"
+  pull_request:
+    paths:
+      - "fragments/concerns/plan/**"
+      - "tests/plan/**"
+      - ".github/workflows/project-page-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: project-page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 3.11 is the floor: the kit reads TOML with tomllib, new in 3.11.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Render the example, full/ and the broken copies
+        run: python3 tests/plan/check.py

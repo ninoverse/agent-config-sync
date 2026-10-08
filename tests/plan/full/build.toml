@@ -1,0 +1,24 @@
+[[section]]
+id = "prs"
+title = "PRs"
+kind = "items"
+
+[[section.item]]
+id = "MX-1"
+title = "Expose the metrics endpoint"
+kind = "minor"
+status = "done"
+fields = [["Result", "Merged."]]
+
+[[section.item]]
+id = "MX-2"
+title = "A second exporter"
+kind = "patch"
+status = "dropped"
+why = "The first one covers it."
+
+[[section]]
+id = "results"
+title = "Results"
+kind = "results"
+ids = ["MX-2", "MX-1"]
