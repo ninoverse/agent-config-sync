@@ -37,8 +37,8 @@ Python 3.11 or later, and nothing else.
 
 It writes nothing, and names the file and the item, when:
 
-- an id is used twice anywhere in the project, or a link points at an id
-  nothing has;
+- an id is used twice anywhere in the project, a link points at an id nothing
+  has, or a `[[ref]]` names no item;
 - a status is unknown, a Blocked item doesn't say what it waits on, a Dropped
   item doesn't say why, or a phase that is Not needed doesn't say why;
 - an item's status is set both on the item and in a `[status]` table;
@@ -54,16 +54,23 @@ It writes nothing, and names the file and the item, when:
   `title` and a `kind`: `prose`, `table`, `items`, `board`, `results`, `log`,
   `figures` or `defs`. Then `[[changelog]]` entries, newest first, each with a
   `date`, its `text`, and `changed`, the sections and items it changed.
+- An `items` section has a `type`, which sets the words its statuses take:
+  `piece`, `decision` (To decide, Taken), `question` (To answer, Answered), `pr`
+  (To merge, Merged), `setting` (To set, Set), `risk` (Open, Closed), `check`
+  (Waiting, Passed) or `later` (Waiting, Picked up). An item can set its own.
 - An item is a card: an `id`, a `title`, its `fields` as `[label, text]` pairs,
-  and optionally a `short` title for chips and lists, a `kind` (`major`,
-  `minor`, `patch`, `you` or `together`), a `status` with its `waits` or `why`,
-  and an `ask`, what the user does while it is Open.
+  and optionally a `short` title, which names it wherever it is linked, a
+  `kind` (`major`, `minor`, `patch`, `you` or `together`), a `status` with its
+  `waits` or `why`, and an `ask`, when what the user does while it is Open isn't
+  what its type says.
 - A `[status.<id>]` table sets the status, and the `result`, of an item kept in
   another phase. The Plan's PRs keep theirs this way in `build.toml`, so the
   Plan shows them as approved and the Build shows where they stand.
-- Text is HTML, as the page shows it. A `prose` section can take its `body` from
-  a `file` instead, and `prefix` moves that file's ids, and the links to them,
-  under a prefix: the way to bring in a page that predates the kit.
+- Text is HTML, as the page shows it, and `[[D1]]` anywhere in it links to D1
+  with its short title: name items that way, never by a bare number.
+- A `prose` section can take its `body` from a `file` instead, and `prefix`
+  moves that file's ids, and the links to them, under a prefix: the way to
+  bring in a page that predates the kit.
 
 ## Before publishing
 

@@ -1,10 +1,11 @@
 # Analysis: the decisions, each with its options, a recommendation, the
-# answer and where it lands. A decision waiting on the user is "open", with
-# ask = "Decide", and shows in Waiting on you.
+# answer and where it lands. A decision waiting on the user is "open": it reads
+# To decide, and shows in Waiting on you; once answered, "done" reads Taken.
 [[section]]
 id = "decisions"
 title = "Decisions"
 kind = "items"
+type = "decision"
 
 [[section.item]]
 id = "D1"
@@ -14,7 +15,7 @@ fields = [
   ["Options", "(a) <code>/healthz</code> and <code>/readyz</code> beside <code>/api</code>. (b) A second port that serves only the probes."],
   ["Recommendation", "<strong>(a)</strong>. One port keeps the platform's settings to two lines."],
   ["Answer", "<strong>(a)</strong>, on 2 October."],
-  ["Lands in", "<a href=\"#ex-1\">EX-1</a> and <a href=\"#ex-2\">EX-2</a>"],
+  ["Lands in", "[[EX-1]] and [[EX-2]]"],
 ]
 
 [[section.item]]
@@ -25,5 +26,5 @@ fields = [
   ["Options", "(a) The database connection. (b) The database and the cache."],
   ["Recommendation", "<strong>(a)</strong>. The service answers from the database when the cache is down, only slower."],
   ["Answer", "<strong>(a)</strong>, on 2 October."],
-  ["Lands in", "<a href=\"#ex-2\">EX-2</a>"],
+  ["Lands in", "[[EX-2]]"],
 ]

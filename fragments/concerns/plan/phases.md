@@ -58,7 +58,10 @@ they answer.
   later work, and a prefix for each repository's PRs, such as AC-1.
 - An item is Done; Open, when it waits on the user, such as a PR to merge, a
   decision to take or a setting to change; Ready, when everything it waits on is
-  done; Blocked, naming what it waits on; or Dropped, saying why.
+  done; Blocked, naming what it waits on; or Dropped, saying why. The page says
+  each in its item's words: a decision is Taken, a PR Merged, a risk Closed.
+- Name an item with its number and its summary, never the number alone: the
+  reader shouldn't have to look D12 up.
 - *Waiting on you*, at the top of the page, lists every Open item. It is built
   from the statuses: never write it by hand, and never repeat a status in prose,
   which goes stale the next time the status changes.

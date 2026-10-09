@@ -17,7 +17,7 @@ result = "Open and green, waiting for your merge."
 
 [status.RK1]
 status = "blocked"
-waits = "EX-2"
+waits = "[[EX-2]]"
 
 # A board: rows by columns of chips, each an item and its status.
 [[section]]
@@ -42,12 +42,12 @@ kind = "results"
 id = "questions"
 title = "Questions"
 kind = "items"
+type = "question"
 
 [[section.item]]
 id = "Q1"
 title = "The probe's timeout in production"
 status = "open"
-ask = "Answer"
 fields = [
   ["Question", "Staging allows five seconds. Production's database is slower at night: keep five, or allow ten?"],
   ["Recommendation", "Ten. A false failure takes the process out of service, and a slow answer costs nothing."],
@@ -70,11 +70,11 @@ kind = "log"
 
 [[section.entry]]
 date = "7 Oct"
-text = "EX-2 opened, green. Question 1 asks for the production timeout."
+text = "[[EX-2]] opened, green. [[Q1]] asks for the production timeout."
 
 [[section.entry]]
 date = "6 Oct"
-text = "EX-1 merged and released 1.4.0. You set S1."
+text = "[[EX-1]] merged and released 1.4.0. You set [[S1]]."
 
 [[changelog]]
 date = "7 Oct"

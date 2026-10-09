@@ -41,11 +41,24 @@ PHASE_NAME = dict(PHASES)
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "dropped": "Dropped"}
 KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "you": "You", "together": "Together"}
+# What a status reads as for each type of item, and what the user does while one is open.
+TYPES = {
+    "piece": {"labels": {}, "ask": "Read"},
+    "decision": {"labels": {"open": "To decide", "done": "Taken", "dropped": "Withdrawn"}, "ask": "Decide"},
+    "question": {"labels": {"open": "To answer", "done": "Answered", "dropped": "Withdrawn"}, "ask": "Answer"},
+    "pr": {"labels": {"open": "To merge", "done": "Merged", "dropped": "Closed"}, "ask": "Merge"},
+    "setting": {"labels": {"open": "To set", "done": "Set", "dropped": "Not needed"}, "ask": "Set"},
+    "risk": {"labels": {"open": "To accept", "blocked": "Open", "done": "Closed", "dropped": "Accepted"}, "ask": "Accept", "waits": "closes with"},
+    "check": {"labels": {"open": "To check", "blocked": "Waiting", "done": "Passed", "dropped": "Skipped"}, "ask": "Check"},
+    "later": {"labels": {"blocked": "Waiting", "done": "Picked up"}, "ask": "Start"},
+}
 SECTION_KINDS = ("prose", "table", "items", "board", "results", "log", "figures", "defs")
 SOURCES = {"coined": "Coined for this project", "borrowed": "Borrowed from elsewhere"}
 
 KEBAB = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 ITEM_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
+# [[D1]] in any text: a link to the item, with its id and its short title.
+REF = re.compile(r"\[\[([^\]]*)\]\]")
 # Only an anchor made of these reaches location.hash from an artifact's link.
 ANCHOR = re.compile(r"[A-Za-z0-9._~-]+")
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
@@ -161,11 +174,15 @@ def collect_items(phases):
                 anchors.add(anchor_of(item_id))
                 required(item, "title", where)
                 check_status(item, where)
+                item_type = item.get("type", section.get("type"))
+                if item_type is not None and item_type not in TYPES:
+                    problem(where, f"`type` is one of {', '.join(TYPES)}")
+                    item_type = None
                 if item.get("kind") and item["kind"] not in KINDS:
                     problem(where, f"`kind` is one of {', '.join(KINDS)}")
                 if not all(is_pair(field) for field in item.get("fields", [])):
                     problem(where, "each of `fields` is a [label, text] pair")
-                items[item_id] = dict(item, phase=key, status_from=key if "status" in item else None)
+                items[item_id] = dict(item, phase=key, type=item_type, status_from=key if "status" in item else None)
     for key, data in phases.items():
         for item_id, entry in data.get("status", {}).items():
             where = f"{key}.toml [status.{item_id}]"
@@ -202,24 +219,60 @@ def check_status(entry, where):
 # ------------------------------------------------------------------ rendering
 
 
-def badge(status):
-    return f'<span class="st st-{status}">{ITEM_STATUS[status]}</span>'
+def label_of(item):
+    """The status in the words of the item's type: a decision is Taken, a PR Merged."""
+    status = item["status"]
+    return TYPES.get(item.get("type"), {}).get("labels", {}).get(status, ITEM_STATUS[status])
 
 
-def state_line(item):
+def ask_of(item):
+    return item.get("ask") or TYPES.get(item.get("type"), {}).get("ask", "Open")
+
+
+def state_line(item, plain=False):
+    """The status badge, with what a Blocked item waits on or why one was Dropped.
+
+    `plain` writes references as text, for a line that sits inside a link.
+    """
     status = item.get("status")
     if not status or status not in ITEM_STATUS:
         return ""
-    line = badge(status)
-    if status == "blocked":
-        line += f' <span class="waits">waits on {item.get("waits", "")}</span>'
-    if status == "dropped":
-        line += f' <span class="waits">{item.get("why", "")}</span>'
+    line = f'<span class="st st-{status}">{label_of(item)}</span>'
+    note = {"blocked": item.get("waits", ""), "dropped": item.get("why", "")}.get(status)
+    if note:
+        note = refs_as_text(note) if plain else note
+        prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on") if status == "blocked" else ""
+        line += f' <span class="waits">{prefix + " " if prefix else ""}{note}</span>'
     return line
 
 
 def short_of(item):
     return item.get("short") or text_of(item.get("title", ""))
+
+
+ITEMS = {}
+
+
+def ref_html(item_id):
+    item = ITEMS[item_id]
+    return f'<a class="ref" href="#{anchor_of(item_id)}"><b>{esc(item_id)}</b> {short_of(item)}</a>'
+
+
+def expand_refs(text, where):
+    """[[D1]] as a link to D1, with its short title. An id nothing has is a problem."""
+
+    def replace(match):
+        item_id = match.group(1)
+        if item_id not in ITEMS:
+            problem(where, f"[[{item_id}]] names no item")
+            return match.group(0)
+        return ref_html(item_id)
+
+    return REF.sub(replace, text)
+
+
+def refs_as_text(text):
+    return REF.sub(lambda m: f"{m.group(1)} {short_of(ITEMS[m.group(1)])}" if m.group(1) in ITEMS else m.group(0), text)
 
 
 def card(item):
@@ -240,7 +293,7 @@ def chip(item):
         classes.append(f'k-{item["kind"]}')
     if item.get("status") in ITEM_STATUS:
         classes.append(f's-{item["status"]}')
-    line = state_line(item)
+    line = state_line(item, plain=True)
     tail = f'<span class="w">{line}</span>' if line else ""
     return f'<a class="{" ".join(classes)}" href="#{anchor_of(item["id"])}"><b>{esc(item["id"])}</b><span>{short_of(item)}</span>{tail}</a>'
 
@@ -332,8 +385,7 @@ def render_section(section, key, data, items, data_dir):
                 problem(where, f"`ids` names {item_id}, which no item has")
                 continue
             item = items[item_id]
-            link = f'<a class="ref" href="#{anchor_of(item_id)}"><b>{esc(item_id)}</b> {short_of(item)}</a>'
-            rows.append([link, state_line(item), item.get("result", "")])
+            rows.append([ref_html(item_id), state_line(item), item.get("result", "")])
         parts.append(table_html(["Item", "Status", "Result"], rows, section.get("min_width", 760), "results"))
     elif kind == "log":
         entries = "".join(
@@ -370,7 +422,7 @@ def changelog(key, entries, targets):
                 problem(where, f"`changed` names {target}, which is no section or item in this phase")
                 continue
             links.append(f'<a href="#{target}">{targets[target]}</a>')
-        changed = f' <span class="changed">Changed: {" · ".join(links)}</span>' if links else ""
+        changed = f' <span class="changed">Changed: {"; ".join(links)}</span>' if links else ""
         rows.append(f'<li><time>{esc(entry.get("date", ""))}</time><div>{entry.get("text", "")}{changed}</div></li>')
     return f'<footer class="changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n  <ol>{"".join(rows)}</ol>\n</footer>'
 
@@ -391,15 +443,15 @@ def render_phase(key, status, why, data, items, data_dir):
             if section.get("id"):
                 targets[section["id"]] = section.get("title") or section["id"]
             for item in section.get("item", []) if section.get("kind") == "items" else []:
-                if item.get("id"):
-                    targets[anchor_of(item["id"])] = esc(item["id"])
+                if item.get("id") in ITEMS:
+                    targets[anchor_of(item["id"])] = f'<b>{esc(item["id"])}</b> {short_of(ITEMS[item["id"]])}'
         parts.append(changelog(key, data.get("changelog", []), targets))
-    return "\n".join(part for part in parts if part)
+    return expand_refs("\n".join(part for part in parts if part), f"{key}.toml")
 
 
 def waiting(items):
     rows = [
-        f'<li><span class="pill ask">{esc(item.get("ask", "Open"))}</span><span><b>{esc(item_id)}</b> {short_of(item)}</span><a href="#{anchor_of(item_id)}">{PHASE_NAME[item["phase"]]}</a></li>'
+        f'<li><span class="pill ask">{esc(ask_of(item))}</span><span><b>{esc(item_id)}</b> {short_of(item)}</span><a href="#{anchor_of(item_id)}">{PHASE_NAME[item["phase"]]}</a></li>'
         for item_id, item in items.items()
         if item.get("status") == "open"
     ]
@@ -552,12 +604,14 @@ def main(argv):
     project = read_project(data_dir)
     phases = read_phases(data_dir)
     items = collect_items(phases)
+    ITEMS.update(items)
     sections = {}
     for key, _ in PHASES:
         status, why = project["status"][key]
         sections[key] = (render_phase(key, status, why, phases.get(key), items, data_dir), key in phases)
     opening = opening_phase(project["status"])
     title, files, shell = page(project, sections, opening, inline, data_dir, waiting(items))
+    shell = expand_refs(shell, "project.toml")
     fragments = [("the page", shell)] + [(f"phases/{key}.html", text) for key, text in files.items()]
     check(fragments)
     if problems:
