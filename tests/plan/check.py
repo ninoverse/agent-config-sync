@@ -51,6 +51,13 @@ def check_example(tmp):
     expect('"ex-1":"plan"' in manifest(page), "a link to EX-1 opens the plan")
     plan = (out / "phases" / "plan.html").read_text()
     expect("st-open" not in plan, "the plan shows its PRs as approved, without the build's statuses")
+    analysis = (out / "phases" / "analysis.html").read_text()
+    expect('st-done">Taken<' in analysis, "a decision that is done reads Taken")
+    expect('st-done">Merged<' in page and 'st-open">To merge<' in page, "a PR reads Merged, or To merge while open")
+    expect('st-blocked">Open<' in page and "closes with" in page, "an open risk names the step that closes it")
+    expect('<a class="ref" href="#ex-1"><b>EX-1</b> Liveness probe</a>' in plan, "[[EX-1]] links with its short title")
+    for chip in re.findall(r'<a class="chip.*?</a>', page):
+        expect("<a " not in chip[2:], f"a chip holds no link of its own: {chip[:80]}")
 
     inline = tmp / "inline"
     run = render(KIT / "example", inline, "--inline")
@@ -80,9 +87,11 @@ def check_full(tmp):
 # Each broken copy: the file, the text replaced, its replacement, and the message.
 BROKEN = [
     ("analysis.toml", 'id = "D2"', 'id = "D1"', "this id is used twice"),
-    ("research.toml", 'href=\\"#d1\\"', 'href=\\"#d9\\"', 'a link to "#d9"'),
+    ("research.toml", '"[[D1]]"', '"<a href=\\"#d9\\">D9</a>"', 'a link to "#d9"'),
+    ("research.toml", '"[[D1]]"', '"[[D9]]"', "[[D9]] names no item"),
+    ("research.toml", 'type = "piece"', 'type = "pieces"', "`type` is one of"),
     ("build.toml", 'status = "open"\nresult', 'status = "waiting"\nresult', "status `waiting` is not one of"),
-    ("build.toml", 'waits = "EX-2"\n', "", "a blocked item says what it waits on"),
+    ("build.toml", 'waits = "[[EX-2]]"\n', "", "a blocked item says what it waits on"),
     ("project.toml", 'why = "Two routes', 'what = "Two routes', "a phase that is not needed says why"),
     ("plan.toml", 'kind = "minor"\nfields = [\n  ["Branch", "<code>feat/liveness', 'kind = "minor"\nstatus = "done"\nfields = [\n  ["Branch", "<code>feat/liveness', "status is set twice"),
     ("research.toml", "<code>/api</code>", "<code>/api", "is never closed"),

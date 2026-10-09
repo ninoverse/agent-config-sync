@@ -4,6 +4,7 @@
 id = "deferred"
 title = "Deferred"
 kind = "items"
+type = "later"
 
 [[section.item]]
 id = "T1"
