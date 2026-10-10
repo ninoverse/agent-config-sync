@@ -1,0 +1,40 @@
+# Verify: what proves the merged work does what it should, in the world, and
+# the Brief's success criteria. Build ends at the last merge; Verify at the
+# last check.
+intro = "Each PR's Done when, checked where it runs."
+
+[status.SC1]
+status = "done"
+on = 2026-10-06
+
+[status.SC2]
+status = "blocked"
+
+[[section]]
+id = "checks"
+title = "Checks"
+kind = "items"
+type = "check"
+
+[[section.item]]
+id = "C1"
+title = "A process whose <code>/healthz</code> stops answering is restarted"
+short = "Restart on a hang"
+needs = ["EX-1"]
+status = "done"
+on = 2026-10-06
+fields = [["How", "In staging, block <code>/healthz</code> on one process and watch the platform's events."]]
+
+[[section.item]]
+id = "C2"
+title = "A process without its database gets no traffic"
+short = "No traffic without a database"
+needs = ["EX-2"]
+status = "blocked"
+fields = [["How", "In staging, cut one process off its database and watch its share of requests."]]
+
+[[section]]
+id = "criteria-met"
+title = "Success criteria"
+kind = "results"
+ids = ["SC1", "SC2"]

@@ -27,15 +27,18 @@ since the user finds the page by it.
 
 - Start from the data, not the page. Read `src/project.toml` and the phase
   files with the Artifact tool's `read` action, by path, edit them, and render
-  again.
+  again. The notes for the next session, under `[handoff]`, say what was in
+  flight.
 - Read the project's state again right before publishing, and set `read_at` to
   that time.
 - Publish to the same `url`, with the files that changed, and `null` for a
   phase file that no longer exists.
 - A session that neither published nor read the live page has to read it in
   full before it can publish over it. The page holds only the phase in
-  progress, so that read stays small.
+  progress and the Calendar, so that read stays small.
 
 ## Hand it over
 
-Give the user the link, and say in one sentence what changed.
+Give the user the link, and say in one sentence what changed. Before the
+session ends, update `[handoff]` and publish it, so the next session starts
+where this one stopped.

@@ -18,6 +18,17 @@ status = "dropped"
 why = "The first one covers it."
 
 [[section]]
+id = "board"
+title = "The order"
+kind = "board"
+rows_title = "Repository"
+columns = [["First", "The endpoint"], ["Then", "Its second exporter"]]
+
+[[section.row]]
+name = "example-service"
+cells = [["MX-1"], ["MX-2"]]
+
+[[section]]
 id = "results"
 title = "Results"
 kind = "results"

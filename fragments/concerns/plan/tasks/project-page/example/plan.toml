@@ -1,7 +1,9 @@
 # Plan: the PRs as approved, the settings only the user can change, and the
 # risk register. Their statuses live in build.toml, under [status], so this
-# phase keeps the plan as it was approved.
-intro = "Two PRs, one at a time, and one setting only you can change."
+# phase keeps the plan as it was approved. An item added after `approved` says
+# so with `amended`.
+intro = "One PR at a time, each with what proves it works, and one setting only you can change."
+approved = 2026-10-03
 
 [[section]]
 id = "prs"
@@ -10,8 +12,8 @@ kind = "items"
 type = "pr"
 
 # `kind` is what a merge releases (major, minor, patch), or you or together.
-# `short` labels the item wherever it is named: the board, links, Waiting on
-# you. While a PR is open it reads To merge; merged, Merged.
+# `short` names the item wherever it is linked. `needs` lists what has to be
+# done first: it decides the board's waves, and a loop in it fails the render.
 [[section.item]]
 id = "EX-1"
 title = "<code>feat: add the liveness probe</code>"
@@ -20,7 +22,7 @@ kind = "minor"
 fields = [
   ["Branch", "<code>feat/liveness-probe</code>"],
   ["Changes", "A <code>/healthz</code> route that answers 200 while the process runs."],
-  ["Waits on", "Nothing."],
+  ["Carries out", "[[D1]]"],
   ["Releases", "A minor version."],
   ["Done when", "In staging, a process whose <code>/healthz</code> stops answering is restarted."],
 ]
@@ -30,12 +32,28 @@ id = "EX-2"
 title = "<code>feat: add the readiness probe</code>"
 short = "Readiness probe"
 kind = "minor"
+needs = ["EX-1"]
+due = 2026-10-14
 fields = [
   ["Branch", "<code>feat/readiness-probe</code>"],
   ["Changes", "A <code>/readyz</code> route that answers 200 only while the database connection is up."],
-  ["Waits on", "[[EX-1]] merged."],
+  ["Carries out", "[[D1]] and [[D2]]"],
   ["Releases", "A minor version."],
   ["Done when", "In staging, a process that loses its database gets no traffic until the connection is back."],
+]
+
+[[section.item]]
+id = "EX-3"
+title = "<code>fix: allow ten seconds for readiness in production</code>"
+short = "Ten seconds in production"
+kind = "patch"
+needs = ["Q1"]
+amended = { on = 2026-10-07, why = "the answer to [[Q1]]" }
+fields = [
+  ["Branch", "<code>fix/readiness-timeout</code>"],
+  ["Changes", "The production readiness probe allows ten seconds instead of five."],
+  ["Releases", "A patch."],
+  ["Done when", "A slow night in production takes no process out of service."],
 ]
 
 [[section]]
@@ -49,10 +67,8 @@ id = "S1"
 title = "Point the platform's probes at the new routes"
 short = "Probe routes"
 kind = "you"
-fields = [
-  ["Where", "The service's deployment settings."],
-  ["When", "After [[EX-1]] merges."],
-]
+needs = ["EX-1"]
+fields = [["Where", "The service's deployment settings."]]
 
 [[section]]
 id = "risks"
@@ -64,6 +80,4 @@ type = "risk"
 id = "RK1"
 title = "A slow database fails readiness and takes every process out of service at once"
 short = "Slow database"
-fields = [
-  ["Closes at", "[[EX-2]], whose probe allows five seconds."],
-]
+needs = ["EX-3"]

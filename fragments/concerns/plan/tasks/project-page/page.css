@@ -94,16 +94,16 @@
   .lede { font-size: 1.12rem; margin-top: 16px; }
   .readat { margin-top: 16px; font-size: 0.9rem; color: var(--ink-muted); }
 
-  /* The phase indicator: seven phases in their order, each a link to its view,
-     its name over its state so the seven fit one row on a laptop. */
-  nav.phases ol { list-style: none; padding: 0; margin: 28px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  /* The phase indicator: nine phases in their order, each a link to its view,
+     its name over its state so the nine fit one row on a laptop. */
+  nav.phases ol { list-style: none; padding: 0; margin: 28px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
   nav.phases li { margin: 0; }
   nav.phases a {
     display: grid; grid-template-columns: auto auto; column-gap: 7px; align-items: baseline;
-    padding: 6px 13px 7px 10px;
+    padding: 6px 11px 7px 9px;
     border: 1px solid var(--rule);
     border-radius: var(--notch-lg) var(--notch-xs) var(--notch-xs) var(--notch-xs);
-    background: var(--bg); color: var(--ink-muted); text-decoration: none; font-size: 0.92rem; line-height: 1.35;
+    background: var(--bg); color: var(--ink-muted); text-decoration: none; font-size: 0.88rem; line-height: 1.35;
   }
   nav.phases a:hover { border-color: var(--outline); color: var(--ink); }
   nav.phases .n { font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -114,14 +114,17 @@
   nav.phases a.t-not-needed { border-style: dashed; }
   nav.phases a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent-fill); }
 
-  /* Waiting on you: built from the items whose status is Open. */
-  .waiting { margin-top: 36px; }
-  .waiting h2 { font-size: 1.15rem; }
-  .inbox { list-style: none; padding: 0; margin: 12px 0 0; max-width: 88ch; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--notch-lg) var(--notch-xs) var(--notch-xs) var(--notch-xs); }
-  .inbox li { margin: 0; display: grid; grid-template-columns: 6.6rem minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
-  .inbox li:last-child { border-bottom: none; }
-  .inbox .pill { justify-self: start; }
-  .nothing { color: var(--ink-muted); }
+  /* The header's glance at the calendar: who holds the ball, and the next date. */
+  .glance { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; font-size: 0.92rem; }
+  .glance span { color: var(--ink-muted); }
+  .glance span + span::before { content: '·'; margin-right: 16px; color: var(--outline); }
+  a.to-cal {
+    font-family: var(--font-display); font-weight: 600; color: var(--ink); text-decoration: none;
+    padding: 4px 12px 5px; border: 1px solid var(--outline);
+    border-radius: var(--notch-lg) var(--notch-xs) var(--notch-xs) var(--notch-xs); background: var(--surface);
+  }
+  a.to-cal:hover { border-color: var(--accent-fill); }
+  a.to-cal[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); box-shadow: inset 0 -3px 0 var(--accent-fill); }
 
   /* A phase's view. */
   .phase { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--outline); }
@@ -132,6 +135,13 @@
   .ph-to-come { color: var(--ready); background: var(--ready-soft); }
   .ph-not-needed { color: var(--na); background: var(--na-soft); }
   .why { color: var(--ink-muted); }
+  .phase-head .span, .on { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  .pill.amended { color: var(--ready); background: var(--ready-soft); }
+  .approved { margin-top: 18px; max-width: 88ch; padding: 10px 14px; border-left: 3px solid var(--ready); background: var(--surface); font-size: 0.92rem; }
+  .approved p { margin: 0; }
+  .approved ul { margin-top: 6px; }
+  .backlinks { margin-top: 10px; max-width: 88ch; font-size: 0.86rem; color: var(--ink-muted); }
+  .backlinks > span { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 4px; }
   .block { margin-top: 40px; }
   .block > h3 { padding-top: 14px; border-top: 1px solid var(--rule); }
   .intro { color: var(--ink-muted); }
@@ -233,6 +243,38 @@
   footer.changelog time { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
   .changed { color: var(--ink-muted); }
 
+  /* The calendar view: who holds the ball, the months, and every date. */
+  .ball { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 14px; }
+  .ball .col { min-width: 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--notch-lg) var(--notch-xs) var(--notch-xs) var(--notch-xs); }
+  .ball h3 { font-size: 0.95rem; }
+  .ball ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; font-size: 0.92rem; }
+  .ball li { margin: 0; }
+  .ball li.none { color: var(--ink-muted); }
+  .ball time, .agenda time { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .handoff ul { max-width: 88ch; }
+  .months { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 44rem)); gap: 22px; }
+  .month h4 { font-size: 0.95rem; margin-bottom: 8px; }
+  table.cal { table-layout: fixed; border: 1px solid var(--rule); background: var(--surface); }
+  table.cal th { padding: 5px 4px; text-align: center; font-size: 0.66rem; }
+  table.cal td { height: 4.2rem; padding: 4px; border: 1px solid var(--rule); vertical-align: top; }
+  table.cal td.out { background: var(--bg); }
+  table.cal .dn { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  table.cal td.today { outline: 2px solid var(--accent-fill); outline-offset: -2px; }
+  table.cal td.today .dn { color: var(--accent); font-weight: 700; }
+  table.cal ul { list-style: none; padding: 0; margin: 3px 0 0; display: flex; flex-wrap: wrap; gap: 2px; }
+  table.cal li { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.64rem; font-family: var(--font-mono); padding: 0 3px; border-radius: 3px; background: var(--na-soft); color: var(--ink); }
+  table.cal li.dot { width: 7px; height: 7px; padding: 0; border-radius: 50%; background: var(--outline); align-self: center; }
+  .m-event, .m-due { background: var(--accent-soft) !important; color: var(--accent) !important; }
+  .m-s-done { background: var(--done-soft) !important; color: var(--done) !important; }
+  .m-s-open { background: var(--open-soft) !important; color: var(--open) !important; }
+  .m-amended, .m-phase { background: var(--ready-soft) !important; color: var(--ready) !important; }
+  ol.agenda { list-style: none; padding: 0; margin: 14px 0 0; max-width: 88ch; }
+  ol.agenda > li { margin: 0; display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 4px 14px; padding-block: 8px; border-bottom: 1px solid var(--rule); }
+  ol.agenda > li.today { border-bottom: 2px solid var(--accent-fill); }
+  ol.agenda > li.ahead time { color: var(--accent); font-weight: 700; }
+  ol.agenda ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+  ol.agenda ul li { margin: 0; background: none !important; color: inherit !important; }
+
   /* The glossary, one per project, open from any phase. */
   details.glossary { margin-top: 56px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--notch-lg) var(--notch-xs) var(--notch-xs) var(--notch-xs); }
   details.glossary summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
@@ -243,6 +285,10 @@
     body { padding-inline: 16px; }
     dl, dl.defs { grid-template-columns: 1fr; gap: 2px; }
     dt { padding-top: 10px; }
-    .inbox li, ul.plain li, footer.changelog li { grid-template-columns: 1fr; }
+    ul.plain li, footer.changelog li, ol.agenda > li { grid-template-columns: 1fr; }
+    table.cal td { height: 2.6rem; }
+    table.cal li:not(.dot) { width: 7px; height: 7px; padding: 0; font-size: 0; border-radius: 50%; align-self: center; }
+    .glance { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .glance span + span::before { content: none; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

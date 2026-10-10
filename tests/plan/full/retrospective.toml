@@ -1,8 +1,8 @@
 intro = "What the project did, for a portfolio."
 
 [[section]]
-id = "brief"
-title = "Brief"
+id = "in-short"
+title = "In short"
 kind = "defs"
 
 [[section.def]]
@@ -28,6 +28,36 @@ value = "15 s"
 label = "between scrapes"
 
 [[section]]
+id = "lessons"
+title = "What was learned"
+kind = "items"
+type = "lesson"
+
+[[section.item]]
+id = "L1"
+title = "Name the metrics before the first PR"
+short = "Names first"
+status = "open"
+fields = [
+  ["What happened", "[[MX-1]] renamed two metrics in review, and a dashboard broke."],
+  ["Becomes", "A line in <em>Project phases</em>: the Plan names every metric a PR adds."],
+]
+
+[[section.item]]
+id = "L2"
+title = "Say what a scrape costs"
+short = "Scrape cost"
+status = "done"
+on = 2026-10-08
+fields = [["Becomes", "A line in <em>Project phases</em>: a probe or a scrape says what each call costs."]]
+
+[[section.item]]
+id = "L3"
+title = "A second exporter is rarely needed"
+status = "dropped"
+why = "One project is too little to make a rule of."
+
+[[section]]
 id = "notes"
 kind = "prose"
 body = "<p>Most of this came from the other phases, as <a href=\"#mx-1\">MX-1</a> shows.</p>"
@@ -41,6 +71,6 @@ prefix = "old"
 wide = true
 
 [[changelog]]
-date = "8 Oct"
+date = 2026-10-08
 text = "Written."
-changed = ["brief", "imported"]
+changed = ["in-short", "imported", "l2"]
