@@ -3,7 +3,8 @@ intro = "What the service has today, and what the platform expects of it."
 
 # Every section has an id, a title and a kind. "items" holds cards: each has an
 # id, a title, and its fields as [label, text] pairs. Its `type` sets the words
-# its statuses take: piece, decision, question, pr, setting, risk, check or later.
+# its statuses take: piece, rule, criterion, decision, question, pr, setting,
+# risk, check, lesson or later.
 [[section]]
 id = "pieces"
 title = "What exists"
@@ -28,8 +29,7 @@ fields = [
 
 # Each change after the first publish, newest first. `changed` names the
 # sections or items it changed, by id; an item's id is its own, lowercased.
-# Anywhere in a text, [[R2]] links to an item, with its id and short title.
 [[changelog]]
-date = "2 Oct"
-text = "R2 says what the platform does when each probe fails."
+date = 2026-10-02
+text = "[[R2]] says what the platform does when each probe fails."
 changed = ["r2"]

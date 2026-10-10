@@ -1,35 +1,41 @@
 # Build: the live state. [status.<id>] sets the status of an item kept in
-# another phase: done, open (waiting on the user), ready, blocked (with
-# `waits`) or dropped (with `why`), and a `result` once it lands.
+# another phase: done, open (waiting on the user), ready, blocked (with `waits`
+# or the item's `needs`) or dropped (with `why`); `on`, the day it got there;
+# and a `result` once it lands.
 intro = "Where each PR, setting and risk stands."
 
 [status.EX-1]
 status = "done"
-result = "Merged on 6 October, released 1.4.0. In staging, a process whose <code>/healthz</code> was blocked restarted 30 seconds later."
+on = 2026-10-06
+result = "Released 1.4.0. In staging, a process whose <code>/healthz</code> was blocked restarted 30 seconds later."
 
 [status.S1]
 status = "done"
-result = "Set on 6 October."
+on = 2026-10-06
+result = "Both probes point at the new routes."
 
 [status.EX-2]
 status = "open"
+on = 2026-10-07
 result = "Open and green, waiting for your merge."
+
+[status.EX-3]
+status = "ready"
 
 [status.RK1]
 status = "blocked"
-waits = "[[EX-2]]"
 
-# A board: rows by columns of chips, each an item and its status.
+# A board: chips in waves. With `auto`, the waves come from `needs` and the rows
+# from each item's `repo`, or `rows_default`.
 [[section]]
 id = "board"
 title = "The order"
 kind = "board"
+auto = true
+types = ["pr", "setting"]
 rows_title = "Repository"
-columns = [["Wave 1", "Liveness"], ["Wave 2", "Readiness"]]
-
-[[section.row]]
-name = "example-service"
-cells = [["EX-1", "S1"], ["EX-2", "RK1"]]
+rows_default = "example-service"
+waves = ["No dependency", "After the liveness probe"]
 
 # Results: each item's status and result, by default every item this phase
 # sets under [status], in that order.
@@ -47,20 +53,11 @@ type = "question"
 [[section.item]]
 id = "Q1"
 title = "The probe's timeout in production"
-status = "open"
+status = "done"
+on = 2026-10-07
 fields = [
   ["Question", "Staging allows five seconds. Production's database is slower at night: keep five, or allow ten?"],
-  ["Recommendation", "Ten. A false failure takes the process out of service, and a slow answer costs nothing."],
-]
-
-[[section]]
-id = "checks"
-title = "Checks"
-kind = "table"
-head = ["Check", "Known now", "Settled by"]
-rows = [
-  ["A process whose <code>/healthz</code> stops answering is restarted", "Seen in staging on 6 October.", "Done."],
-  ["A process without its database gets no traffic", "Nothing yet.", "EX-2, in staging."],
+  ["Answer", "Ten. A false failure takes the process out of service, and a slow answer costs nothing."],
 ]
 
 [[section]]
@@ -69,19 +66,19 @@ title = "Log"
 kind = "log"
 
 [[section.entry]]
-date = "7 Oct"
-text = "[[EX-2]] opened, green. [[Q1]] asks for the production timeout."
+date = 2026-10-07
+text = "[[EX-2]] opened, green. Your answer to [[Q1]] adds [[EX-3]] to the plan."
 
 [[section.entry]]
-date = "6 Oct"
+date = 2026-10-06
 text = "[[EX-1]] merged and released 1.4.0. You set [[S1]]."
 
 [[changelog]]
-date = "7 Oct"
-text = "EX-2 is open, and question 1 is new."
+date = 2026-10-07
+text = "[[EX-2]] is open, and [[EX-3]] is new, from [[Q1]]."
 changed = ["results", "q1"]
 
 [[changelog]]
-date = "6 Oct"
-text = "EX-1 merged, and S1 is set."
+date = 2026-10-06
+text = "[[EX-1]] merged, and [[S1]] is set."
 changed = ["results"]

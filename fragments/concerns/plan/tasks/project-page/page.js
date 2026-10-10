@@ -1,11 +1,12 @@
-// The phase indicator switches the phase on view. A link to any id on the page
-// opens the phase that holds it; a phase published as its own file is fetched
-// the first time it is shown.
+// The phase indicator switches the phase on view, and the header's link opens
+// the calendar. A link to any id on the page opens the view that holds it; a
+// phase published as its own file is fetched the first time it is shown.
 (() => {
   const owner = JSON.parse(document.getElementById('anchors').textContent);
   const main = document.getElementById('phases');
   const phases = new Map([...main.querySelectorAll('section.phase')].map((s) => [s.dataset.phase, s]));
-  const tabs = [...document.querySelectorAll('nav.phases a[data-phase]')];
+  // The phase tabs, and the header's link to the calendar.
+  const tabs = [...document.querySelectorAll('header a[data-phase]')];
 
   async function load(section) {
     if (!section.dataset.src) return;

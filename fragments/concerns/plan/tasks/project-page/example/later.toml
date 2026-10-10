@@ -1,5 +1,5 @@
 # For later: each deferred item, what it waits on, and where it goes when that
-# comes.
+# comes. A lesson the Retrospective turns into a rule change waits here too.
 [[section]]
 id = "deferred"
 title = "Deferred"

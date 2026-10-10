@@ -1,0 +1,72 @@
+# Brief: what the project is for, how it will be judged, and the ground rules
+# the user set for working on it. The next session reads this first.
+intro = "Agreed on 1 October, before any research."
+
+[[section]]
+id = "the-project"
+title = "The project"
+kind = "defs"
+
+[[section.def]]
+term = "Problem"
+text = "The platform restarts <code>example-service</code> only when the process dies, and sends it traffic while its database is down."
+
+[[section.def]]
+term = "Objective"
+text = "A liveness probe and a readiness probe that the platform uses."
+
+[[section.def]]
+term = "In scope"
+text = "The two routes, the platform's settings that point at them, and their timeouts."
+
+[[section.def]]
+term = "Out of scope"
+text = "Dashboards for the probes: that is [[T1]]."
+
+# Success criteria are judged in Verify, which sets their status.
+[[section]]
+id = "criteria"
+title = "Success criteria"
+kind = "items"
+type = "criterion"
+
+[[section.item]]
+id = "SC1"
+title = "A process that hangs is restarted"
+short = "Hangs restart"
+needs = ["C1"]
+
+[[section.item]]
+id = "SC2"
+title = "A process without its database gets no traffic"
+short = "No traffic without a database"
+needs = ["C2"]
+
+[[section]]
+id = "repositories"
+title = "Repositories"
+kind = "table"
+head = ["Repository", "Its part"]
+rows = [["<code>example-service</code>", "The routes, and the deployment settings."]]
+
+[[section]]
+id = "ground-rules"
+title = "Ground rules"
+intro = "How the user wants this project run. They hold until the user changes them."
+kind = "items"
+type = "rule"
+
+[[section.item]]
+id = "G1"
+title = "PRs open ready for review, never as drafts"
+fields = [["Since", "1 October."]]
+
+[[section.item]]
+id = "G2"
+title = "Only the user merges"
+fields = [["Since", "1 October."]]
+
+[[section.item]]
+id = "G3"
+title = "Ask before using a branch the plan doesn't name"
+fields = [["Since", "1 October."]]

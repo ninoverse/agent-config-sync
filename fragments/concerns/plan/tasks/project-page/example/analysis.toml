@@ -1,6 +1,8 @@
-# Analysis: the decisions, each with its options, a recommendation, the
-# answer and where it lands. A decision waiting on the user is "open": it reads
-# To decide, and shows in Waiting on you; once answered, "done" reads Taken.
+# Analysis: the decisions, each with its options, a recommendation and the
+# answer. A decision waiting on the user is "open": it reads To decide, and
+# shows in Waiting on you; once answered, "done" reads Taken. `on` is the day
+# it was taken. Its card lists the PRs that name it, so "lands in" needs no
+# field of its own.
 [[section]]
 id = "decisions"
 title = "Decisions"
@@ -11,20 +13,20 @@ type = "decision"
 id = "D1"
 title = "Where the probes live"
 status = "done"
+on = 2026-10-02
 fields = [
   ["Options", "(a) <code>/healthz</code> and <code>/readyz</code> beside <code>/api</code>. (b) A second port that serves only the probes."],
   ["Recommendation", "<strong>(a)</strong>. One port keeps the platform's settings to two lines."],
-  ["Answer", "<strong>(a)</strong>, on 2 October."],
-  ["Lands in", "[[EX-1]] and [[EX-2]]"],
+  ["Answer", "<strong>(a)</strong>."],
 ]
 
 [[section.item]]
 id = "D2"
 title = "What readiness waits for"
 status = "done"
+on = 2026-10-02
 fields = [
   ["Options", "(a) The database connection. (b) The database and the cache."],
   ["Recommendation", "<strong>(a)</strong>. The service answers from the database when the cache is down, only slower."],
-  ["Answer", "<strong>(a)</strong>, on 2 October."],
-  ["Lands in", "[[EX-2]]"],
+  ["Answer", "<strong>(a)</strong>."],
 ]

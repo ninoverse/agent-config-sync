@@ -1,11 +1,15 @@
 # A finished project that uses what the example leaves out: a retrospective with
-# headline figures, a brief and an imported page, an explicit results list, a
-# dropped item, and a stylesheet of its own.
+# headline figures, lessons and an imported page, a board with its columns
+# written out, an explicit results list, a dropped item, and a stylesheet of
+# its own.
 repo = "example-service"
 objective = "metrics"
 summary = "A test project for the renderer: every section kind, and an imported page."
-read_at = "8 October 2026 at 09:00 UTC"
+read_at = 2026-10-08T09:00:00
 css = ["extra.css"]
+
+[phases.brief]
+status = "done"
 
 [phases.research]
 status = "done"
@@ -19,7 +23,10 @@ status = "done"
 [phases.build]
 status = "done"
 
-[phases.templating]
+[phases.verify]
+status = "done"
+
+[phases.reuse]
 status = "not-needed"
 why = "Nothing here is worth copying."
 
@@ -27,7 +34,7 @@ why = "Nothing here is worth copying."
 status = "now"
 
 [phases.later]
-status = "done"
+status = "now"
 
 [[glossary]]
 term = "Scrape"

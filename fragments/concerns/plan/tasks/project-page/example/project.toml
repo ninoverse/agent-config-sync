@@ -3,40 +3,78 @@
 #
 #   python3 .agents/project-page/render.py <this directory> <out directory>
 #
-# Text is HTML, written as the page shows it. This example is a small project
-# in its Build phase; copy the directory to start a real one.
+# Text is HTML, written as the page shows it, and [[D1]] anywhere in it links
+# to item D1 with its short title. Dates are TOML dates, such as 2026-10-07.
+# This example is a small project in its Build phase; copy the directory to
+# start a real one.
 
 # The page's title is <repo>-<objective>: the main repository, then the
 # objective in kebab-case.
 repo = "example-service"
 objective = "health-checks"
-summary = "An example project: give <code>example-service</code> the liveness and readiness probes its platform asks for, in two PRs."
-# When the statuses below were read. Read them again before each publish.
-read_at = "7 October 2026 at 18:00 UTC"
+summary = "An example project: give <code>example-service</code> the liveness and readiness probes its platform asks for."
+# When the statuses below were read, in UTC. Read them again before each publish.
+read_at = 2026-10-07T18:00:00
 
 # Every phase, in order. A phase is done, now, to-come or not-needed, and one
-# that is not needed says why. A phase left out is to-come.
+# that is not needed says why. A phase left out is to-come. `start` and `end`
+# are optional, and put the phase on the calendar.
+[phases.brief]
+status = "done"
+start = 2026-10-01
+end = 2026-10-01
+
 [phases.research]
 status = "done"
+start = 2026-10-01
+end = 2026-10-02
 
 [phases.analysis]
 status = "done"
+end = 2026-10-02
 
 [phases.plan]
 status = "done"
+end = 2026-10-03
 
 [phases.build]
 status = "now"
+start = 2026-10-05
 
-[phases.templating]
+[phases.verify]
+status = "now"
+start = 2026-10-06
+
+[phases.reuse]
 status = "not-needed"
-why = "Two routes are too little to copy into a template. The service template's README links this project instead."
+why = "Two routes are too little for another project to take. The service template's README links this project instead."
 
 [phases.retrospective]
 status = "to-come"
 
 [phases.later]
 status = "now"
+
+# Dates that aren't items: scheduled runs, deadlines, changes outside the
+# project. `short` labels the event in a calendar cell.
+[[event]]
+date = 2026-10-12
+title = "Renovate's weekly run"
+short = "Renovate"
+
+[[event]]
+date = 2026-10-14
+title = "Production deploys freeze until the 21st"
+short = "Freeze"
+
+# What the next session needs before it reads anything else: what is in
+# flight, where, and what comes next. Update it before a session ends.
+[handoff]
+updated = 2026-10-07
+notes = [
+  "[[EX-2]] is open on <code>feat/readiness-probe</code>, green, waiting for your merge.",
+  "Then: [[EX-3]], cut from an up-to-date <code>main</code> once [[EX-2]] merges, since each repository has one PR in flight.",
+]
 
 # One glossary for the project: terms coined for it, and terms borrowed.
 [[glossary]]

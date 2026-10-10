@@ -1,0 +1,14 @@
+[[section]]
+id = "deferred"
+title = "Deferred"
+kind = "items"
+type = "later"
+
+[[section.item]]
+id = "T1"
+title = "The rule change from [[L2]]"
+short = "Scrape-cost rule"
+status = "blocked"
+needs = ["L2"]
+waits = "agent-config-sync's next release"
+fields = [["Goes to", "A PR to agent-config-sync's fragments."]]
