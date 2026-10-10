@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Builds a project page from its TOML data, and checks it.
 
-Usage: python3 render.py <data-dir> <out-dir> [--inline]
+Usage: python3 render.py <data-dir> <out-dir> [--inline | --retrospective]
 
 <data-dir> holds project.toml and a <phase>.toml for each phase with content.
 <out-dir> gets index.html, the page to publish, and phases/<phase>.html for
 every other phase with content, which the page loads when that phase is
 picked. --inline puts every phase in index.html instead, for a preview or a
-small project.
+small project. --retrospective writes retrospective.html instead: the
+Retrospective alone, as a page to share.
 
 Exits 0 once the page is written, after printing a warning for each state that
 looks stale; 1 when the data or the page has a problem, writing nothing and
@@ -70,6 +71,8 @@ ITEM_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
 REF = re.compile(r"\[\[([^\]]*)\]\]")
 # Only an anchor made of these reaches location.hash from an artifact's link.
 ANCHOR = re.compile(r"[A-Za-z0-9._~-]+")
+# A pull request or an issue on GitHub, which a link names as GitHub does: owner/repo#12.
+GITHUB = re.compile(r"https://github\.com/([^/]+/[^/]+)/(?:pull|issues)/(\d+)")
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 FONTS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
@@ -81,6 +84,8 @@ FONTS = (
 problems, warnings = [], []
 ITEMS = {}  # every item of every phase, by id, in phase order
 TODAY = None  # the day the state was read
+LINKABLE = None  # the ids a reference links to, on a page that holds only some; None for all
+COUNTED = []  # the headline figures counted from the data, for a `figures` section with `auto`
 
 
 def problem(where, text):
@@ -284,6 +289,9 @@ def collect_items(phases):
                     problem(where, f"`kind` is one of {', '.join(KINDS)}")
                 if not all(is_pair(field) for field in item.get("fields", [])):
                     problem(where, "each of `fields` is a [label, text] pair")
+                url = item.get("url")
+                if url is not None and not (isinstance(url, str) and url.startswith("https://")):
+                    problem(where, "`url` is an https:// address, such as the PR's on GitHub")
                 needs = item.get("needs", [])
                 if not (isinstance(needs, list) and all(isinstance(n, str) for n in needs)):
                     problem(where, "`needs` is a list of item ids")
@@ -422,7 +430,18 @@ def short_of(item):
 
 
 def ref_html(item_id):
-    return f'<a class="ref" href="#{anchor_of(item_id)}"><b>{esc(item_id)}</b> {short_of(ITEMS[item_id])}</a>'
+    """D1 with its short title: a link to it, or text on a page that doesn't hold it."""
+    name = f"<b>{esc(item_id)}</b> {short_of(ITEMS[item_id])}"
+    if LINKABLE is not None and item_id not in LINKABLE:
+        return f'<span class="ref">{name}</span>'
+    return f'<a class="ref" href="#{anchor_of(item_id)}">{name}</a>'
+
+
+def link_html(url):
+    """An address outside the page, named as GitHub names it where it is one."""
+    match = GITHUB.fullmatch(url)
+    label = f"{match.group(1)}#{match.group(2)}" if match else url
+    return f'<a href="{esc(url)}" target="_blank" rel="noopener">{esc(label)}</a>'
 
 
 def expand_refs(text, where):
@@ -478,6 +497,8 @@ def card(item):
     if item.get("status_from") == item["phase"]:
         head.append(state_line(item))
     rows = [(field[0], field[1]) for field in item.get("fields", []) if is_pair(field)]
+    if isinstance(item.get("url"), str):
+        rows.append(("Link", link_html(item["url"])))
     if item["needs"]:
         rows.append(("Needs", refs_list(item["needs"])))
     if item["due"]:
@@ -639,13 +660,17 @@ def render_section(section, key, data, data_dir):
             entries.append(f'<li><span class="who">{day(date) if date else ""}</span><span>{entry.get("text", "")}</span></li>')
         parts.append(f'  <ul class="plain log">{"".join(entries)}</ul>')
     elif kind == "figures":
-        figures = "".join(
-            f'<li><span class="v">{esc(fig.get("value", ""))}</span><span class="k">{fig.get("label", "")}</span></li>'
-            for fig in section.get("figure", [])
-        )
+        # With `auto`, the figures the data can count come first, then those written out.
+        auto = COUNTED if section.get("auto") else []
+        shown = auto + [(fig.get("value", ""), fig.get("label", "")) for fig in section.get("figure", [])]
+        figures = "".join(f'<li><span class="v">{esc(value)}</span><span class="k">{label}</span></li>' for value, label in shown)
         parts.append(f'  <ul class="figures">{figures}</ul>')
-        if section.get("note"):
-            parts.append(f'  <p class="note">{section["note"]}</p>')
+        note = section.get("note", "")
+        if auto and not note:
+            which = "Counted" if len(auto) == len(shown) else f"The first {len(auto)} counted"
+            note = f"{which} from the project's data on {TODAY.day} {TODAY:%B %Y}."
+        if note:
+            parts.append(f'  <p class="note">{note}</p>')
     elif kind == "defs":
         rows = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in section.get("def", []))
         parts.append(f'  <dl class="defs">{rows}</dl>')
@@ -689,14 +714,16 @@ def changelog(key, entries, targets):
     return f'<footer class="changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n  <ol>{"".join(rows)}</ol>\n</footer>'
 
 
-def render_phase(key, state, data, data_dir):
+def render_phase(key, state, data, data_dir, head=True):
+    """A phase's view: its head, unless it stands alone, then its sections and changelog."""
     status = state["status"]
     span = ""
     if state["start"]:
         when = f'{day(state["start"])} – {day(state["end"])}' if state["end"] else f'since {day(state["start"])}'
         span = f'<span class="span">{when}</span>'
-    head = f'<div class="phase-head"><h2>{PHASE_NAME[key]}</h2><span class="ph ph-{status}">{PHASE_STATUS[status]}</span>{span}</div>'
-    parts = [head]
+    parts = []
+    if head:
+        parts.append(f'<div class="phase-head"><h2>{PHASE_NAME[key]}</h2><span class="ph ph-{status}">{PHASE_STATUS[status]}</span>{span}</div>')
     if status == "not-needed":
         parts.append(f'<p class="why">{state["why"]}</p>')
     elif data is None:
@@ -902,7 +929,8 @@ def check(fragments):
 # ------------------------------------------------------------------ the page
 
 
-def page(project, sections, opening, inline, data_dir, calendar_html, glance):
+def stylesheet(project, data_dir):
+    """The kit's styles, then the project's own, from `css`."""
     css = (HERE / "page.css").read_text(encoding="utf-8")
     for extra in project.get("css", []):
         path = data_dir / extra
@@ -910,14 +938,36 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance):
             css += "\n" + path.read_text(encoding="utf-8")
         else:
             problem("project.toml", f"`css` names {extra}, which does not exist beside project.toml")
+    return css
+
+
+def progress():
+    """For each phase, how many of the statuses it keeps are done, of those not Dropped."""
+    counts = {}
+    for item in ITEMS.values():
+        key, status = item.get("status_from"), item.get("status")
+        if key and status in ITEM_STATUS and status != "dropped":
+            done, total = counts.get(key, (0, 0))
+            counts[key] = (done + (status == "done"), total + 1)
+    return counts
+
+
+def page(project, sections, opening, inline, data_dir, calendar_html, glance):
+    css = stylesheet(project, data_dir)
     title = f'{project.get("repo", "")}-{project.get("objective", "")}'
+    counts = progress()
     tabs = []
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
         current = ' aria-current="true"' if key == opening else ""
+        state = PHASE_STATUS[status]
+        # A phase in progress says how far it is.
+        if status == "now" and key in counts:
+            done, total = counts[key]
+            state += f' <span class="count" title="{done} of {total} done, dropped items aside">{done}/{total}</span>'
         tabs.append(
             f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}><span class="n">{number}</span>'
-            f'<span class="name">{name}</span><span class="state">{PHASE_STATUS[status]}</span></a></li>'
+            f'<span class="name">{name}</span><span class="state">{state}</span></a></li>'
         )
     shells, files = [], {}
     for key, _ in PHASES:
@@ -953,19 +1003,103 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance):
 """
 
 
+# ------------------------------------------------------------------ the retrospective, alone
+
+
+def counted(project, phases):
+    """The headline figures the data can count, as (value, label) pairs, leaving out a zero."""
+
+    def done(kind, kinds=None):
+        return sum(1 for item in ITEMS.values() if item["type"] == kind and item.get("status") == "done" and (kinds is None or item.get("kind") in kinds))
+
+    figures = [
+        (done("pr"), "PRs merged"),
+        (done("pr", ("major", "minor", "patch")), "releases"),
+        (done("decision"), "decisions taken"),
+        (done("setting"), "settings changed by hand"),
+        (done("lesson"), "lessons adopted"),
+    ]
+    # The project's span: what happened, not what is announced or due.
+    dates = [date for date, cls, *_ in dated(project, phases) if cls not in ("event", "due")]
+    if dates:
+        figures.append(((max(dates) - min(dates)).days + 1, "days, start to finish"))
+    return [(str(value), label) for value, label in figures if value]
+
+
+def retrospective_page(project, phases, data_dir):
+    """The Retrospective alone, as a page to share: no tabs, no calendar and no
+    script, and the items it doesn't hold named as text rather than linked."""
+    global LINKABLE
+    title = f'{project.get("repo", "")}-{project.get("objective", "")}-retrospective'
+    data = phases.get("retrospective")
+    if not data:
+        problem("retrospective.toml", "the Retrospective has no data yet")
+        return title, ""
+    LINKABLE = {item_id for item_id, item in ITEMS.items() if item["phase"] == "retrospective"}
+    body = render_phase("retrospective", project["status"]["retrospective"], data, data_dir, head=False)
+    read_at = project["read_at"]
+    text = f"""<meta charset="utf-8">
+<title>{esc(title)}</title>
+{FONTS}
+<style>
+{stylesheet(project, data_dir)}
+</style>
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">{esc(project.get("repo", ""))} · retrospective</p>
+  <h1>{esc(title)}</h1>
+  <p class="lede">{project.get("summary", "")}</p>
+  <p class="readat">Written from the project's data, read on {read_at.day} {read_at:%B %Y}.</p>
+</header>
+<main>
+<section class="phase" id="retrospective">
+{body}
+</section>
+</main>
+{glossary(project.get("glossary", []))}
+<footer class="site"><p>Built with <code>/project-page</code> from the data behind the project's page.</p></footer>
+</div>
+"""
+    return title, expand_refs(text, "project.toml")
+
+
+def failed():
+    """Prints the problems, or else the warnings, and says whether there were problems."""
+    if not problems:
+        for line in warnings:
+            print(f"warning: {line}", file=sys.stderr)
+        return False
+    for line in problems:
+        print(line, file=sys.stderr)
+    print(f"{len(problems)} problem{'s' if len(problems) != 1 else ''}; nothing written.", file=sys.stderr)
+    return True
+
+
 def main(argv):
-    args = [arg for arg in argv if arg != "--inline"]
-    if len(args) != 2 or any(arg.startswith("-") for arg in args):
+    flags = [arg for arg in argv if arg.startswith("-")]
+    args = [arg for arg in argv if not arg.startswith("-")]
+    if len(args) != 2 or len(flags) > 1 or any(flag not in ("--inline", "--retrospective") for flag in flags):
         print(__doc__.strip().splitlines()[2], file=sys.stderr)
         return 2
     data_dir, out_dir = Path(args[0]), Path(args[1])
-    inline = "--inline" in argv
     project = read_project(data_dir)
     phases = read_phases(data_dir)
     collect_items(phases)
     link_items()
     if not problems:
         check_states(project, phases)
+    COUNTED.extend(counted(project, phases))
+    warned = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""
+    if "--retrospective" in flags:
+        title, text = retrospective_page(project, phases, data_dir)
+        check([("retrospective.html", text)])
+        if failed():
+            return 1
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "retrospective.html").write_text(text, encoding="utf-8")
+        print(f"{title}: retrospective.html, {len(text.encode()) // 1024} KB{warned}")
+        return 0
+    inline = "--inline" in flags
     sections = {}
     for key, _ in PHASES:
         sections[key] = (render_phase(key, project["status"][key], phases.get(key), data_dir), key in phases)
@@ -978,13 +1112,8 @@ def main(argv):
     shell = expand_refs(shell, "project.toml")
     fragments = [("the page", shell)] + [(f"phases/{key}.html", text) for key, text in files.items()]
     check(fragments)
-    if problems:
-        for line in problems:
-            print(line, file=sys.stderr)
-        print(f"{len(problems)} problem{'s' if len(problems) != 1 else ''}; nothing written.", file=sys.stderr)
+    if failed():
         return 1
-    for line in warnings:
-        print(f"warning: {line}", file=sys.stderr)
     # Which view holds each id, so a link into a phase not loaded yet opens it.
     phase_of = {}
     for key, (text, _) in list(sections.items()) + [("calendar", (calendar_html, True))]:
@@ -1002,8 +1131,7 @@ def main(argv):
         for key, text in files.items():
             (out_dir / "phases" / f"{key}.html").write_text(text, encoding="utf-8")
     loaded = ", ".join(f"phases/{key}.html" for key in files) or "none"
-    notes = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""
-    print(f"{title}: index.html, {len(out.encode()) // 1024} KB, opening on {PHASE_NAME[opening]}; loaded when picked: {loaded}{notes}")
+    print(f"{title}: index.html, {len(out.encode()) // 1024} KB, opening on {PHASE_NAME[opening]}; loaded when picked: {loaded}{warned}")
     return 0
 
 

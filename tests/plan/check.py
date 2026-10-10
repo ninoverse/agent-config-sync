@@ -63,6 +63,8 @@ def check_example(tmp):
     expect(sorted(phase) == ["analysis", "brief", "later", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
     expect("<title>example-service-health-checks</title>" in page, "the title is <repo>-<objective>")
     expect('data-open="build"' in page, "the page opens on the phase in progress")
+    counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
+    expect(counts == {"build": "3/6", "verify": "2/4", "later": "0/1"}, f"each phase in progress counts its items done, and only those: {counts}")
     expect('<span class="span">since 5 Oct</span>' in page, "a phase in progress says since when")
     expect('<span class="span">1 Oct – 2 Oct</span>' in phase["research"], "a finished phase says when it ran")
 
@@ -75,6 +77,8 @@ def check_example(tmp):
     expect('class="st ' not in phase["plan"], "the plan shows its items as approved, without the build's statuses")
     expect('<a class="ref" href="#ex-1"><b>EX-1</b> Liveness probe</a>' in phase["plan"], "[[EX-1]] links with its short title")
     expect("Approved on 3 Oct. Amended since:" in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so")
+    link = '<dt>Link</dt><dd><a href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a></dd>'
+    expect(link in phase["plan"], "a PR's url links to it, named as GitHub names it")
     needed = between(between(phase["plan"], 'id="ex-1"', "</article>"), "Needed by", "</p>")
     expect(all(f'href="#{i}"' in needed for i in ("ex-2", "s1", "c1")), f"a card lists what needs it: {needed}")
     named = between(between(phase["analysis"], 'id="d1"', "</article>"), "Named by", "</p>")
@@ -107,6 +111,11 @@ def check_example(tmp):
         whole = (inline / "index.html").read_text()
         expect('id="ex-1"' in whole and 'id="g1"' in whole and 'id="c1"' in whole, "--inline holds every phase")
 
+    run = render(EXAMPLE, tmp / "no-retrospective", "--retrospective")
+    expect(run.returncode == 1 and "the Retrospective has no data yet" in run.stderr, f"--retrospective needs a Retrospective: {run.stderr}")
+    run = render(EXAMPLE, tmp / "both", "--inline", "--retrospective")
+    expect(run.returncode == 2, f"--inline and --retrospective don't go together: exit {run.returncode}")
+
 
 def check_full(tmp):
     out = tmp / "full"
@@ -123,6 +132,10 @@ def check_full(tmp):
     expect('class="figures"' in page and 'class="defs"' in page, "figures and definitions render")
     expect(".imported-marker" in page, "a project's own stylesheet is appended")
     expect(all(f'st-{s}">{label}<' in page for s, label in (("open", "To review"), ("done", "Adopted"), ("dropped", "Not adopted"))), "a lesson reads To review, Adopted or Not adopted")
+    figures = re.findall(r'<li><span class="v">(.*?)</span><span class="k">(.*?)</span></li>', page)
+    counted = [("1", "PRs merged"), ("1", "releases"), ("1", "lessons adopted"), ("38", "days, start to finish"), ("15 s", "between scrapes")]
+    expect(figures == counted, f"the figures the data can count come first, then those written out: {figures}")
+    expect("The first 4 counted from the project's data on 8 October 2026." in page, "the note says which figures were counted, and when")
     build = (out / "phases" / "build.html").read_text()
     expect(board_cells(build) == ["example-service", ["MX-1"], ["MX-2"]], f"a board can name its columns and rows: {board_cells(build)}")
     expect(build.index("MX-2") < build.index("<b>MX-1</b>", build.index('class="results"')), "results follow `ids`")
@@ -130,6 +143,22 @@ def check_full(tmp):
     later = (out / "phases" / "later.html").read_text()
     expect('st-blocked">Waiting<' in later and 'href="#l2"' in later, "a rule change waits in For later, on its lesson")
     expect("[[" not in page + build + later, "a title that names an item links it, and leaves no brackets in a short name")
+
+    alone = tmp / "alone"
+    run = render(FULL, alone, "--retrospective")
+    expect(run.returncode == 0 and "warning:" not in run.stderr, f"full/'s Retrospective renders alone: {run.stderr}")
+    if run.returncode == 0:
+        expect(sorted(p.name for p in alone.iterdir()) == ["retrospective.html"], "--retrospective writes the one page")
+        retro = (alone / "retrospective.html").read_text()
+        expect("<title>example-service-metrics-retrospective</title>" in retro, "the page alone is titled <repo>-<objective>-retrospective")
+        expect(all(absent not in retro for absent in ('<nav class="phases"', 'id="calendar"', "<script")), "it has no tabs, no calendar and no script")
+        expect('<span class="ref"><b>MX-1</b>' in retro and 'href="#mx-1"' not in retro, "it names as text an item it doesn't hold")
+        expect('id="l1"' in retro and 'id="glossary"' in retro and "lessons adopted" in retro, "it holds the lessons, the figures and the glossary")
+    linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
+    if linked is not None:
+        expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")
+        run = render(linked, tmp / "linked-alone", "--retrospective")
+        expect(run.returncode == 1 and 'a link to "#mx-1"' in run.stderr, f"alone, it has none, and the render says so: {run.stderr}")
 
 
 # Each stale copy of the example: the file, the text replaced, its replacement,
@@ -157,7 +186,7 @@ BROKEN = [
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
     (EXAMPLE, "later.toml", 'waits = "the metrics stack"\n', "", "a blocked item says what it waits on"),
     (EXAMPLE, "project.toml", 'why = "Two routes', 'what = "Two routes', "a phase that is not needed says why"),
-    (EXAMPLE, "plan.toml", 'kind = "minor"\nfields = [\n  ["Branch", "<code>feat/liveness', 'kind = "minor"\nstatus = "done"\nfields = [\n  ["Branch", "<code>feat/liveness', "status is set twice"),
+    (EXAMPLE, "plan.toml", 'pull/12"\nfields = [', 'pull/12"\nstatus = "done"\nfields = [', "status is set twice"),
     (EXAMPLE, "research.toml", "<code>/api</code>", "<code>/api", "is never closed"),
     (EXAMPLE, "project.toml", 'objective = "health-checks"', 'objective = "Health Checks"', "kebab-case"),
     (EXAMPLE, "later.toml", 'id = "deferred"', 'id = "deferred', "not valid TOML"),
@@ -170,6 +199,7 @@ BROKEN = [
     (EXAMPLE, "plan.toml", 'needs = ["EX-1"]\ndue', 'needs = ["EX-9"]\ndue', "`needs` names EX-9, which no item has"),
     (EXAMPLE, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nneeds = ["EX-2"]\n', "`needs` loops: EX-1 → EX-2 → EX-1"),
     (EXAMPLE, "plan.toml", ', why = "the answer to [[Q1]]" }', " }", "`amended` is"),
+    (EXAMPLE, "plan.toml", 'url = "https://github.com/example/example-service/pull/12"', 'url = "github.com/example/example-service/pull/12"', "`url` is an https:// address"),
     (FULL, "build.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
 ]
 

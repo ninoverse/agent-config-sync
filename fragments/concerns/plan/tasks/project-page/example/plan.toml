@@ -14,11 +14,13 @@ type = "pr"
 # `kind` is what a merge releases (major, minor, patch), or you or together.
 # `short` names the item wherever it is linked. `needs` lists what has to be
 # done first: it decides the board's waves, and a loop in it fails the render.
+# `url` is the PR's address once it is open, where its state is read from.
 [[section.item]]
 id = "EX-1"
 title = "<code>feat: add the liveness probe</code>"
 short = "Liveness probe"
 kind = "minor"
+url = "https://github.com/example/example-service/pull/12"
 fields = [
   ["Branch", "<code>feat/liveness-probe</code>"],
   ["Changes", "A <code>/healthz</code> route that answers 200 while the process runs."],
@@ -32,6 +34,7 @@ id = "EX-2"
 title = "<code>feat: add the readiness probe</code>"
 short = "Readiness probe"
 kind = "minor"
+url = "https://github.com/example/example-service/pull/14"
 needs = ["EX-1"]
 due = 2026-10-14
 fields = [

@@ -108,6 +108,7 @@
   nav.phases a:hover { border-color: var(--outline); color: var(--ink); }
   nav.phases .n { font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; }
   nav.phases .state { grid-column: 2; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  nav.phases .count { margin-left: 3px; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: 0; }
   nav.phases a.t-done .state { color: var(--done); }
   nav.phases a.t-now { color: var(--ink); }
   nav.phases a.t-now .state { color: var(--accent); }
@@ -141,7 +142,7 @@
   .approved p { margin: 0; }
   .approved ul { margin-top: 6px; }
   .backlinks { margin-top: 10px; max-width: 88ch; font-size: 0.86rem; color: var(--ink-muted); }
-  .backlinks > span { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 4px; }
+  .backlinks > span:not(.ref) { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 4px; }
   .block { margin-top: 40px; }
   .block > h3 { padding-top: 14px; border-top: 1px solid var(--rule); }
   .intro { color: var(--ink-muted); }
@@ -180,7 +181,7 @@
   table.results td:nth-child(2) { white-space: nowrap; }
   a.ref { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
   a.ref:hover { border-bottom-color: var(--accent-fill); }
-  a.ref b { font-family: var(--font-mono); font-size: 0.82rem; }
+  .ref b { font-family: var(--font-mono); font-size: 0.82rem; }
 
   /* The board: rows by columns of chips, each chip an item with its status. */
   table.board { table-layout: fixed; }
@@ -290,5 +291,7 @@
     table.cal li:not(.dot) { width: 7px; height: 7px; padding: 0; font-size: 0; border-radius: 50%; align-self: center; }
     .glance { flex-direction: column; align-items: flex-start; gap: 6px; }
     .glance span + span::before { content: none; }
+    nav.phases ol { gap: 5px; }
+    nav.phases a { padding: 5px 8px 6px 7px; column-gap: 5px; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

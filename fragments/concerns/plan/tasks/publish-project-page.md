@@ -29,13 +29,21 @@ since the user finds the page by it.
   files with the Artifact tool's `read` action, by path, edit them, and render
   again. The notes for the next session, under `[handoff]`, say what was in
   flight.
-- Read the project's state again right before publishing, and set `read_at` to
-  that time.
+- Read the project's state again right before publishing, as *Building the
+  project page* says, and set `read_at` to that time.
 - Publish to the same `url`, with the files that changed, and `null` for a
   phase file that no longer exists.
 - A session that neither published nor read the live page has to read it in
   full before it can publish over it. The page holds only the phase in
   progress and the Calendar, so that read stays small.
+
+## The Retrospective, alone
+
+Once the Retrospective is written, render it with `--retrospective` and publish
+`retrospective.html` as an artifact of its own, titled
+`<repo>-<objective>-retrospective`, with an `icon` such as `notes`. It carries
+no data of its own: publish it again from the project's data whenever the
+Retrospective changes. Whom to share it with is the user's choice.
 
 ## Hand it over
 

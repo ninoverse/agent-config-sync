@@ -19,13 +19,14 @@ they answer.
   Retrospective, For later. The page opens on the phase in progress.
 - A phase is Done, Now, To come or Not needed. Not needed says why in one
   sentence; Reuse is the phase most often not needed. Build and Verify can both
-  be Now: Verify starts with the first merge.
+  be Now: Verify starts with the first merge. A phase that is Now shows on its
+  tab how many of its items are done.
 - The page shows the current state. Each publish that changes a phase adds an
   entry to that phase's changelog, at its foot, newest first, naming the
   sections it changed. A correction is an entry of its own, saying what was
   wrong.
 - The page says when its state was read. Read it again right before each
-  publish: a status read earlier is stale by then.
+  publish, each PR from GitHub: a status read earlier is stale by then.
 - Rendering warns about what looks stale, such as a Done phase that still holds
   an unfinished item, a decision taken that no PR carries out, a merged PR
   without its result, an item Blocked on work that is done, or a date that has
@@ -41,7 +42,9 @@ they answer.
   raises.
 - **Analysis**: the decisions. Each holds its options, a recommendation with
   its reasons, and the user's answer with its date. Its card lists the PRs that
-  carry it out.
+  carry it out. One list is the default; only when the decisions are many do
+  they come in batches, one section each, with the evidence and what the batch
+  costs, discussed and answered together.
 - **Plan**: the PRs as approved, one at a time in each repository, each with its
   branch, what it needs first, what its merge releases, and *Done when*: what
   proves it works. The settings only the user can change. The risk register:
@@ -61,7 +64,9 @@ they answer.
   the day they were checked; what only using it revealed; what the record
   corrected, as it was and as it is; roads not taken; the risks and how they
   closed; what it cost; what was learned; what comes next; the decision log.
-  Most of it comes from the other phases.
+  Most of it comes from the other phases, and the figures are counted from the
+  data wherever they can be. It also renders alone, as a page the user can
+  share.
 - **For later**: each deferred item, what it waits on, and where it goes when
   that comes. Deferring an item there lets the Retrospective go ahead without
   it.

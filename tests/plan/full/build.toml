@@ -2,13 +2,16 @@
 id = "prs"
 title = "PRs"
 kind = "items"
+type = "pr"
 
 [[section.item]]
 id = "MX-1"
 title = "Expose the metrics endpoint"
 kind = "minor"
+url = "https://github.com/example/example-service/pull/3"
 status = "done"
-fields = [["Result", "Merged."]]
+on = 2026-10-06
+result = "Released 2.1.0."
 
 [[section.item]]
 id = "MX-2"

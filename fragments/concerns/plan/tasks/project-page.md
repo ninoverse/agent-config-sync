@@ -33,8 +33,11 @@ python3 .agents/project-page/render.py <data directory> <out directory>
 It writes `index.html`, holding the phase in progress and the Calendar, and
 `phases/<phase>.html` for each other phase with content, which the page fetches
 when the reader picks that phase. `--inline` puts every phase in `index.html`,
-for a preview opened from disk, where a page can't fetch a file. It needs
-Python 3.11 or later, and nothing else.
+for a preview opened from disk, where a page can't fetch a file.
+`--retrospective` writes `retrospective.html` instead: the Retrospective alone,
+without the tabs or the Calendar, naming as text the items it doesn't hold. A
+link written by hand to one of those fails the render there. It needs Python
+3.11 or later, and nothing else.
 
 It writes nothing, and names the file and the item, when:
 
@@ -76,6 +79,7 @@ why the warning stands.
   - `kind`: `major`, `minor`, `patch`, `you` or `together`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
     `result`, once it lands;
+  - `url`, the PR's address once it is open, where its state is read from;
   - `needs`, the ids of the items to finish first;
   - `due`, the day it is due;
   - `amended`, as `{ on = <date>, why = "..." }`, when it was added after its
@@ -89,6 +93,9 @@ why the warning stands.
 - A `board` with `auto = true` builds its waves from `needs`, over the item
   `types` it names, and its rows from each item's `repo`, or `rows_default`;
   `waves` subtitles each wave. Without `auto`, it takes `columns` and `row`s.
+- A `figures` section with `auto = true` starts with what the data counts: PRs
+  merged, releases, decisions taken, settings changed by hand, lessons adopted,
+  and the days from the first date to the last. Its `figure`s follow.
 - Text is HTML, as the page shows it, and `[[D1]]` anywhere in it links to D1
   with its short title: name items that way, never by a bare number. Dates are
   TOML dates, such as `2026-10-07`.
@@ -101,6 +108,18 @@ why the warning stands.
 
 ## Before publishing
 
-Open the `--inline` preview, or capture it with `/take-screenshot` where the
-repository has it, and look at the phase that changed. Then publish
+Read the state again. For each PR item with a `url` that isn't `done` or
+`dropped`, read the PR with the GitHub tools you have; `render.py` never reaches
+GitHub.
+
+- Merged: `done`, `on` its merge day, with its `result`: what it released, and
+  what its *Done when* showed.
+- Closed without a merge: ask the user whether it is `dropped`, with `why`, or
+  replaced by a new PR.
+- Still open: `open` once it waits only on the user's merge, `ready` or
+  `blocked` while work remains.
+
+Then set `read_at` to now, render, and fix each warning or tell the user why it
+stands. Open the `--inline` preview, or capture it with `/take-screenshot` where
+the repository has it, and look at the phase that changed. Then publish
 `index.html`, with `phases/` and the data files, as `src/`, beside it.
