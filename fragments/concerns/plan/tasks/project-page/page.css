@@ -1,9 +1,9 @@
   /* One page per project, its phases switched from the indicator at the top.
      hmi-components' forest colour theme and rounded structure: its colour
-     roles, as its badges use them (success, warning, tertiary for information,
-     error, and the neutral surfaces), each text colour darkened where a role
-     falls short of AA; symmetric rounded corners and pills; Quicksand
-     throughout. */
+     roles, as its badges use them (success, warning, error, and the neutral
+     surfaces), with Ready on the secondary role, since forest's tertiary sits
+     too close to its warning; each text colour darkened where a role falls
+     short of AA; symmetric rounded corners and pills; Quicksand throughout. */
   :root {
     --bg: #f5f9f7;
     --surface: #eef5f1;
@@ -17,9 +17,9 @@
     --accent-soft: #c8e8d8;
     --done: #2b6b46;     --done-soft: #d9eee2;
     --open: #87571a;     --open-soft: #f7e4c0;
-    --ready: #6b5d2a;    --ready-soft: #f0e6c0;
+    --ready: #3d4f48;    --ready-soft: #dde7e4;
     --blocked: #9e3934;  --blocked-soft: #f4dad6;
-    --na: #556660;       --na-soft: #dde7e4;
+    --na: #5f6e68;       --na-soft: #edf3f1;
     --corner-xs: 6px;
     --corner-sm: 10px;
     --corner-md: 16px;
@@ -44,9 +44,9 @@
       --accent-soft: #173a2a;
       --done: #80ccaa;     --done-soft: #163527;
       --open: #e8ca8a;     --open-soft: #3a2a10;
-      --ready: #d4c07a;    --ready-soft: #352c10;
+      --ready: #c4d2ce;    --ready-soft: #2d3d38;
       --blocked: #e89a93;  --blocked-soft: #3d1f1d;
-      --na: #a7b6b1;       --na-soft: #202e29;
+      --na: #95a49f;       --na-soft: #141f1b;
     }
   }
   :root[data-theme="dark"] {
@@ -63,9 +63,9 @@
     --accent-soft: #173a2a;
     --done: #80ccaa;     --done-soft: #163527;
     --open: #e8ca8a;     --open-soft: #3a2a10;
-    --ready: #d4c07a;    --ready-soft: #352c10;
+    --ready: #c4d2ce;    --ready-soft: #2d3d38;
     --blocked: #e89a93;  --blocked-soft: #3d1f1d;
-    --na: #a7b6b1;       --na-soft: #202e29;
+    --na: #95a49f;       --na-soft: #141f1b;
   }
 
   * { box-sizing: border-box; }
@@ -269,7 +269,7 @@
   table.cal td.today { outline: 2px solid var(--accent-fill); outline-offset: -2px; }
   table.cal td.today .dn { color: var(--accent); font-weight: 700; }
   table.cal ul { list-style: none; padding: 0; margin: 3px 0 0; display: flex; flex-wrap: wrap; gap: 2px; }
-  table.cal li { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.64rem; font-family: var(--font-mono); padding: 0 5px; border-radius: var(--corner-full); background: var(--na-soft); color: var(--ink); }
+  table.cal li { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.64rem; font-family: var(--font-mono); padding: 0 5px; border-radius: var(--corner-full); background: var(--surface-high); color: var(--ink); }
   table.cal li.dot { width: 7px; height: 7px; padding: 0; border-radius: 50%; background: var(--outline); align-self: center; }
   .m-event, .m-due { background: var(--accent-soft) !important; color: var(--accent) !important; }
   .m-s-done { background: var(--done-soft) !important; color: var(--done) !important; }
