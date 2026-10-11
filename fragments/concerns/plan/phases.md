@@ -23,8 +23,8 @@ they answer.
   tab how many of its items are done.
 - The page shows the current state. Each publish that changes a phase adds an
   entry to that phase's changelog, at its foot, newest first, naming the
-  sections it changed. A correction is an entry of its own, saying what was
-  wrong.
+  sections it changed; rendering against the data as last published lists
+  them. A correction is an entry of its own, saying what was wrong.
 - The page says when its state was read. Read it again right before each
   publish, each PR from GitHub: a status read earlier is stale by then.
 - Rendering warns about what looks stale, such as a Done phase that still holds

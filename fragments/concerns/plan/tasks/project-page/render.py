@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Builds a project page from its TOML data, and checks it.
 
-Usage: python3 render.py <data-dir> <out-dir> [--inline | --retrospective]
+Usage: python3 render.py <data-dir> <out-dir> [--inline | --retrospective] [--since <published-dir>]
 
 <data-dir> holds project.toml and a <phase>.toml for each phase with content.
 <out-dir> gets index.html, the page to publish, and phases/<phase>.html for
 every other phase with content, which the page loads when that phase is
 picked. --inline puts every phase in index.html instead, for a preview or a
 small project. --retrospective writes retrospective.html instead: the
-Retrospective alone, as a page to share.
+Retrospective alone, as a page to share. --since, given the data as it was
+last published, also prints what has changed in each phase since, for its
+changelog entry.
 
 Exits 0 once the page is written, after printing a warning for each state that
 looks stale; 1 when the data or the page has a problem, writing nothing and
@@ -866,6 +868,164 @@ def opening_phase(statuses):
     return PHASES[0][0]
 
 
+# ------------------------------------------------------------------ since the last publish
+
+STATE = ("status", "waits", "why", "result", "on")
+
+
+def raw(data_dir, whose):
+    """project.toml and each <phase>.toml in a directory, as written."""
+    found = {}
+    for key in ["project"] + [key for key, _ in PHASES]:
+        path = data_dir / f"{key}.toml"
+        if path.is_file():
+            try:
+                found[key] = tomllib.loads(path.read_text(encoding="utf-8"))
+            except tomllib.TOMLDecodeError as error:
+                problem(f"{whose} {path.name}", f"not valid TOML: {error}")
+    return found
+
+
+def snapshot(files):
+    """Each item as written, with its type, its state and the phase that keeps
+    that state; and each section, by phase and id."""
+    items, sections = {}, {}
+    for key, _ in PHASES:
+        for section in files.get(key, {}).get("section", []):
+            sections[(key, section.get("id"))] = section
+            for item in section.get("item", []) if section.get("kind") == "items" else []:
+                state = {field: item[field] for field in STATE if field in item}
+                items[item.get("id")] = {
+                    "phase": key,
+                    "section": section.get("id"),
+                    "type": item.get("type", section.get("type")),
+                    "written": {field: value for field, value in item.items() if field not in STATE},
+                    "state": state,
+                    "kept": key if state else None,
+                }
+    for key, _ in PHASES:
+        for item_id, entry in files.get(key, {}).get("status", {}).items():
+            if item_id in items:
+                items[item_id].update(state=dict(entry), kept=key)
+    return items, sections
+
+
+def edits(before, after):
+    """What changed between two versions of a table: its fields by label, then its keys."""
+    fields = [dict(f for f in version.get("fields", []) if is_pair(f)) for version in (before, after)]
+    words = [label for label in dict.fromkeys(list(fields[1]) + list(fields[0])) if fields[0].get(label) != fields[1].get(label)]
+    words += [f"`{key}`" for key in dict.fromkeys(list(after) + list(before)) if key != "fields" and before.get(key) != after.get(key)]
+    return words
+
+
+def said(snap, state):
+    """A state's status in the words of the item's type."""
+    status = state.get("status")
+    if status not in ITEM_STATUS:
+        return "no status"
+    return TYPES.get(snap["type"], {}).get("labels", {}).get(status, ITEM_STATUS[status])
+
+
+def changes_since(data_dir, published):
+    """What changed since the data was last published: for each phase, the changes
+    in words and the ids its changelog entry names in `changed`; then project.toml's.
+    A phase that changed without a new changelog entry is warned about."""
+    old, new = raw(published, "the published"), raw(data_dir, "the new")
+    (old_items, old_sections), (new_items, new_sections) = snapshot(old), snapshot(new)
+    found = {key: ([], []) for key, _ in PHASES}
+
+    def note(key, text, *targets):
+        lines, known = found[key]
+        lines.append(text)
+        known.extend(target for target in targets if target and target not in known)
+
+    def shown_at(key, item_id, item):
+        """Where a phase shows a state it keeps: the item's card, or its results."""
+        if item["phase"] == key:
+            return [anchor_of(item_id)]
+        data = new.get(key, {})
+        return [s.get("id") for s in data.get("section", []) if s.get("kind") == "results" and item_id in (s.get("ids") or list(data.get("status", {})))]
+
+    for item_id in dict.fromkeys(list(new_items) + list(old_items)):
+        before, after = old_items.get(item_id), new_items.get(item_id)
+        if after is None:
+            section = before["section"] if (before["phase"], before["section"]) in new_sections else None
+            note(before["phase"], f"{item_id} removed", section)
+            continue
+        if before is None:
+            note(after["phase"], f"{item_id} added", anchor_of(item_id))
+        elif before["written"] != after["written"]:
+            note(after["phase"], f"{item_id}: {', '.join(edits(before['written'], after['written']))} edited", anchor_of(item_id))
+        was = before["state"] if before else {}
+        if was == after["state"]:
+            continue
+        # A state that is gone was kept where it was; one that is new or changed, where it is.
+        key = after["kept"] or before["kept"]
+        if was.get("status") != after["state"].get("status"):
+            note(key, f"{item_id} {said(after, was)} → {said(after, after['state'])}", *shown_at(key, item_id, after))
+        else:
+            note(key, f"{item_id}: {', '.join(edits(was, after['state']))} edited", *shown_at(key, item_id, after))
+
+    for (key, section_id), after in new_sections.items():
+        before = old_sections.get((key, section_id))
+        name = text_of(after.get("title") or section_id)
+        if before is None:
+            note(key, f"{name} added", section_id)
+        elif after.get("kind") == "log" and before.get("kind") == "log":
+            added = [e for e in after.get("entry", []) if e not in before.get("entry", [])]
+            gone = [e for e in before.get("entry", []) if e not in after.get("entry", [])]
+            if gone or {k: v for k, v in before.items() if k != "entry"} != {k: v for k, v in after.items() if k != "entry"}:
+                note(key, f"{name} edited", section_id)
+            elif added:
+                note(key, f"{name}: {len(added)} {'entry' if len(added) == 1 else 'entries'} added", section_id)
+        elif {k: v for k, v in before.items() if k != "item"} != {k: v for k, v in after.items() if k != "item"}:
+            note(key, f"{name} edited", section_id)
+    for (key, section_id), before in old_sections.items():
+        if (key, section_id) not in new_sections:
+            note(key, f"{text_of(before.get('title') or section_id)} removed")
+
+    for key, _ in PHASES:
+        before, after = old.get(key, {}), new.get(key, {})
+        for field in dict.fromkeys(list(after) + list(before)):
+            if field not in ("section", "status", "changelog") and before.get(field) != after.get(field):
+                note(key, f"`{field}` edited")
+        fresh = [entry for entry in after.get("changelog", []) if entry not in before.get("changelog", [])]
+        if found[key][0] and not fresh:
+            warn(f"{key}.toml", "it has changed since the published data, and its changelog has no new entry")
+
+    project = []
+    before, after = old.get("project", {}), new.get("project", {})
+    for field in dict.fromkeys(list(after) + list(before)):
+        if field == "read_at" or before.get(field) == after.get(field):
+            continue
+        if field != "phases":
+            project.append(f"`{field}` edited")
+            continue
+        for key, name in PHASES:
+            was, now = before.get("phases", {}).get(key, {}), after.get("phases", {}).get(key, {})
+            if was.get("status", "to-come") != now.get("status", "to-come"):
+                project.append(f"{name} {PHASE_STATUS.get(was.get('status', 'to-come'), '?')} → {PHASE_STATUS.get(now.get('status', 'to-come'), '?')}")
+            elif was != now:
+                project.append(f"{name}: {', '.join(edits(was, now))} edited")
+    return found, project
+
+
+def print_changes(changes):
+    found, project = changes
+    if not project and not any(lines for lines, _ in found.values()):
+        print("Since the published data: nothing has changed.")
+        return
+    print("Since the published data:")
+    for key, name in PHASES:
+        lines, targets = found[key]
+        if lines:
+            print(f"  {name}: {'; '.join(lines)}.")
+            if targets:
+                print(f"    changed = {json.dumps(targets)}")
+    if project:
+        print(f"  project.toml: {'; '.join(project)}.")
+
+
 # ------------------------------------------------------------------ checking
 
 
@@ -1076,10 +1236,20 @@ def failed():
 
 
 def main(argv):
-    flags = [arg for arg in argv if arg.startswith("-")]
-    args = [arg for arg in argv if not arg.startswith("-")]
-    if len(args) != 2 or len(flags) > 1 or any(flag not in ("--inline", "--retrospective") for flag in flags):
+    args, flags, since = [], [], None
+    rest = iter(argv)
+    for arg in rest:
+        if arg == "--since":
+            since = next(rest, "")
+        elif arg.startswith("-"):
+            flags.append(arg)
+        else:
+            args.append(arg)
+    if len(args) != 2 or len(flags) > 1 or any(flag not in ("--inline", "--retrospective") for flag in flags) or since == "":
         print(__doc__.strip().splitlines()[2], file=sys.stderr)
+        return 2
+    if since is not None and not Path(since).is_dir():
+        print(f"--since {since}: no such directory; it holds the data as last published", file=sys.stderr)
         return 2
     data_dir, out_dir = Path(args[0]), Path(args[1])
     project = read_project(data_dir)
@@ -1088,6 +1258,7 @@ def main(argv):
     link_items()
     if not problems:
         check_states(project, phases)
+    changes = changes_since(data_dir, Path(since)) if since is not None else None
     COUNTED.extend(counted(project, phases))
     warned = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""
     if "--retrospective" in flags:
@@ -1098,6 +1269,8 @@ def main(argv):
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "retrospective.html").write_text(text, encoding="utf-8")
         print(f"{title}: retrospective.html, {len(text.encode()) // 1024} KB{warned}")
+        if changes:
+            print_changes(changes)
         return 0
     inline = "--inline" in flags
     sections = {}
@@ -1132,6 +1305,8 @@ def main(argv):
             (out_dir / "phases" / f"{key}.html").write_text(text, encoding="utf-8")
     loaded = ", ".join(f"phases/{key}.html" for key in files) or "none"
     print(f"{title}: index.html, {len(out.encode()) // 1024} KB, opening on {PHASE_NAME[opening]}; loaded when picked: {loaded}{warned}")
+    if changes:
+        print_changes(changes)
     return 0
 
 

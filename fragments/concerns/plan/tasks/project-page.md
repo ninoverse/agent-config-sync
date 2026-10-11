@@ -53,6 +53,11 @@ It still writes the page when a state looks stale, as *Project phases* says,
 and prints a warning naming it. Fix the data and render again, or tell the user
 why the warning stands.
 
+`--since <directory>`, given the data as it was last published, also prints
+what has changed in each phase since, statuses in their type's words, and the
+`changed` ids for that phase's changelog entry. A phase that changed without a
+new changelog entry gets a warning.
+
 ## The data
 
 - `project.toml`: `repo` and `objective`, which make the title; `summary`;
@@ -119,7 +124,9 @@ GitHub.
 - Still open: `open` once it waits only on the user's merge, `ready` or
   `blocked` while work remains.
 
-Then set `read_at` to now, render, and fix each warning or tell the user why it
-stands. Open the `--inline` preview, or capture it with `/take-screenshot` where
-the repository has it, and look at the phase that changed. Then publish
-`index.html`, with `phases/` and the data files, as `src/`, beside it.
+Then set `read_at` to now and render with `--since`, given the data as last
+published. Write each changed phase's changelog entry from what it prints,
+render again, and fix each warning or tell the user why it stands. Open the
+`--inline` preview, or capture it with `/take-screenshot` where the repository
+has it, and look at the phase that changed. Then publish `index.html`, with
+`phases/` and the data files, as `src/`, beside it.

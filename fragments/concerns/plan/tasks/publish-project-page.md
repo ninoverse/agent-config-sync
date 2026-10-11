@@ -26,9 +26,10 @@ since the user finds the page by it.
 ## Updating
 
 - Start from the data, not the page. Read `src/project.toml` and the phase
-  files with the Artifact tool's `read` action, by path, edit them, and render
-  again. The notes for the next session, under `[handoff]`, say what was in
-  flight.
+  files with the Artifact tool's `read` action, by path, and edit copies of
+  them: the files as read are the data as last published, which `--since`
+  compares with. The notes for the next session, under `[handoff]`, say what
+  was in flight.
 - Read the project's state again right before publishing, as *Building the
   project page* says, and set `read_at` to that time.
 - Publish to the same `url`, with the files that changed, and `null` for a

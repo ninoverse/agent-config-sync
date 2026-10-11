@@ -2,9 +2,10 @@
 
 Runs the project-page renderer the plan concern ships against its example, in
 both modes, against full/, which uses every section kind the example leaves
-out, against stale copies of the example, and against broken copies. A stale
-copy must still render, with its own warning; a broken copy must fail with its
-own message and write nothing; everything else must render without a warning.
+out, against an edited copy compared with the example as if published, against
+stale copies of the example, and against broken copies. A stale copy must still
+render, with its own warning; a broken copy must fail with its own message and
+write nothing; everything else must render without a warning.
 """
 
 import re
@@ -204,17 +205,54 @@ BROKEN = [
 ]
 
 
+def replace_in(data, file, old, new):
+    """One replacement in a copy's file; False, and a failure, when `old` isn't there."""
+    path = data / file
+    text = path.read_text()
+    if old not in text:
+        failed.append(f"{data.name}: {old!r} is not in {file}")
+        return False
+    path.write_text(text.replace(old, new, 1))
+    return True
+
+
 def copy_with(tmp, name, base, file, old, new):
     """A copy of `base` with one replacement in `file`, or None when `old` isn't there."""
     data = tmp / name
     shutil.copytree(base, data)
-    path = data / file
-    text = path.read_text()
-    if old not in text:
-        failed.append(f"{name}: {old!r} is not in {file}")
-        return None
-    path.write_text(text.replace(old, new, 1))
-    return data
+    return data if replace_in(data, file, old, new) else None
+
+
+def check_since(tmp):
+    """--since lists what changed in each phase since the data as published."""
+    run = render(EXAMPLE, tmp / "since-same", "--since", str(EXAMPLE))
+    expect(run.returncode == 0 and run.stdout.endswith("Since the published data: nothing has changed.\n"), f"unchanged data reports nothing: {run.stdout}")
+    expect(render(EXAMPLE, tmp / "since-none", "--since", str(tmp / "nowhere")).returncode == 2, "--since names a directory that exists")
+
+    merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-09\nresult = "Released 1.5.0."'
+    data = copy_with(tmp, "since", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07\nresult = "Open and green, waiting for your merge."', merged)
+    if data is None:
+        return
+    added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\n\n[[section]]\nid = "settings"'
+    entry = '[[section.entry]]\ndate = 2026-10-09\ntext = "[[EX-2]] merged."\n\n[[section.entry]]\ndate = 2026-10-07'
+    edited = [
+        replace_in(data, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute."),
+        replace_in(data, "plan.toml", '[[section]]\nid = "settings"', added),
+        replace_in(data, "build.toml", "[[section.entry]]\ndate = 2026-10-07", entry),
+        replace_in(data, "project.toml", "updated = 2026-10-07", "updated = 2026-10-09"),
+    ]
+    if not all(edited):
+        return
+    run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
+    expect(run.returncode == 0, f"a changed copy renders: {run.stderr}")
+    expect('  Plan: EX-1: Done when edited; EX-4 added.\n    changed = ["ex-1", "ex-4"]\n' in run.stdout, f"an edited field and a new item, with their ids: {run.stdout}")
+    expect('  Build: EX-2 To merge → Merged; Log: 1 entry added.\n    changed = ["results", "log"]\n' in run.stdout, f"a status in its type's words, shown in the results: {run.stdout}")
+    expect("  project.toml: `handoff` edited.\n" in run.stdout and "read_at" not in run.stdout, f"project.toml's changes, read_at aside: {run.stdout}")
+    for key in ("plan", "build"):
+        expect(f"warning: {key}.toml: it has changed since the published data, and its changelog has no new entry" in run.stderr, f"{key}.toml changed without a changelog entry: {run.stderr}")
+    replace_in(data, "build.toml", "[[changelog]]\ndate = 2026-10-07", '[[changelog]]\ndate = 2026-10-09\ntext = "[[EX-2]] merged."\nchanged = ["results", "log"]\n\n[[changelog]]\ndate = 2026-10-07')
+    run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
+    expect("build.toml: it has changed" not in run.stderr and "plan.toml: it has changed" in run.stderr, f"a new entry answers the warning, phase by phase: {run.stderr}")
 
 
 def check_stale(tmp):
@@ -247,11 +285,12 @@ def main():
         tmp = Path(name)
         check_example(tmp)
         check_full(tmp)
+        check_since(tmp)
         check_stale(tmp)
         check_broken(tmp)
     for what in failed:
         print(f"FAIL: {what}", file=sys.stderr)
-    print(f"{'FAILED' if failed else 'passed'}: the example, full/, {len(STALE)} stale copies and {len(BROKEN)} broken copies")
+    print(f"{'FAILED' if failed else 'passed'}: the example, full/, changes since a publish, {len(STALE)} stale copies and {len(BROKEN)} broken copies")
     return 1 if failed else 0
 
 
