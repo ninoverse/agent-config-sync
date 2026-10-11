@@ -14,7 +14,8 @@ type = "pr"
 # `kind` is what a merge releases (major, minor, patch), or you or together.
 # `short` names the item wherever it is linked. `needs` lists what has to be
 # done first: it decides the board's waves, and a loop in it fails the render.
-# `url` is the PR's address once it is open, where its state is read from.
+# `url` is the PR's address once it is open, where its state is read from. A
+# field that holds several things, such as EX-2's decisions, is a list.
 [[section.item]]
 id = "EX-1"
 title = "<code>feat: add the liveness probe</code>"
@@ -39,7 +40,7 @@ needs = ["EX-1"]
 fields = [
   ["Branch", "<code>feat/readiness-probe</code>"],
   ["Changes", "A <code>/readyz</code> route that answers 200 only while the database connection is up."],
-  ["Carries out", "[[D1]] and [[D2]]"],
+  ["Carries out", ["[[D1]]", "[[D2]]"]],
   ["Releases", "A minor version."],
   ["Done when", "In staging, a process that loses its database gets no traffic until the connection is back."],
 ]

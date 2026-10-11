@@ -85,20 +85,29 @@ def check_example(tmp):
 
     expect('class="st ' not in phase["plan"], "the plan shows its items as approved, without the build's statuses")
     expect('<a class="ref" href="#ex-1"><b>EX-1</b> Liveness probe</a>' in phase["plan"], "[[EX-1]] links with its short title")
-    expect("Approved on 3 Oct. Amended since:" in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so")
+    expect('Approved on 3 Oct. Amended since:</p><ul class="list">' in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so, and the plan lists it")
     link = '<a class="pill link" href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a>'
     expect(link in phase["plan"], "a PR's url is a chip linking to it, named as GitHub names it")
     ex2 = between(phase["plan"], 'id="ex-2"', "</article>")
     layers = [ex2.find(mark) for mark in ('<h4>Readiness probe</h4>', 'class="item-tags"', "<dl>")]
     expect(-1 not in layers and layers == sorted(layers), f"a card reads number and summary, then chips, then fields: {layers}")
     expect("<dt>Title</dt><dd><code>feat: add the readiness probe</code></dd>" in ex2, "a title longer than the summary is a field")
-    needed = between(between(phase["plan"], 'id="ex-1"', "</article>"), "Needed by", "</p>")
-    expect(all(f'href="#{i}"' in needed for i in ("ex-2", "s1", "c1")), f"a card lists what needs it: {needed}")
-    named = between(between(phase["analysis"], 'id="d1"', "</article>"), "Named by", "</p>")
-    expect(all(f'href="#{i}"' in named for i in ("r1", "ex-1", "ex-2")), f"a card lists what names it: {named}")
+    expect('<dt>Carries out</dt><dd><ul class="list"><li><a class="ref" href="#d1">' in ex2, "a field that holds several things is a list")
+    needed = between(between(phase["plan"], 'id="ex-1"', "</article>"), "Needed by", "</dd>")
+    expect('<ul class="list">' in needed and all(f'href="#{i}"' in needed for i in ("ex-2", "s1", "c1")), f"a card lists what needs it: {needed}")
+    named = between(between(phase["analysis"], 'id="d1"', "</article>"), "Named by", "</dd>")
+    expect('<ul class="list">' in named and all(f'href="#{i}"' in named for i in ("r1", "ex-1", "ex-2")), f"a card lists what names it: {named}")
     expect('pill st-done">Taken · 2 Oct<' in phase["analysis"], "a decision that is done reads Taken, with its day, as a chip")
     d1 = between(phase["analysis"], 'id="d1"', "</article>")
-    expect('<li class="chosen"><span class="key">a</span>' in d1 and 'pill recommended">Recommended<' in d1 and 'pill chosen">Chosen<' in d1, "options are a list, the chosen one highlighted, both marked with chips")
+    expect('<li class="chosen"><span class="key">a</span>' in d1 and '<span class="vh"> (chosen)</span>' in d1, "options are a list, the chosen one marked, in a word for screen readers too")
+    expect('class="recommended"' not in d1 and "pill" not in between(d1, '<ol class="options">', "</ol>"), "once one is chosen, only it is marked, and options carry no chips")
+    unchosen = copy_with(tmp, "unchosen", EXAMPLE, "analysis.toml", 'recommended = "a"\nchosen = "a"', 'recommended = "a"')
+    if unchosen is not None:
+        render(unchosen, tmp / "unchosen-out")
+        analysis = tmp / "unchosen-out" / "phases" / "analysis.html"
+        d1 = between(analysis.read_text(), 'id="d1"', "</article>") if analysis.exists() else ""
+        expect('<li class="recommended"><span class="key">a</span>' in d1 and 'class="chosen"' not in d1, "until one is chosen, the recommended option is marked")
+    expect('<div class="changed">Changed:<ul class="list"><li><a href="#results">' in page, "a changelog entry lists what it changed")
 
     expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
     expect('id="g1"' in phase["brief"], "the brief holds the ground rules")
@@ -149,8 +158,8 @@ def check_full(tmp):
     expect(".imported-marker" in page, "a project's own stylesheet is appended")
     expect(all(f'st-{s}">{label}<' in page for s, label in (("open", "To review"), ("done", "Adopted · 8 Oct"), ("dropped", "Not adopted"))), "a lesson reads To review, Adopted or Not adopted")
     analysis = (out / "phases" / "analysis.html").read_text()
-    marked = '<li><span class="key">a</span><span><code>/metrics</code>, which every scraper asks for first.</span><span class="marks"><span class="pill recommended">Recommended</span></span></li>'
-    expect(marked in analysis and '<li class="chosen"><span class="key">b</span>' in analysis, "the recommended option and the chosen one can differ")
+    unmarked = '<li><span class="key">a</span><span><code>/metrics</code>, which every scraper asks for first.</span></li>'
+    expect(unmarked in analysis and '<li class="chosen"><span class="key">b</span>' in analysis, "the chosen option can differ from the recommended one, which is then no longer marked")
     figures = re.findall(r'<li><span class="v">(.*?)</span><span class="k">(.*?)</span></li>', page)
     counted = [("1", "PR merged"), ("1", "release"), ("1", "decision taken"), ("1", "lesson adopted"), ("38", "days, start to finish"), ("15 s", "between scrapes")]
     expect(figures == counted, f"the figures the data can count come first, then those written out: {figures}")
@@ -185,7 +194,7 @@ def check_full(tmp):
 # and the warning it must print. The page is still written.
 STALE = [
     ("project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"', "Build is done, but EX-2 is still `open`"),
-    ("plan.toml", '["Carries out", "[[D1]] and [[D2]]"]', '["Carries out", "[[D1]]"]', "D2 is a decision taken, but no PR names it or needs it"),
+    ("plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]"]]', "D2 is a decision taken, but no PR names it or needs it"),
     ("build.toml", 'on = 2026-10-06\nresult = "Released 1.4.0.', 'on = 2026-10-06\nnote = "Released 1.4.0.', "EX-1 is a merged PR without a `result`"),
     ("build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "done"', "C2 is `blocked`, but everything it needs is done"),
     ("later.toml", 'waits = "the metrics stack"', 'waits = "[[EX-1]]"', "T1 waits on EX-1, which is done"),
@@ -218,6 +227,7 @@ BROKEN = [
     (EXAMPLE, "plan.toml", 'pull/14"\nneeds = ["EX-1"]', 'pull/14"\nneeds = ["EX-9"]', "`needs` names EX-9, which no item has"),
     (EXAMPLE, "analysis.toml", 'chosen = "a"', 'chosen = "c"', "`chosen` is c, which no option has"),
     (EXAMPLE, "analysis.toml", '["b", "A second port', '["A second port', "`options` is a list of [key, text] pairs"),
+    (EXAMPLE, "plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]", 2]]', "each of `fields` is a [label, text] pair, its text one string or a list of them"),
     (EXAMPLE, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nneeds = ["EX-2"]\n', "`needs` loops: EX-1 → EX-2 → EX-1"),
     (EXAMPLE, "plan.toml", ', why = "the answer to [[Q1]]" }', " }", "`amended` is"),
     (EXAMPLE, "plan.toml", 'url = "https://github.com/example/example-service/pull/12"', 'url = "github.com/example/example-service/pull/12"', "`url` is an https:// address"),
@@ -257,6 +267,7 @@ def check_since(tmp):
     entry = '[[section.entry]]\ndate = 2026-10-09\ntext = "[[EX-2]] merged."\n\n[[section.entry]]\ndate = 2026-10-07'
     edited = [
         replace_in(data, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute."),
+        replace_in(data, "plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D2]]", "[[D1]]"]]'),
         replace_in(data, "plan.toml", '[[section]]\nid = "settings"', added),
         replace_in(data, "build.toml", "[[section.entry]]\ndate = 2026-10-07", entry),
         replace_in(data, "project.toml", "updated = 2026-10-07", "updated = 2026-10-09"),
@@ -265,7 +276,7 @@ def check_since(tmp):
         return
     run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
     expect(run.returncode == 0, f"a changed copy renders: {run.stderr}")
-    expect('  Plan: EX-1: Done when edited; EX-4 added.\n    changed = ["ex-1", "ex-4"]\n' in run.stdout, f"an edited field and a new item, with their ids: {run.stdout}")
+    expect('  Plan: EX-1: Done when edited; EX-2: Carries out edited; EX-4 added.\n    changed = ["ex-1", "ex-2", "ex-4"]\n' in run.stdout, f"edited fields, a list among them, and a new item, with their ids: {run.stdout}")
     expect('  Build: EX-2 To merge → Merged; Log: 1 entry added.\n    changed = ["results", "log"]\n' in run.stdout, f"a status in its type's words, shown in the results: {run.stdout}")
     expect("  project.toml: `handoff` edited.\n" in run.stdout and "read_at" not in run.stdout, f"project.toml's changes, read_at aside: {run.stdout}")
     for key in ("plan", "build"):

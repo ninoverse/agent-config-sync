@@ -73,17 +73,21 @@
 
 <section class="block" id="guide-cards">
   <h3>Cards</h3>
-  <p class="intro">Every item is a card, in three layers: what it is, a line of chips, then the longer facts. These two have every part a card can have; most have fewer.</p>
+  <p class="intro">Every item is a card, in three layers: what it is, a line of chips, then the longer facts. These three samples show the parts a card can have, described after them; most cards have fewer.</p>
   <article class="item sample">
     <div class="item-head"><span class="n">EX-2</span><h4>Readiness probe</h4></div>
     <div class="item-tags"><span class="pill k-minor">Minor</span><span class="pill st-open">To merge · 7 Oct</span><span class="pill amended">Amended 7 Oct</span><span class="pill link">example/example-service#14</span></div>
-    <dl><dt>Title</dt><dd><code>feat: add the readiness probe</code></dd><dt>Branch</dt><dd><code>feat/readiness-probe</code></dd><dt>Done when</dt><dd>In staging, a process that loses its database gets no traffic.</dd><dt>Needs</dt><dd><span class="ref"><b>EX-1</b> Liveness probe</span></dd><dt>Why amended</dt><dd>the answer to <span class="ref"><b>Q1</b> The probe's timeout</span></dd></dl>
-    <p class="backlinks"><span>Needed by</span> <span class="ref"><b>C2</b> No traffic without a database</span> · <span>Named by</span> <span class="ref"><b>D1</b> Where the probes live</span></p>
+    <dl><dt>Title</dt><dd><code>feat: add the readiness probe</code></dd><dt>Branch</dt><dd><code>feat/readiness-probe</code></dd><dt>Carries out</dt><dd><ul class="list"><li><span class="ref"><b>D1</b> Where the probes live</span></li><li><span class="ref"><b>D2</b> What readiness waits for</span></li></ul></dd><dt>Done when</dt><dd>In staging, a process that loses its database gets no traffic.</dd><dt>Needs</dt><dd><ul class="list"><li><span class="ref"><b>EX-1</b> Liveness probe</span></li></ul></dd><dt>Why amended</dt><dd>the answer to <span class="ref"><b>Q1</b> The probe's timeout</span></dd><dt>Needed by</dt><dd><ul class="list"><li><span class="ref"><b>C2</b> No traffic without a database</span></li></ul></dd></dl>
   </article>
   <article class="item sample">
     <div class="item-head"><span class="n">D1</span><h4>Where the probes live</h4></div>
     <div class="item-tags"><span class="pill st-done">Taken · 2 Oct</span></div>
-    <dl><dt>Options</dt><dd><ol class="options"><li class="chosen"><span class="key">a</span><span>Two routes beside the API.</span><span class="marks"><span class="pill recommended">Recommended</span><span class="pill chosen">Chosen</span></span></li><li><span class="key">b</span><span>A second port that serves only the probes.</span><span class="marks"></span></li></ol></dd><dt>Reasons</dt><dd>One port keeps the platform's settings to two lines.</dd></dl>
+    <dl><dt>Options</dt><dd><ol class="options"><li class="chosen"><span class="key">a</span><span><code>/healthz</code> and <code>/readyz</code> beside <code>/api</code>.<span class="vh"> (chosen)</span></span></li><li><span class="key">b</span><span>A second port that serves only the probes.</span></li></ol></dd><dt>Reasons</dt><dd>One port keeps the platform's settings to two lines.</dd><dt>Named by</dt><dd><ul class="list"><li><span class="ref"><b>EX-1</b> Liveness probe</span></li><li><span class="ref"><b>EX-2</b> Readiness probe</span></li></ul></dd></dl>
+  </article>
+  <article class="item sample">
+    <div class="item-head"><span class="n">D3</span><h4>How long a probe may take</h4></div>
+    <div class="item-tags"><span class="pill st-open">To decide</span></div>
+    <dl><dt>Options</dt><dd><ol class="options"><li><span class="key">a</span><span>Five seconds everywhere.</span></li><li class="recommended"><span class="key">b</span><span>Five seconds in staging, ten in production.<span class="vh"> (recommended)</span></span></li></ol></dd><dt>Reasons</dt><dd>A slow night in production shouldn't take a process out of service.</dd></dl>
   </article>
   <dl class="defs">
     <dt>First line</dt>
@@ -93,9 +97,9 @@
     <dt>Title</dt>
     <dd>The full title, when the summary is shorter. A PR's is the title it merges with.</dd>
     <dt>Options</dt>
-    <dd>A decision's options, as a list. Chips mark the one recommended and the one you chose, and the chosen one is highlighted. The reasons for the recommendation follow.</dd>
+    <dd>A decision's options, as a list. Until you choose, the recommended one is grey; once you have, only the one you chose is marked, in green. The reasons for the recommendation follow.</dd>
     <dt>Fields</dt>
-    <dd>The longer facts, each a label and its text, such as Branch, Changes, or <em>Done when</em>: what proves a PR works.</dd>
+    <dd>The longer facts, each a label and its text, such as Branch, Changes, or <em>Done when</em>: what proves a PR works. A field that holds several things, such as the decisions a PR carries out, is a list.</dd>
     <dt>Waits on, Why</dt>
     <dd>What a blocked item waits on, or, for a risk, the step it closes with; and why a dropped one was dropped.</dd>
     <dt>Needs</dt>
@@ -103,7 +107,7 @@
     <dt>Why amended</dt>
     <dd>Why the item was added after its phase was approved.</dd>
     <dt>Needed by, Named by</dt>
-    <dd>The items that need this one, and the items that mention it: a decision's card lists the PRs that carry it out.</dd>
+    <dd>The items that need this one, and the items that mention it, each a list: a decision's card lists the PRs that carry it out.</dd>
   </dl>
 </section>
 

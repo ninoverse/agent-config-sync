@@ -272,6 +272,18 @@ def is_pair(value):
     return isinstance(value, list) and len(value) == 2 and all(isinstance(part, str) for part in value)
 
 
+def is_field(value):
+    """A [label, text] pair, its text one string or a list of them."""
+    if not (isinstance(value, list) and len(value) == 2 and isinstance(value[0], str)):
+        return False
+    text = value[1]
+    return isinstance(text, str) or (isinstance(text, list) and all(isinstance(part, str) for part in text))
+
+
+def texts_of(text):
+    return text if isinstance(text, list) else [text]
+
+
 def check_status(entry, where):
     status = entry.get("status")
     if status is None:
@@ -309,8 +321,8 @@ def collect_items(phases):
                     item_type = None
                 if item.get("kind") and item["kind"] not in KINDS:
                     problem(where, f"`kind` is one of {', '.join(KINDS)}")
-                if not all(is_pair(field) for field in item.get("fields", [])):
-                    problem(where, "each of `fields` is a [label, text] pair")
+                if not all(is_field(field) for field in item.get("fields", [])):
+                    problem(where, "each of `fields` is a [label, text] pair, its text one string or a list of them")
                 url = item.get("url")
                 if url is not None and not (isinstance(url, str) and url.startswith("https://")):
                     problem(where, "`url` is an https:// address, such as the PR's on GitHub")
@@ -394,7 +406,7 @@ def link_items():
             if need in ITEMS:
                 ITEMS[need]["needed_by"].append(item_id)
         texts = [item.get("title", ""), item.get("waits", ""), item.get("why", ""), item.get("result", "")]
-        texts += [value for _, value in (f for f in item.get("fields", []) if is_pair(f))]
+        texts += [part for _, value in (f for f in item.get("fields", []) if is_field(f)) for part in texts_of(value)]
         texts += [text for _, text in (o for o in item.get("options") or [] if is_pair(o))]
         if item["amended"]:
             texts.append(item["amended"]["why"])
@@ -480,17 +492,24 @@ def link_html(url):
 
 
 def options_html(item):
-    """An item's options as a list, the recommended one and the chosen one marked with chips."""
+    """An item's options as a list: the recommended one marked until one is chosen,
+    and after that only the choice. The mark is a background, and a hidden word."""
+    chosen = item.get("chosen")
+    marked, mark = (chosen, "chosen") if chosen else (item.get("recommended"), "recommended")
     rows = []
     for key, text in item["options"]:
-        marks = []
-        if key == item.get("recommended"):
-            marks.append('<span class="pill recommended">Recommended</span>')
-        if key == item.get("chosen"):
-            marks.append('<span class="pill chosen">Chosen</span>')
-        chosen = ' class="chosen"' if key == item.get("chosen") else ""
-        rows.append(f'<li{chosen}><span class="key">{esc(key)}</span><span>{text}</span><span class="marks">{"".join(marks)}</span></li>')
+        tag, note = (f' class="{mark}"', f'<span class="vh"> ({mark})</span>') if key == marked else ("", "")
+        rows.append(f'<li{tag}><span class="key">{esc(key)}</span><span>{text}{note}</span></li>')
     return f'<ol class="options">{"".join(rows)}</ol>'
+
+
+def list_html(entries):
+    """A simple list: how the page shows anything that holds several things."""
+    return f'<ul class="list">{"".join(f"<li>{entry}</li>" for entry in entries)}</ul>'
+
+
+def refs_ul(ids):
+    return list_html([f"[[{i}]]" for i in ids if i in ITEMS])
 
 
 def expand_refs(text, where):
@@ -559,25 +578,23 @@ def card(item):
     options = item.get("options")
     if isinstance(options, list) and options and all(is_pair(option) for option in options):
         rows.append(("Options", options_html(item)))
-    rows += [(field[0], field[1]) for field in item.get("fields", []) if is_pair(field)]
+    rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in item.get("fields", []) if is_field(field)]
     if own and item["status"] == "blocked" and item.get("waits"):
         rows.append((TYPES.get(item["type"], {}).get("waits", "waits on").capitalize(), item["waits"]))
     if own and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
     if item["needs"]:
-        rows.append(("Needs", refs_list(item["needs"])))
+        rows.append(("Needs", refs_ul(item["needs"])))
     if item["amended"]:
         rows.append(("Why amended", item["amended"]["why"]))
-    dl = "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows)
-    links = []
     if item["needed_by"]:
-        links.append(f'<span>Needed by</span> {refs_list(item["needed_by"])}')
+        rows.append(("Needed by", refs_ul(item["needed_by"])))
     if item["named_by"]:
-        links.append(f'<span>Named by</span> {refs_list(item["named_by"])}')
-    back = f'\n    <p class="backlinks">{" · ".join(links)}</p>' if links else ""
+        rows.append(("Named by", refs_ul(item["named_by"])))
+    dl = "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows)
     chips = f'\n    <div class="item-tags">{"".join(tags)}</div>' if tags else ""
     body = f"\n    <dl>{dl}</dl>" if dl else ""
-    return f'  <article class="item" id="{anchor_of(item["id"])}">\n    {head}{chips}{body}{back}\n  </article>'
+    return f'  <article class="item" id="{anchor_of(item["id"])}">\n    {head}{chips}{body}\n  </article>'
 
 
 def chip(item):
@@ -750,11 +767,11 @@ def amendments(key, data):
     lead = f'Approved on {day(data["approved"])}.' if data.get("approved") else ""
     if not amended:
         return f'<p class="approved">{lead} Nothing has been amended since.</p>'
-    rows = "".join(
-        f'<li>[[{item["id"]}]]{", " + day(item["amended"]["on"]) if item["amended"]["on"] else ""}, because {item["amended"]["why"]}</li>'
+    rows = [
+        f'[[{item["id"]}]]{", " + day(item["amended"]["on"]) if item["amended"]["on"] else ""}, because {item["amended"]["why"]}'
         for item in amended
-    )
-    return f'<div class="approved"><p>{lead} Amended since:</p><ul>{rows}</ul></div>'
+    ]
+    return f'<div class="approved"><p>{lead} Amended since:</p>{list_html(rows)}</div>'
 
 
 def changelog(key, entries, targets):
@@ -772,7 +789,7 @@ def changelog(key, entries, targets):
                 problem(where, f"`changed` names {target}, which is no section or item in this phase")
                 continue
             links.append(f'<a href="#{target}">{targets[target]}</a>')
-        changed = f' <span class="changed">Changed: {"; ".join(links)}</span>' if links else ""
+        changed = f'<div class="changed">Changed:{list_html(links)}</div>' if links else ""
         date = day(entry["date"]) if entry.get("date") else ""
         rows.append(f'<li><time>{date}</time><div>{entry.get("text", "")}{changed}</div></li>')
     return f'<footer class="changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n  <ol>{"".join(rows)}</ol>\n</footer>'
@@ -1038,7 +1055,7 @@ def snapshot(files):
 
 def edits(before, after):
     """What changed between two versions of a table: its fields by label, then its keys."""
-    fields = [dict(f for f in version.get("fields", []) if is_pair(f)) for version in (before, after)]
+    fields = [dict(f for f in version.get("fields", []) if is_field(f)) for version in (before, after)]
     words = [label for label in dict.fromkeys(list(fields[1]) + list(fields[0])) if fields[0].get(label) != fields[1].get(label)]
     words += [f"`{key}`" for key in dict.fromkeys(list(after) + list(before)) if key != "fields" and before.get(key) != after.get(key)]
     return words

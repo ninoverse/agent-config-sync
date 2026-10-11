@@ -81,7 +81,8 @@ new changelog entry gets a warning.
   `lesson` (To review, Adopted) or `later` (Waiting, Picked up). An item can set
   its own.
 - An item is a card: an `id`, a `title`, and its `fields` as `[label, text]`
-  pairs. Optionally, it has:
+  pairs, where a text that holds several things, such as the decisions a PR
+  carries out, is a list of them, shown as a list. Optionally, it has:
   - `short`, the name it goes by wherever it is linked;
   - `kind`: `major`, `minor`, `patch`, `you` or `together`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
@@ -89,8 +90,8 @@ new changelog entry gets a warning.
   - `url`, the PR's address once it is open, where its state is read from;
   - `needs`, the ids of the items to finish first;
   - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
-    one each by its key: a decision's choices, shown as a list with the two
-    marked;
+    one each by its key: a decision's choices, shown as a list that marks the
+    recommended one until one is chosen, and then only the chosen one;
   - `amended`, as `{ on = <date>, why = "..." }`, when it was added after its
     phase's approval;
   - `repo`, the board row it goes in;

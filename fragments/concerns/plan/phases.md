@@ -42,11 +42,12 @@ they answer.
   rule holds until the user changes it.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises.
-- **Analysis**: the decisions. Each lists its options, marks the one
-  recommended, with the reasons, and, once the user answers, the one chosen,
-  with the date. Its card lists the PRs that carry it out. One list is the default; only when the decisions are many do
-  they come in batches, one section each, with the evidence and what the batch
-  costs, discussed and answered together.
+- **Analysis**: the decisions. Each lists its options, with the reasons for the
+  one recommended. Until the user answers, the page marks that one; after, only
+  the one chosen, with the date. Its card lists the PRs that carry it out. One
+  list is the default; only when the decisions are many do they come in
+  batches, one section each, with the evidence and what the batch costs,
+  discussed and answered together.
 - **Plan**: the PRs as approved, one at a time in each repository, each with its
   branch, what it needs first, what its merge releases, and *Done when*: what
   proves it works. The settings only the user can change. The risk register:
