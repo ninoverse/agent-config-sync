@@ -519,13 +519,14 @@ def card(item):
 
 
 def chip(item):
+    """An item on the board: its stripe and tint say its status, and its kind is a word."""
     classes = ["chip"]
-    if item.get("kind") in KINDS:
-        classes.append(f'k-{item["kind"]}')
     if item.get("status") in ITEM_STATUS:
         classes.append(f's-{item["status"]}')
     line = state_line(item, plain=True)
-    tail = f'<span class="w">{line}</span>' if line else ""
+    if item.get("kind") in KINDS:
+        line += f' <span class="kind">{KINDS[item["kind"]]}</span>'
+    tail = f'<span class="w">{line.strip()}</span>' if line else ""
     return f'<a class="{" ".join(classes)}" href="#{anchor_of(item["id"])}"><b>{esc(item["id"])}</b><span>{short_of(item)}</span>{tail}</a>'
 
 

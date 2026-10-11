@@ -189,7 +189,7 @@
   a.ref:hover { border-bottom-color: var(--accent-fill); }
   .ref b { font-family: var(--font-mono); font-size: 0.82rem; }
 
-  /* The board: rows by columns of chips, each chip an item with its status. */
+  /* The board: rows by columns of chips, each chip an item, its stripe and tint its status. */
   table.board { table-layout: fixed; }
   table.board thead th span { display: block; font-family: var(--font-body); font-weight: 600; font-size: 0.78rem; letter-spacing: 0; text-transform: none; color: var(--ink); }
   table.board td { padding: 10px 7px; }
@@ -206,16 +206,13 @@
   .chip b { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
   .chip .w { grid-column: 1 / -1; color: var(--ink-muted); font-size: 0.72rem; margin-top: 2px; }
   .chip .w .waits { font-size: inherit; }
-  .chip.k-major { --c: var(--ink); }
-  .chip.k-minor { --c: var(--accent-fill); }
-  .chip.k-patch { --c: var(--open); }
-  .chip.k-you { --c: var(--ready); }
-  .chip.k-together { --c: var(--done); }
-  .chip.k-major, .chip.k-minor, .chip.k-patch, .chip.k-you, .chip.k-together { color: var(--ink); background: var(--bg); }
-  .chip.s-done { opacity: 0.6; }
-  .chip.s-open { border-color: var(--open); border-left-color: var(--c, var(--outline)); background: var(--open-soft); }
-  .chip.s-ready { border-color: var(--ready); border-left-color: var(--c, var(--outline)); background: var(--ready-soft); }
-  .chip.s-blocked { border-style: dashed; border-left-style: solid; }
+  .chip .kind { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .chip .kind::before { content: '· '; }
+  .chip.s-done { --c: var(--done); opacity: 0.6; }
+  .chip.s-open { --c: var(--open); border-color: var(--open); background: var(--open-soft); }
+  .chip.s-ready { --c: var(--ready); border-color: var(--ready); background: var(--ready-soft); }
+  .chip.s-blocked { --c: var(--blocked); border-style: dashed; border-left-style: solid; }
+  .chip.s-dropped { --c: var(--na); }
 
   /* Items: a card each, with its fields as a definition list. */
   article.item { padding-block: 20px; border-top: 1px solid var(--rule); scroll-margin-top: 16px; }
