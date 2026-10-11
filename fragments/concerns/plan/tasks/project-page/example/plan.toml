@@ -36,7 +36,6 @@ short = "Readiness probe"
 kind = "minor"
 url = "https://github.com/example/example-service/pull/14"
 needs = ["EX-1"]
-due = 2026-10-14
 fields = [
   ["Branch", "<code>feat/readiness-probe</code>"],
   ["Changes", "A <code>/readyz</code> route that answers 200 only while the database connection is up."],

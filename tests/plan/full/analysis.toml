@@ -1,0 +1,18 @@
+[[section]]
+id = "decisions"
+title = "Decisions"
+kind = "items"
+type = "decision"
+
+[[section.item]]
+id = "D1"
+title = "What the endpoint is called"
+status = "done"
+on = 2026-09-10
+options = [
+  ["a", "<code>/metrics</code>, which every scraper asks for first."],
+  ["b", "<code>/stats</code>, which the service's other routes already suggest."],
+]
+recommended = "a"
+chosen = "b"
+fields = [["Reasons", "Every scraper asks for <code>/metrics</code> first."]]

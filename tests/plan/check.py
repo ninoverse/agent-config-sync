@@ -64,7 +64,6 @@ def check_example(tmp):
     expect(sorted(phase) == ["analysis", "brief", "guides", "later", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
     expect("<title>example-service-health-checks</title>" in page, "the title is <repo>-<objective>")
     expect('<span class="n">0</span><span class="name">Guides</span>' in page, "tab 0 is the guides")
-    expect('href="#guides"' in between(page, '<footer class="site">', "</footer>"), "the footer points to the guides")
     guides = phase["guides"]
     parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "calendar", "links", "changes", "answering")
     expect(all(f'id="guide-{part}"' in guides and f'href="#guide-{part}"' in guides for part in parts), "the guides hold every part of the guide, each in the contents")
@@ -87,18 +86,24 @@ def check_example(tmp):
     expect('class="st ' not in phase["plan"], "the plan shows its items as approved, without the build's statuses")
     expect('<a class="ref" href="#ex-1"><b>EX-1</b> Liveness probe</a>' in phase["plan"], "[[EX-1]] links with its short title")
     expect("Approved on 3 Oct. Amended since:" in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so")
-    link = '<dt>Link</dt><dd><a href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a></dd>'
-    expect(link in phase["plan"], "a PR's url links to it, named as GitHub names it")
+    link = '<a class="pill link" href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a>'
+    expect(link in phase["plan"], "a PR's url is a chip linking to it, named as GitHub names it")
+    ex2 = between(phase["plan"], 'id="ex-2"', "</article>")
+    layers = [ex2.find(mark) for mark in ('<h4>Readiness probe</h4>', 'class="item-tags"', "<dl>")]
+    expect(-1 not in layers and layers == sorted(layers), f"a card reads number and summary, then chips, then fields: {layers}")
+    expect("<dt>Title</dt><dd><code>feat: add the readiness probe</code></dd>" in ex2, "a title longer than the summary is a field")
     needed = between(between(phase["plan"], 'id="ex-1"', "</article>"), "Needed by", "</p>")
     expect(all(f'href="#{i}"' in needed for i in ("ex-2", "s1", "c1")), f"a card lists what needs it: {needed}")
     named = between(between(phase["analysis"], 'id="d1"', "</article>"), "Named by", "</p>")
     expect(all(f'href="#{i}"' in named for i in ("r1", "ex-1", "ex-2")), f"a card lists what names it: {named}")
-    expect('st-done">Taken<' in phase["analysis"], "a decision that is done reads Taken")
+    expect('pill st-done">Taken · 2 Oct<' in phase["analysis"], "a decision that is done reads Taken, with its day, as a chip")
+    d1 = between(phase["analysis"], 'id="d1"', "</article>")
+    expect('<li class="chosen"><span class="key">a</span>' in d1 and 'pill recommended">Recommended<' in d1 and 'pill chosen">Chosen<' in d1, "options are a list, the chosen one highlighted, both marked with chips")
 
     expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
     expect('id="g1"' in phase["brief"], "the brief holds the ground rules")
     expect('st-done">Met<' in phase["verify"] and 'st-blocked">Not met yet<' in phase["verify"], "a criterion reads Met, or Not met yet")
-    expect('st-done">Passed<' in phase["verify"] and 'st-blocked">Waiting<' in phase["verify"], "a check reads Passed, or Waiting")
+    expect('pill st-done">Passed · 6 Oct<' in phase["verify"] and 'pill st-blocked">Waiting<' in phase["verify"], "a check reads Passed, or Waiting")
 
     ball = between(page, 'id="ball"', "</section>")
     you, me = between(ball, "Waiting on you", "</ul>"), between(ball, "Next for me", "</ul>")
@@ -142,11 +147,14 @@ def check_full(tmp):
     expect('aria-labelledby="old-status-title"' in page and 'for="old-pick"' in page, "so do the attributes that name ids")
     expect('class="figures"' in page and 'class="defs"' in page, "figures and definitions render")
     expect(".imported-marker" in page, "a project's own stylesheet is appended")
-    expect(all(f'st-{s}">{label}<' in page for s, label in (("open", "To review"), ("done", "Adopted"), ("dropped", "Not adopted"))), "a lesson reads To review, Adopted or Not adopted")
+    expect(all(f'st-{s}">{label}<' in page for s, label in (("open", "To review"), ("done", "Adopted · 8 Oct"), ("dropped", "Not adopted"))), "a lesson reads To review, Adopted or Not adopted")
+    analysis = (out / "phases" / "analysis.html").read_text()
+    marked = '<li><span class="key">a</span><span><code>/metrics</code>, which every scraper asks for first.</span><span class="marks"><span class="pill recommended">Recommended</span></span></li>'
+    expect(marked in analysis and '<li class="chosen"><span class="key">b</span>' in analysis, "the recommended option and the chosen one can differ")
     figures = re.findall(r'<li><span class="v">(.*?)</span><span class="k">(.*?)</span></li>', page)
-    counted = [("1", "PRs merged"), ("1", "releases"), ("1", "lessons adopted"), ("38", "days, start to finish"), ("15 s", "between scrapes")]
+    counted = [("1", "PR merged"), ("1", "release"), ("1", "decision taken"), ("1", "lesson adopted"), ("38", "days, start to finish"), ("15 s", "between scrapes")]
     expect(figures == counted, f"the figures the data can count come first, then those written out: {figures}")
-    expect("The first 4 counted from the project's data on 8 October 2026." in page, "the note says which figures were counted, and when")
+    expect("The first 5 counted from the project's data on 8 October 2026." in page, "the note says which figures were counted, and when")
     build = (out / "phases" / "build.html").read_text()
     expect(board_cells(build) == ["example-service", ["MX-1"], ["MX-2"]], f"a board can name its columns and rows: {board_cells(build)}")
     expect(build.index("MX-2") < build.index("<b>MX-1</b>", build.index('class="results"')), "results follow `ids`")
@@ -164,7 +172,7 @@ def check_full(tmp):
         expect("<title>example-service-metrics-retrospective</title>" in retro, "the page alone is titled <repo>-<objective>-retrospective")
         expect(all(absent not in retro for absent in ('<nav class="phases"', 'id="calendar"', "<script")), "it has no tabs, no calendar and no script")
         expect('<span class="ref"><b>MX-1</b>' in retro and 'href="#mx-1"' not in retro, "it names as text an item it doesn't hold")
-        expect('id="l1"' in retro and 'id="glossary"' in retro and "lessons adopted" in retro, "it holds the lessons, the figures and the glossary")
+        expect('id="l1"' in retro and 'id="glossary"' in retro and "lesson adopted" in retro, "it holds the lessons, the figures and the glossary")
         expect('id="guides"' not in retro and 'id="guide-board"' not in retro, "but not the guides, which are about the project page")
     linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
     if linked is not None:
@@ -182,7 +190,7 @@ STALE = [
     ("build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "done"', "C2 is `blocked`, but everything it needs is done"),
     ("later.toml", 'waits = "the metrics stack"', 'waits = "[[EX-1]]"', "T1 waits on EX-1, which is done"),
     ("build.toml", 'production"\nstatus = "done"', 'production"\nstatus = "open"', "EX-3 is `ready`, but needs Q1, which isn't done"),
-    ("plan.toml", "due = 2026-10-14", "due = 2026-10-05", "EX-2 was due on 5 Oct"),
+    ("analysis.toml", 'recommended = "a"\nchosen = "a"', 'recommended = "a"', "D1 is `done`, but none of its options is `chosen`"),
     ("plan.toml", "amended = { on = 2026-10-07", "amended = { on = 2026-10-02", "EX-3 is amended on 2 Oct, before its phase was approved"),
     ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest changelog entry"),
     ("project.toml", "updated = 2026-10-07", "updated = 2026-10-06", "the notes for the next session date from 6 Oct, before the last change"),
@@ -207,8 +215,9 @@ BROKEN = [
     (EXAMPLE, "project.toml", "[phases.reuse]", "[phases.templating]", "[phases.templating] is not a phase"),
     (EXAMPLE, "project.toml", "read_at = 2026-10-07T18:00:00", 'read_at = "7 October"', "`read_at` is when the state was read"),
     (EXAMPLE, "project.toml", "date = 2026-10-12\n", "", "an event has a `date`"),
-    (EXAMPLE, "plan.toml", "due = 2026-10-14", 'due = "14 October"', "`due` is a date"),
-    (EXAMPLE, "plan.toml", 'needs = ["EX-1"]\ndue', 'needs = ["EX-9"]\ndue', "`needs` names EX-9, which no item has"),
+    (EXAMPLE, "plan.toml", 'pull/14"\nneeds = ["EX-1"]', 'pull/14"\nneeds = ["EX-9"]', "`needs` names EX-9, which no item has"),
+    (EXAMPLE, "analysis.toml", 'chosen = "a"', 'chosen = "c"', "`chosen` is c, which no option has"),
+    (EXAMPLE, "analysis.toml", '["b", "A second port', '["A second port', "`options` is a list of [key, text] pairs"),
     (EXAMPLE, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nneeds = ["EX-2"]\n', "`needs` loops: EX-1 → EX-2 → EX-1"),
     (EXAMPLE, "plan.toml", ', why = "the answer to [[Q1]]" }', " }", "`amended` is"),
     (EXAMPLE, "plan.toml", 'url = "https://github.com/example/example-service/pull/12"', 'url = "github.com/example/example-service/pull/12"', "`url` is an https:// address"),

@@ -30,9 +30,9 @@ they answer.
 - The page says when its state was read. Read it again right before each
   publish, each PR from GitHub: a status read earlier is stale by then.
 - Rendering warns about what looks stale, such as a Done phase that still holds
-  an unfinished item, a decision taken that no PR carries out, a merged PR
-  without its result, an item Blocked on work that is done, or a date that has
-  passed. Fix each before publishing, or tell the user why it stands.
+  an unfinished item, a decision taken that no PR carries out or with no option
+  chosen, a merged PR without its result, or an item Blocked on work that is
+  done. Fix each before publishing, or tell the user why it stands.
 
 ## The phases
 
@@ -42,9 +42,9 @@ they answer.
   rule holds until the user changes it.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises.
-- **Analysis**: the decisions. Each holds its options, a recommendation with
-  its reasons, and the user's answer with its date. Its card lists the PRs that
-  carry it out. One list is the default; only when the decisions are many do
+- **Analysis**: the decisions. Each lists its options, marks the one
+  recommended, with the reasons, and, once the user answers, the one chosen,
+  with the date. Its card lists the PRs that carry it out. One list is the default; only when the decisions are many do
   they come in batches, one section each, with the evidence and what the batch
   costs, discussed and answered together.
 - **Plan**: the PRs as approved, one at a time in each repository, each with its

@@ -73,31 +73,35 @@
 
 <section class="block" id="guide-cards">
   <h3>Cards</h3>
-  <p class="intro">Every item is a card. This one has every part a card can have; most have fewer.</p>
+  <p class="intro">Every item is a card, in three layers: what it is, a line of chips, then the longer facts. These two have every part a card can have; most have fewer.</p>
   <article class="item sample">
-    <div class="item-head"><span class="n">EX-2</span><h4><code>feat: add the readiness probe</code></h4><span class="pill k-minor">Minor</span><span class="pill amended">Amended 7 Oct</span><span class="st st-open">To merge</span> <span class="on">7 Oct</span></div>
-    <dl><dt>Branch</dt><dd><code>feat/readiness-probe</code></dd><dt>Done when</dt><dd>In staging, a process that loses its database gets no traffic.</dd><dt>Link</dt><dd><span class="ext">example/example-service#14</span></dd><dt>Needs</dt><dd><span class="ref"><b>EX-1</b> Liveness probe</span></dd><dt>Due</dt><dd>Wed 14 Oct</dd><dt>Amended</dt><dd>On 7 Oct, because of the answer to <span class="ref"><b>Q1</b> The probe's timeout</span></dd></dl>
+    <div class="item-head"><span class="n">EX-2</span><h4>Readiness probe</h4></div>
+    <div class="item-tags"><span class="pill k-minor">Minor</span><span class="pill st-open">To merge · 7 Oct</span><span class="pill amended">Amended 7 Oct</span><span class="pill link">example/example-service#14</span></div>
+    <dl><dt>Title</dt><dd><code>feat: add the readiness probe</code></dd><dt>Branch</dt><dd><code>feat/readiness-probe</code></dd><dt>Done when</dt><dd>In staging, a process that loses its database gets no traffic.</dd><dt>Needs</dt><dd><span class="ref"><b>EX-1</b> Liveness probe</span></dd><dt>Why amended</dt><dd>the answer to <span class="ref"><b>Q1</b> The probe's timeout</span></dd></dl>
     <p class="backlinks"><span>Needed by</span> <span class="ref"><b>C2</b> No traffic without a database</span> · <span>Named by</span> <span class="ref"><b>D1</b> Where the probes live</span></p>
   </article>
+  <article class="item sample">
+    <div class="item-head"><span class="n">D1</span><h4>Where the probes live</h4></div>
+    <div class="item-tags"><span class="pill st-done">Taken · 2 Oct</span></div>
+    <dl><dt>Options</dt><dd><ol class="options"><li class="chosen"><span class="key">a</span><span>Two routes beside the API.</span><span class="marks"><span class="pill recommended">Recommended</span><span class="pill chosen">Chosen</span></span></li><li><span class="key">b</span><span>A second port that serves only the probes.</span><span class="marks"></span></li></ol></dd><dt>Reasons</dt><dd>One port keeps the platform's settings to two lines.</dd></dl>
+  </article>
   <dl class="defs">
-    <dt>Number</dt>
-    <dd>EX-2. It never changes and is never reused. Its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T later work. A PR carries its repository's prefix, such as AC-1.</dd>
+    <dt>First line</dt>
+    <dd>The item's number and its summary: the name it goes by wherever it's linked. The number never changes and is never reused, and its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T later work. A PR carries its repository's prefix, such as AC-1.</dd>
+    <dt>Chips</dt>
+    <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved; and the link to where the item lives, such as its PR on GitHub. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, and Verify says whether they're met.</dd>
     <dt>Title</dt>
-    <dd>What the item is. A PR's title is the one it merges with.</dd>
-    <dt>Kind</dt>
-    <dd>The first pill after the title: what kind of change it is, described under Kinds.</dd>
-    <dt>Amended</dt>
-    <dd>The item was added after its phase was approved. Its Amended line says when, and why.</dd>
-    <dt>Status</dt>
-    <dd>In the item's own words, with the day it got there, described under Statuses. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, and Verify says whether they're met.</dd>
+    <dd>The full title, when the summary is shorter. A PR's is the title it merges with.</dd>
+    <dt>Options</dt>
+    <dd>A decision's options, as a list. Chips mark the one recommended and the one you chose, and the chosen one is highlighted. The reasons for the recommendation follow.</dd>
     <dt>Fields</dt>
-    <dd>A label and its text, such as Branch, Changes, or <em>Done when</em>: what proves a PR works.</dd>
-    <dt>Link</dt>
-    <dd>Where the item lives outside the page, such as its PR on GitHub.</dd>
+    <dd>The longer facts, each a label and its text, such as Branch, Changes, or <em>Done when</em>: what proves a PR works.</dd>
+    <dt>Waits on, Why</dt>
+    <dd>What a blocked item waits on, or, for a risk, the step it closes with; and why a dropped one was dropped.</dd>
     <dt>Needs</dt>
     <dd>What has to be done first. The board's waves come from it.</dd>
-    <dt>Due</dt>
-    <dd>The day it's due. The Calendar shows it too.</dd>
+    <dt>Why amended</dt>
+    <dd>Why the item was added after its phase was approved.</dd>
     <dt>Needed by, Named by</dt>
     <dd>The items that need this one, and the items that mention it: a decision's card lists the PRs that carry it out.</dd>
   </dl>
@@ -119,7 +123,7 @@
 
 <section class="block" id="guide-kinds">
   <h3>Kinds</h3>
-  <p class="intro">The pill after a card's title, and the word at the end of a chip on the board, say what kind of change an item is.</p>
+  <p class="intro">The first chip on a card, and the word at the end of a chip on the board, say what kind of change an item is.</p>
   <!--kinds-->
 </section>
 
@@ -145,7 +149,7 @@
     <dt>Notes for the next session</dt>
     <dd>What is in flight, where, and what comes next, as the last session left them. A new session reads them before anything else.</dd>
     <dt>The calendar</dt>
-    <dd>The months the project spans, today outlined. Each day lists what happened or is due: events and due dates, status changes in their status's colours, amendments, and the days phases start and end. A dot is a line of the log; point at it to read it. On a phone, every entry is a dot.</dd>
+    <dd>The months the project spans, today outlined. Each day lists what happened or is coming: events, status changes in their status's colours, amendments, and the days phases start and end. A dot is a line of the log; point at it to read it. On a phone, every entry is a dot.</dd>
     <dt>Every date</dt>
     <dd>The same entries as a list, newest first. Dates still ahead are in bold, and a line marks today.</dd>
   </dl>

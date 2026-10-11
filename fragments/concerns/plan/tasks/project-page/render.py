@@ -318,6 +318,17 @@ def collect_items(phases):
                 if not (isinstance(needs, list) and all(isinstance(n, str) for n in needs)):
                     problem(where, "`needs` is a list of item ids")
                     needs = []
+                options = item.get("options")
+                if options is not None:
+                    keys = [option[0] for option in options] if isinstance(options, list) and all(is_pair(o) for o in options) else None
+                    if keys is None or len(set(keys)) != len(keys):
+                        problem(where, '`options` is a list of [key, text] pairs, each key once, such as ["a", "One port for everything."]')
+                    else:
+                        for mark in ("recommended", "chosen"):
+                            if mark in item and item[mark] not in keys:
+                                problem(where, f"`{mark}` is {item[mark]}, which no option has; the options are {', '.join(keys)}")
+                elif "recommended" in item or "chosen" in item:
+                    problem(where, "`recommended` and `chosen` name one of the item's `options`")
                 amended = item.get("amended")
                 if amended is not None:
                     if not isinstance(amended, dict) or not amended.get("why"):
@@ -332,7 +343,6 @@ def collect_items(phases):
                     type=item_type,
                     needs=needs,
                     amended=amended,
-                    due=as_date(item.get("due"), where, "due"),
                     on=as_date(item.get("on"), where, "on"),
                     status_from=key if "status" in item else None,
                 )
@@ -385,6 +395,7 @@ def link_items():
                 ITEMS[need]["needed_by"].append(item_id)
         texts = [item.get("title", ""), item.get("waits", ""), item.get("why", ""), item.get("result", "")]
         texts += [value for _, value in (f for f in item.get("fields", []) if is_pair(f))]
+        texts += [text for _, text in (o for o in item.get("options") or [] if is_pair(o))]
         if item["amended"]:
             texts.append(item["amended"]["why"])
         for ref in REF.findall(" ".join(str(text) for text in texts)):
@@ -418,8 +429,10 @@ def check_states(project, phases):
             pending = [need for need in needs if ITEMS[need].get("status") != "done"]
             if pending:
                 warn(where, f"{item_id} is `ready`, but needs {', '.join(pending)}, which {'isn' if len(pending) == 1 else 'aren'}'t done")
-        if item["due"] and item["due"] < TODAY and status != "done":
-            warn(where, f"{item_id} was due on {day(item['due'])}")
+        if item.get("options") and status == "done" and "chosen" not in item:
+            warn(where, f"{item_id} is `done`, but none of its options is `chosen`")
+        if "chosen" in item and status in UNFINISHED:
+            warn(where, f"{item_id} has a `chosen` option, but is still `{status}`")
         if item["amended"] and item["amended"]["on"]:
             approved = phases.get(item["phase"], {}).get("approved")
             if approved and item["amended"]["on"] < approved:
@@ -460,10 +473,24 @@ def ref_html(item_id):
 
 
 def link_html(url):
-    """An address outside the page, named as GitHub names it where it is one."""
+    """An address outside the page as a chip, named as GitHub names it where it is one."""
     match = GITHUB.fullmatch(url)
     label = f"{match.group(1)}#{match.group(2)}" if match else url
-    return f'<a href="{esc(url)}" target="_blank" rel="noopener">{esc(label)}</a>'
+    return f'<a class="pill link" href="{esc(url)}" target="_blank" rel="noopener">{esc(label)}</a>'
+
+
+def options_html(item):
+    """An item's options as a list, the recommended one and the chosen one marked with chips."""
+    rows = []
+    for key, text in item["options"]:
+        marks = []
+        if key == item.get("recommended"):
+            marks.append('<span class="pill recommended">Recommended</span>')
+        if key == item.get("chosen"):
+            marks.append('<span class="pill chosen">Chosen</span>')
+        chosen = ' class="chosen"' if key == item.get("chosen") else ""
+        rows.append(f'<li{chosen}><span class="key">{esc(key)}</span><span>{text}</span><span class="marks">{"".join(marks)}</span></li>')
+    return f'<ol class="options">{"".join(rows)}</ol>'
 
 
 def expand_refs(text, where):
@@ -509,25 +536,38 @@ def state_line(item, plain=False):
 
 
 def card(item):
-    head = [f'<span class="n">{esc(item["id"])}</span>', f'<h4>{item.get("title", "")}</h4>']
+    """An item's card: its number and summary; then chips, for what a word or two says;
+    then its fields; then the items that need it or name it."""
+    short = item.get("short")
+    head = f'<div class="item-head"><span class="n">{esc(item["id"])}</span><h4>{short or item.get("title", "")}</h4></div>'
+    tags = []
     if item.get("kind") in KINDS:
-        head.append(f'<span class="pill k-{item["kind"]}">{KINDS[item["kind"]]}</span>')
+        tags.append(f'<span class="pill k-{item["kind"]}">{KINDS[item["kind"]]}</span>')
+    # A status set from another phase shows there: the card keeps the record as written.
+    own = item.get("status_from") == item["phase"] and item.get("status") in ITEM_STATUS
+    if own:
+        when = f' · {day(item["on"])}' if item.get("on") else ""
+        tags.append(f'<span class="pill st-{item["status"]}">{label_of(item)}{when}</span>')
     if item["amended"]:
         when = f' {day(item["amended"]["on"])}' if item["amended"]["on"] else ""
-        head.append(f'<span class="pill amended">Amended{when}</span>')
-    # A status set from another phase shows there: the card keeps the record as written.
-    if item.get("status_from") == item["phase"]:
-        head.append(state_line(item))
-    rows = [(field[0], field[1]) for field in item.get("fields", []) if is_pair(field)]
+        tags.append(f'<span class="pill amended">Amended{when}</span>')
     if isinstance(item.get("url"), str):
-        rows.append(("Link", link_html(item["url"])))
+        tags.append(link_html(item["url"]))
+    rows = []
+    if short and short != text_of(item.get("title", "")):
+        rows.append(("Title", item.get("title", "")))
+    options = item.get("options")
+    if isinstance(options, list) and options and all(is_pair(option) for option in options):
+        rows.append(("Options", options_html(item)))
+    rows += [(field[0], field[1]) for field in item.get("fields", []) if is_pair(field)]
+    if own and item["status"] == "blocked" and item.get("waits"):
+        rows.append((TYPES.get(item["type"], {}).get("waits", "waits on").capitalize(), item["waits"]))
+    if own and item["status"] == "dropped":
+        rows.append(("Why", item.get("why", "")))
     if item["needs"]:
         rows.append(("Needs", refs_list(item["needs"])))
-    if item["due"]:
-        rows.append(("Due", weekday(item["due"])))
     if item["amended"]:
-        when = f'On {day(item["amended"]["on"])}, because' if item["amended"]["on"] else "Because"
-        rows.append(("Amended", f'{when} {item["amended"]["why"]}'))
+        rows.append(("Why amended", item["amended"]["why"]))
     dl = "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows)
     links = []
     if item["needed_by"]:
@@ -535,8 +575,9 @@ def card(item):
     if item["named_by"]:
         links.append(f'<span>Named by</span> {refs_list(item["named_by"])}')
     back = f'\n    <p class="backlinks">{" · ".join(links)}</p>' if links else ""
+    chips = f'\n    <div class="item-tags">{"".join(tags)}</div>' if tags else ""
     body = f"\n    <dl>{dl}</dl>" if dl else ""
-    return f'  <article class="item" id="{anchor_of(item["id"])}">\n    <div class="item-head">{"".join(head)}</div>{body}{back}\n  </article>'
+    return f'  <article class="item" id="{anchor_of(item["id"])}">\n    {head}{chips}{body}{back}\n  </article>'
 
 
 def chip(item):
@@ -779,8 +820,6 @@ def dated(project, phases):
     for item_id, item in ITEMS.items():
         if item.get("on") and item.get("status") in ITEM_STATUS:
             found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id))
-        if item["due"] and item.get("status") != "done":
-            found.append((item["due"], "due", f"[[{item_id}]] due", f"{item_id} due"))
         if item["amended"] and item["amended"]["on"]:
             found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended"))
     for key, state in project["status"].items():
@@ -826,8 +865,8 @@ def calendar_view(project, phases):
     by_day = {}
     for date, cls, text, label in found:
         by_day.setdefault(date, []).append((cls, text, label))
-    # What is still to come: later dates, and today's events and deadlines.
-    ahead = sorted((e for e in found if e[0] > TODAY or (e[0] == TODAY and e[1] in ("event", "due"))), key=lambda e: e[0])
+    # What is still to come: later dates, and today's events.
+    ahead = sorted((e for e in found if e[0] > TODAY or (e[0] == TODAY and e[1] == "event")), key=lambda e: e[0])
     you = [i for i, item in ITEMS.items() if item.get("status") == "open"]
     me = [i for i, item in ITEMS.items() if item.get("status") == "ready"]
 
@@ -1250,7 +1289,7 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance, gu
 <main id="phases" data-open="{opening}">
 {chr(10).join(shells)}
 </main>
-{site_footer("", 'New to this page? <a href="#guides">0 Guides</a> says how to use it, and holds the glossary. Built with <code>/project-page</code> from the TOML files published beside this page.')}
+{site_footer("", "Built with <code>/project-page</code> from the TOML files published beside this page.")}
 </div>
 """
 
@@ -1265,17 +1304,17 @@ def counted(project, phases):
         return sum(1 for item in ITEMS.values() if item["type"] == kind and item.get("status") == "done" and (kinds is None or item.get("kind") in kinds))
 
     figures = [
-        (done("pr"), "PRs merged"),
-        (done("pr", ("major", "minor", "patch")), "releases"),
-        (done("decision"), "decisions taken"),
-        (done("setting"), "settings changed by hand"),
-        (done("lesson"), "lessons adopted"),
+        (done("pr"), "PR merged", "PRs merged"),
+        (done("pr", ("major", "minor", "patch")), "release", "releases"),
+        (done("decision"), "decision taken", "decisions taken"),
+        (done("setting"), "setting changed by hand", "settings changed by hand"),
+        (done("lesson"), "lesson adopted", "lessons adopted"),
     ]
-    # The project's span: what happened, not what is announced or due.
-    dates = [date for date, cls, *_ in dated(project, phases) if cls not in ("event", "due")]
+    # The project's span: what happened, not what is announced.
+    dates = [date for date, cls, *_ in dated(project, phases) if cls != "event"]
     if dates:
-        figures.append(((max(dates) - min(dates)).days + 1, "days, start to finish"))
-    return [(str(value), label) for value, label in figures if value]
+        figures.append(((max(dates) - min(dates)).days + 1, "day, start to finish", "days, start to finish"))
+    return [(str(value), one if value == 1 else many) for value, one, many in figures if value]
 
 
 def retrospective_page(project, phases, data_dir):

@@ -88,7 +88,9 @@ new changelog entry gets a warning.
     `result`, once it lands;
   - `url`, the PR's address once it is open, where its state is read from;
   - `needs`, the ids of the items to finish first;
-  - `due`, the day it is due;
+  - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
+    one each by its key: a decision's choices, shown as a list with the two
+    marked;
   - `amended`, as `{ on = <date>, why = "..." }`, when it was added after its
     phase's approval;
   - `repo`, the board row it goes in;
@@ -107,8 +109,8 @@ new changelog entry gets a warning.
   with its short title: name items that way, never by a bare number. Dates are
   TOML dates, such as `2026-10-07`.
 - The Calendar is built from every date the data holds: events, the days items
-  reached their status, due dates, amendments, the phases' dates, and log
-  entries. Nothing in it is written by hand.
+  reached their status, amendments, the phases' dates, and log entries. Nothing
+  in it is written by hand.
 - A `prose` section can take its `body` from a `file` instead, and `prefix`
   moves that file's ids, and the links to them, under a prefix: the way to
   bring in a page that predates the kit.
