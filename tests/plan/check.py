@@ -61,10 +61,17 @@ def check_example(tmp):
     expect("warning:" not in run.stderr, f"the example renders without a warning: {run.stderr}")
     page = (out / "index.html").read_text()
     phase = {p.stem: p.read_text() for p in (out / "phases").iterdir()}
-    expect(sorted(phase) == ["analysis", "brief", "later", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
+    expect(sorted(phase) == ["analysis", "brief", "guides", "later", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
     expect("<title>example-service-health-checks</title>" in page, "the title is <repo>-<objective>")
-    footer = between(page, '<footer class="site">', "</footer>\n</div>")
-    expect(0 < footer.find('id="guide"') < footer.find('id="glossary"') and "How to use this page" in footer, "the footer holds the guide, then the glossary")
+    expect('<span class="n">0</span><span class="name">Guides</span>' in page, "tab 0 is the guides")
+    expect('href="#guides"' in between(page, '<footer class="site">', "</footer>"), "the footer points to the guides")
+    guides = phase["guides"]
+    parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "calendar", "links", "changes", "answering")
+    expect(all(f'id="guide-{part}"' in guides and f'href="#guide-{part}"' in guides for part in parts), "the guides hold every part of the guide, each in the contents")
+    words = ('st-done">Taken<', 'st-blocked">Not met yet<', 'st-dropped">Not adopted<', 'st-done">Picked up<', 'st-open">To merge<')
+    expect(all(word in between(guides, '<table class="statuses"', "</table>") for word in words), "the guide's statuses come from the page's own words")
+    expect('<span class="chip s-open">' in guides and '<a class="chip' not in guides, "its sample chips are drawn as the board draws them, but aren't links")
+    expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
     expect('data-open="build"' in page, "the page opens on the phase in progress")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
     expect(counts == {"build": "3/6", "verify": "2/4", "later": "0/1"}, f"each phase in progress counts its items done, and only those: {counts}")
@@ -105,6 +112,7 @@ def check_example(tmp):
     expect(first is not None and first.groups() == ("ahead", "Wed 14 Oct"), "the agenda runs newest first, from the last date ahead")
     anchors = manifest(page)
     expect('"ex-1":"plan"' in anchors and '"ball":"calendar"' in anchors, "a link to EX-1 opens the plan, and one to the ball the calendar")
+    expect('"glossary":"guides"' in anchors and '"guide-board":"guides"' in anchors, "a link to the glossary, or into the guide, opens the guides")
 
     inline = tmp / "inline"
     run = render(EXAMPLE, inline, "--inline")
@@ -112,7 +120,7 @@ def check_example(tmp):
     if run.returncode == 0:
         expect(not (inline / "phases").exists(), "--inline writes no phase files")
         whole = (inline / "index.html").read_text()
-        expect('id="ex-1"' in whole and 'id="g1"' in whole and 'id="c1"' in whole, "--inline holds every phase")
+        expect('id="ex-1"' in whole and 'id="g1"' in whole and 'id="c1"' in whole and 'id="guide-board"' in whole, "--inline holds every phase, and the guides")
 
     run = render(EXAMPLE, tmp / "no-retrospective", "--retrospective")
     expect(run.returncode == 1 and "the Retrospective has no data yet" in run.stderr, f"--retrospective needs a Retrospective: {run.stderr}")
@@ -157,7 +165,7 @@ def check_full(tmp):
         expect(all(absent not in retro for absent in ('<nav class="phases"', 'id="calendar"', "<script")), "it has no tabs, no calendar and no script")
         expect('<span class="ref"><b>MX-1</b>' in retro and 'href="#mx-1"' not in retro, "it names as text an item it doesn't hold")
         expect('id="l1"' in retro and 'id="glossary"' in retro and "lessons adopted" in retro, "it holds the lessons, the figures and the glossary")
-        expect('id="guide"' not in retro, "but not the guide, which is about the project page")
+        expect('id="guides"' not in retro and 'id="guide-board"' not in retro, "but not the guides, which are about the project page")
     linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
     if linked is not None:
         expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")

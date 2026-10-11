@@ -33,7 +33,7 @@
     const anchor = decodeURIComponent(hash.replace(/^#/, ''));
     const key = phases.has(anchor) ? anchor : owner[anchor];
     if (anchor && !key) {
-      // An id outside every phase, such as the glossary.
+      // An id outside every view, in the header or the footer.
       const target = document.getElementById(anchor);
       if (target && target.tagName === 'DETAILS') target.open = true;
       target?.scrollIntoView();

@@ -16,7 +16,9 @@ they answer.
   starts, and kept.
 - Nine phases, always in this order, each a view the indicator at the top of
   the page switches to: Brief, Research, Analysis, Plan, Build, Verify, Reuse,
-  Retrospective, For later. The page opens on the phase in progress.
+  Retrospective, For later. The page opens on the phase in progress. Before
+  them, tab 0, Guides, says how to use the page, chips and sections included,
+  and holds the glossary.
 - A phase is Done, Now, To come or Not needed. Not needed says why in one
   sentence; Reuse is the phase most often not needed. Build and Verify can both
   be Now: Verify starts with the first merge. A phase that is Now shows on its
@@ -98,7 +100,7 @@ from the lesson.
   and the notes for the next session. All of it is built from the statuses:
   never repeat a status in prose, which goes stale the next time it changes.
 - One glossary per project: the terms coined for it, and the terms borrowed. It
-  sits in the page's footer, beside a guide to reading the page.
+  sits in Guides, after the guide to using the page.
 
 ## Before a session ends
 

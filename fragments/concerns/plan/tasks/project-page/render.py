@@ -64,6 +64,27 @@ TYPES = {
     "lesson": {"labels": {"open": "To review", "done": "Adopted", "dropped": "Not adopted"}, "ask": "Review"},
     "later": {"labels": {"blocked": "Waiting", "done": "Picked up"}, "ask": "Start"},
 }
+# How the guide names each type of item, with what its numbers start with.
+TYPE_NAMES = {
+    "piece": ("Research piece", "R1"),
+    "rule": ("Ground rule", "G1"),
+    "criterion": ("Success criterion", "SC1"),
+    "decision": ("Decision", "D1"),
+    "question": ("Question", "Q1"),
+    "pr": ("PR", "AC-1"),
+    "setting": ("Setting", "S1"),
+    "risk": ("Risk", "RK1"),
+    "check": ("Check", "C1"),
+    "lesson": ("Lesson", "L1"),
+    "later": ("Later work", "T1"),
+}
+KIND_MEANING = {
+    "major": "Merging it releases a major version: what used the last one may need changing.",
+    "minor": "Merging it releases a minor version: something new, and nothing that worked breaks.",
+    "patch": "Merging it releases a patch: a fix, with nothing new.",
+    "you": "Only you can do it, such as a setting in a service you own.",
+    "together": "Done with the agent, in a session together.",
+}
 SECTION_KINDS = ("prose", "table", "items", "board", "results", "log", "figures", "defs")
 SOURCES = {"coined": "Coined for this project", "borrowed": "Borrowed from elsewhere"}
 
@@ -845,9 +866,8 @@ def calendar_view(project, phases):
     return expand_refs(body, "the calendar"), len(you), len(me), (ahead[0] if ahead else None)
 
 
-def glossary(entries):
-    if not entries:
-        return ""
+def glossary_groups(entries, level):
+    """The terms coined for the project, then those borrowed, under headings of `level`."""
     groups = []
     for source, title in SOURCES.items():
         rows = "".join(
@@ -856,8 +876,15 @@ def glossary(entries):
             if entry.get("source", "coined") == source
         )
         if rows:
-            groups.append(f'<h3>{title}</h3><dl class="defs">{rows}</dl>')
-    return f'<details class="aid glossary" id="glossary">\n  <summary>Glossary</summary>\n  {"".join(groups)}\n</details>'
+            groups.append(f'<h{level}>{title}</h{level}><dl class="defs">{rows}</dl>')
+    return "".join(groups)
+
+
+def glossary(entries):
+    """The glossary folded into a panel, for the Retrospective alone."""
+    if not entries:
+        return ""
+    return f'<details class="aid glossary" id="glossary">\n  <summary>Glossary</summary>\n  {glossary_groups(entries, 3)}\n</details>'
 
 
 def site_footer(aids, line):
@@ -872,6 +899,60 @@ def opening_phase(statuses):
             if statuses[key]["status"] == wanted:
                 return key
     return PHASES[0][0]
+
+
+# ------------------------------------------------------------------ tab 0, the guides
+
+
+def statuses_table():
+    """Each type of item in the words its statuses take, and what the user does while one waits."""
+    order = ("open", "ready", "blocked", "done", "dropped")
+    rows = []
+    for key, entry in TYPES.items():
+        name, example = TYPE_NAMES[key]
+        words = [f'<span class="st st-{status}">{entry["labels"].get(status, ITEM_STATUS[status])}</span>' for status in order]
+        rows.append([f'{name} <span class="letters">{example}</span>'] + words + [entry["ask"]])
+    return table_html(["Type", "Waits on you", "Ready", "Blocked", "Done", "Dropped", "Your part"], rows, 820, "statuses")
+
+
+def kinds_list():
+    rows = "".join(f'<dt><span class="pill k-{key}">{name}</span></dt><dd>{KIND_MEANING[key]}</dd>' for key, name in KINDS.items())
+    return f'<dl class="defs kinds">{rows}</dl>'
+
+
+def sample_chips():
+    """A chip in each status, drawn as the board draws them, but not links: they are examples."""
+    samples = [
+        dict(id="EX-1", short="Liveness probe", status="done", on=TODAY, kind="minor"),
+        dict(id="EX-2", short="Readiness probe", status="open", on=TODAY, kind="minor"),
+        dict(id="EX-3", short="Ten seconds in production", status="ready", kind="patch"),
+        dict(id="EX-4", short="The probes in the README", status="blocked", waits="the freeze to end", kind="patch"),
+        dict(id="EX-5", short="A second exporter", status="dropped", why="EX-2 covers it", kind="minor"),
+    ]
+    chips = [chip(dict(sample, type="pr", needs=[])) for sample in samples]
+    chips = [re.sub(r'^<a class="([^"]*)" href="#[^"]*">(.*)</a>$', r'<span class="\1">\2</span>', html, flags=re.S) for html in chips]
+    return f'<div class="chips samples">{"".join(chips)}</div>'
+
+
+def guides_view(project):
+    """Tab 0: how to use the page, the same on every project, then the project's glossary."""
+    guide = (HERE / "guide.html").read_text(encoding="utf-8")
+    for mark, generated in (("<!--statuses-->", statuses_table()), ("<!--kinds-->", kinds_list()), ("<!--chips-->", sample_chips())):
+        guide = guide.replace(mark, generated)
+    parts = re.findall(r'<section class="block" id="([^"]+)">\s*<h3>(.*?)</h3>', guide)
+    entries = project.get("glossary", [])
+    terms = ""
+    if entries:
+        terms = f'<section class="block" id="glossary">\n  <h3>Glossary</h3>\n  {glossary_groups(entries, 4)}\n</section>'
+        parts.append(("glossary", "Glossary"))
+    contents = "".join(f'<li><a href="#{anchor}">{title}</a></li>' for anchor, title in parts)
+    return "\n".join([
+        '<div class="phase-head"><h2>Guides</h2></div>',
+        "<p class=\"lede\">How to use this page, then the project's glossary. The guide is the same on every project page; the glossary is this project's own.</p>",
+        f'<nav class="contents" aria-label="In this view"><ol>{contents}</ol></nav>',
+        guide.strip(),
+        terms,
+    ])
 
 
 # ------------------------------------------------------------------ since the last publish
@@ -1118,12 +1199,12 @@ def progress():
     return counts
 
 
-def page(project, sections, opening, inline, data_dir, calendar_html, glance):
+def page(project, sections, opening, inline, data_dir, calendar_html, glance, guides_html):
     css = stylesheet(project, data_dir)
-    guide = (HERE / "guide.html").read_text(encoding="utf-8")
     title = f'{project.get("repo", "")}-{project.get("objective", "")}'
     counts = progress()
-    tabs = []
+    # Tab 0 is the guides: not a phase of the project, so it has no state of its own.
+    tabs = ['<li><a href="#guides" data-phase="guides" class="t-guides"><span class="n">0</span><span class="name">Guides</span><span class="state">How to use</span></a></li>']
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
         current = ' aria-current="true"' if key == opening else ""
@@ -1137,6 +1218,11 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance):
             f'<span class="name">{name}</span><span class="state">{state}</span></a></li>'
         )
     shells, files = [], {}
+    if inline:
+        shells.append(f'<section class="phase" id="guides" data-phase="guides" hidden>\n{guides_html}\n</section>')
+    else:
+        files["guides"] = guides_html + "\n"
+        shells.append('<section class="phase" id="guides" data-phase="guides" data-src="phases/guides.html" hidden></section>')
     for key, _ in PHASES:
         hidden = "" if key == opening else " hidden"
         if inline or key == opening or not sections[key][1]:
@@ -1164,7 +1250,7 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance):
 <main id="phases" data-open="{opening}">
 {chr(10).join(shells)}
 </main>
-{site_footer(guide + glossary(project.get("glossary", [])), "Built with <code>/project-page</code> from the TOML files published beside this page.")}
+{site_footer("", 'New to this page? <a href="#guides">0 Guides</a> says how to use it, and holds the glossary. Built with <code>/project-page</code> from the TOML files published beside this page.')}
 </div>
 """
 
@@ -1286,7 +1372,8 @@ def main(argv):
     if next_date:
         glance += f' <span>Next date: {weekday(next_date[0])}, {expand_refs(next_date[2], "the calendar")}</span>'
     opening = opening_phase(project["status"])
-    title, files, shell = page(project, sections, opening, inline, data_dir, calendar_html, glance)
+    guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")
+    title, files, shell = page(project, sections, opening, inline, data_dir, calendar_html, glance, guides_html)
     shell = expand_refs(shell, "project.toml")
     fragments = [("the page", shell)] + [(f"phases/{key}.html", text) for key, text in files.items()]
     check(fragments)
@@ -1294,7 +1381,7 @@ def main(argv):
         return 1
     # Which view holds each id, so a link into a phase not loaded yet opens it.
     phase_of = {}
-    for key, (text, _) in list(sections.items()) + [("calendar", (calendar_html, True))]:
+    for key, (text, _) in list(sections.items()) + [("calendar", (calendar_html, True)), ("guides", (guides_html, True))]:
         holder = Check(key)
         holder.feed(text)
         holder.close()

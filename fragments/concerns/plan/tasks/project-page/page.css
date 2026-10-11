@@ -279,6 +279,22 @@
   ol.agenda ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
   ol.agenda ul li { margin: 0; background: none !important; color: inherit !important; }
 
+  /* Tab 0, the guides: a contents line, then the guide's parts, its samples
+     drawn with the page's own styles, and the glossary. */
+  .contents ol { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+  .contents li, .contents li + li { margin: 0; }
+  .contents a { display: inline-block; padding: 3px 12px; border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface); color: var(--ink); text-decoration: none; font-size: 0.88rem; }
+  .contents a:hover { border-color: var(--accent-fill); }
+  article.item.sample { margin-top: 16px; padding: 16px 18px; border: 1px dashed var(--outline); border-radius: var(--corner-lg); background: var(--surface); max-width: 88ch; }
+  .sample .ext { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .chips.samples { margin-top: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); max-width: 88ch; }
+  table.statuses td { white-space: nowrap; }
+  .letters { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-muted); margin-left: 4px; }
+  dl.kinds dt { padding-top: 0; }
+  #glossary h4 { margin-top: 18px; font-size: 0.95rem; color: var(--ink-muted); }
+  #glossary h4:first-of-type { margin-top: 12px; }
+  .block > ul { max-width: 88ch; }
+
   /* The footer: how to use the page, and the glossary, one per project, side
      by side where there is room. */
   footer.site { margin-top: 56px; }
