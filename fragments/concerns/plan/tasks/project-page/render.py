@@ -79,8 +79,7 @@ VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "met
 FONTS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-    '<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700'
-    '&amp;family=Quicksand:wght@400;500;600;700&amp;display=swap" rel="stylesheet">'
+    '<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&amp;display=swap" rel="stylesheet">'
 )
 
 problems, warnings = [], []
@@ -857,7 +856,13 @@ def glossary(entries):
         )
         if rows:
             groups.append(f'<h3>{title}</h3><dl class="defs">{rows}</dl>')
-    return f'<details class="glossary" id="glossary">\n  <summary>Glossary</summary>\n  {"".join(groups)}\n</details>'
+    return f'<details class="aid glossary" id="glossary">\n  <summary>Glossary</summary>\n  {"".join(groups)}\n</details>'
+
+
+def site_footer(aids, line):
+    """The footer: the panels that help read the page, then where it came from."""
+    panels = f'\n<div class="aids">\n{aids}\n</div>' if aids.strip() else ""
+    return f'<footer class="site">{panels}\n<p>{line}</p>\n</footer>'
 
 
 def opening_phase(statuses):
@@ -1114,6 +1119,7 @@ def progress():
 
 def page(project, sections, opening, inline, data_dir, calendar_html, glance):
     css = stylesheet(project, data_dir)
+    guide = (HERE / "guide.html").read_text(encoding="utf-8")
     title = f'{project.get("repo", "")}-{project.get("objective", "")}'
     counts = progress()
     tabs = []
@@ -1157,8 +1163,7 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance):
 <main id="phases" data-open="{opening}">
 {chr(10).join(shells)}
 </main>
-{glossary(project.get("glossary", []))}
-<footer class="site"><p>Built with <code>/project-page</code> from the TOML files published beside this page.</p></footer>
+{site_footer(guide + glossary(project.get("glossary", [])), "Built with <code>/project-page</code> from the TOML files published beside this page.")}
 </div>
 """
 
@@ -1216,8 +1221,7 @@ def retrospective_page(project, phases, data_dir):
 {body}
 </section>
 </main>
-{glossary(project.get("glossary", []))}
-<footer class="site"><p>Built with <code>/project-page</code> from the data behind the project's page.</p></footer>
+{site_footer(glossary(project.get("glossary", [])), "Built with <code>/project-page</code> from the data behind the project's page.")}
 </div>
 """
     return title, expand_refs(text, "project.toml")

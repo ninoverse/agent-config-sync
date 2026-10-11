@@ -63,6 +63,8 @@ def check_example(tmp):
     phase = {p.stem: p.read_text() for p in (out / "phases").iterdir()}
     expect(sorted(phase) == ["analysis", "brief", "later", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
     expect("<title>example-service-health-checks</title>" in page, "the title is <repo>-<objective>")
+    footer = between(page, '<footer class="site">', "</footer>\n</div>")
+    expect(0 < footer.find('id="guide"') < footer.find('id="glossary"') and "How to use this page" in footer, "the footer holds the guide, then the glossary")
     expect('data-open="build"' in page, "the page opens on the phase in progress")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
     expect(counts == {"build": "3/6", "verify": "2/4", "later": "0/1"}, f"each phase in progress counts its items done, and only those: {counts}")
@@ -155,6 +157,7 @@ def check_full(tmp):
         expect(all(absent not in retro for absent in ('<nav class="phases"', 'id="calendar"', "<script")), "it has no tabs, no calendar and no script")
         expect('<span class="ref"><b>MX-1</b>' in retro and 'href="#mx-1"' not in retro, "it names as text an item it doesn't hold")
         expect('id="l1"' in retro and 'id="glossary"' in retro and "lessons adopted" in retro, "it holds the lessons, the figures and the glossary")
+        expect('id="guide"' not in retro, "but not the guide, which is about the project page")
     linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
     if linked is not None:
         expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")

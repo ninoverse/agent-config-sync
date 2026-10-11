@@ -97,7 +97,8 @@ from the lesson.
   agent, for every Ready one; or a date. It holds every date the project has,
   and the notes for the next session. All of it is built from the statuses:
   never repeat a status in prose, which goes stale the next time it changes.
-- One glossary per project: the terms coined for it, and the terms borrowed.
+- One glossary per project: the terms coined for it, and the terms borrowed. It
+  sits in the page's footer, beside a guide to reading the page.
 
 ## Before a session ends
 
