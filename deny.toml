@@ -16,7 +16,13 @@ confidence-threshold = 0.93
 
 [advisories]
 yanked = "deny"
-ignore = []
+# Each entry says why it is safe to carry, and goes once that stops being true.
+ignore = [
+    # serde_yaml_ng, which reads .agentprofile.yml, pulls in unsafe-libyaml,
+    # archived upstream with no safe upgrade. It goes once agentcfg moves to a
+    # YAML parser written in safe Rust.
+    { id = "RUSTSEC-2024-0449", reason = "unsafe-libyaml is unmaintained; serde_yaml_ng has no release without it" },
+]
 
 [bans]
 multiple-versions = "warn"
