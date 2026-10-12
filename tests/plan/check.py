@@ -63,9 +63,14 @@ def check_example(tmp):
     phase = {p.stem: p.read_text() for p in (out / "phases").iterdir()}
     expect(sorted(phase) == ["analysis", "brief", "guides", "later", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
     expect("<title>example-service-health-checks</title>" in page, "the title is <repo>-<objective>")
-    expect('<span class="n">0</span><span class="name">Guides</span>' in page, "tab 0 is the guides")
+    views = between(page, '<nav class="views"', "</nav>")
+    expect('href="#agenda" data-phase="agenda"' in views and 'href="#guides" data-phase="guides"' in views, "the agenda and the guides open from the top right")
+    tabs = re.findall(r'data-phase="(\w+)"', between(page, '<nav class="phases"', "</nav>"))
+    expect(tabs == ["brief", "research", "analysis", "plan", "build", "verify", "reuse", "retrospective", "later"], f"the indicator holds the nine phases, and only those: {tabs}")
+    expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
+    expect('<footer class="site"' not in page, "the page has no footer: the guides answer what it would")
     guides = phase["guides"]
-    parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "calendar", "links", "changes", "answering")
+    parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "agenda", "links", "changes", "answering")
     expect(all(f'id="guide-{part}"' in guides and f'href="#guide-{part}"' in guides for part in parts), "the guides hold every part of the guide, each in the contents")
     words = ('st-done">Taken<', 'st-blocked">Not met yet<', 'st-dropped">Not adopted<', 'st-done">Picked up<', 'st-open">To merge<')
     expect(all(word in between(guides, '<table class="statuses"', "</table>") for word in words), "the guide's statuses come from the page's own words")
@@ -118,14 +123,20 @@ def check_example(tmp):
     you, me = between(ball, "Waiting on you", "</ul>"), between(ball, "Next for me", "</ul>")
     expect("EX-2" in you and "EX-1" not in you and "Q1" not in you, f"Waiting on you lists the open items, and only those: {you}")
     expect("EX-3" in me and "EX-2" not in me, f"Next for me lists the ready items: {me}")
-    expect("<span>1 waiting on you</span> <span>1 next for me</span> <span>Next date: Mon 12 Oct, Renovate's weekly run</span>" in page, "the header counts who holds the ball, and names the next date")
-    expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the calendar holds the notes for the next session")
-    calendar = between(page, 'id="calendar"', "</main>")
-    expect("October 2026" in calendar and 'class="d today has"><span class="dn">7</span>' in calendar, "the month shows the day the state was read")
-    first = re.search(r'<ol class="agenda"><li class="(\w+)"><time>(.*?)</time>', calendar)
-    expect(first is not None and first.groups() == ("ahead", "Wed 14 Oct"), "the agenda runs newest first, from the last date ahead")
+    order = [page.find(mark) for mark in ('class="months"', 'class="glance"', '<nav class="phases"')]
+    expect(-1 not in order and order == sorted(order), f"the calendar, then the card under it, then the phases: {order}")
+    expect('<p class="readat">PR statuses as of 7 Oct 2026, 18:00 UTC.</p>' in page, "the card says when the PRs' statuses were read")
+    counts = '<li><a href="#ball"><b>1</b> waiting on you</a></li><li><a href="#ball"><b>1</b> next for me</a></li><li><a href="#coming-up"><b>2</b> coming up</a></li>'
+    expect(counts in page, "it counts who holds the ball and what is coming up, each a link into the agenda")
+    expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
+    calendar = between(page, 'class="months"', 'class="glance"')
+    expect("October 2026" in calendar and 'class="d today has"><a class="dn" href="#on-2026-10-07">7</a>' in calendar, "the month shows the day the state was read, and a day links into the agenda")
+    first = re.search(r'<ol class="agenda"><li class="(\w+)" id="on-[\d-]+"><time>(.*?)</time>', between(page, 'id="coming-up"', "</section>"))
+    expect(first is not None and first.groups() == ("ahead", "Mon 12 Oct"), "what is coming up runs soonest first")
+    first = re.search(r'<ol class="agenda"><li class="(\w+)" id="on-[\d-]+"><time>(.*?)</time>', between(page, 'id="history"', "</section>"))
+    expect(first is not None and first.groups() == ("today", "Wed 7 Oct"), "what happened runs newest first, from the day the state was read")
     anchors = manifest(page)
-    expect('"ex-1":"plan"' in anchors and '"ball":"calendar"' in anchors, "a link to EX-1 opens the plan, and one to the ball the calendar")
+    expect('"ex-1":"plan"' in anchors and '"ball":"agenda"' in anchors and '"on-2026-10-12":"agenda"' in anchors, "a link to EX-1 opens the plan, and one to the ball or a day the agenda")
     expect('"glossary":"guides"' in anchors and '"guide-board":"guides"' in anchors, "a link to the glossary, or into the guide, opens the guides")
 
     inline = tmp / "inline"
@@ -171,6 +182,9 @@ def check_full(tmp):
     later = (out / "phases" / "later.html").read_text()
     expect('st-blocked">Waiting<' in later and 'href="#l2"' in later, "a rule change waits in For later, on its lesson")
     expect("[[" not in page + build + later, "a title that names an item links it, and leaves no brackets in a short name")
+    september = between(page, '<div class="month" hidden>', "</table>")
+    expect("<h2>September 2026</h2>" in september and 'disabled aria-label="No earlier month"' in september, "an earlier month waits behind the arrow, and the first has none before it")
+    expect('data-step="-1" aria-label="September 2026">' in between(page, '<div class="month">', "</table>"), "the month shown is the one the state was read in, with an arrow back")
 
     alone = tmp / "alone"
     run = render(FULL, alone, "--retrospective")
@@ -179,7 +193,7 @@ def check_full(tmp):
         expect(sorted(p.name for p in alone.iterdir()) == ["retrospective.html"], "--retrospective writes the one page")
         retro = (alone / "retrospective.html").read_text()
         expect("<title>example-service-metrics-retrospective</title>" in retro, "the page alone is titled <repo>-<objective>-retrospective")
-        expect(all(absent not in retro for absent in ('<nav class="phases"', 'id="calendar"', "<script")), "it has no tabs, no calendar and no script")
+        expect(all(absent not in retro for absent in ('<nav class="phases"', 'class="months"', 'id="agenda"', "<script")), "it has no tabs, no calendar, no agenda and no script")
         expect('<span class="ref"><b>MX-1</b>' in retro and 'href="#mx-1"' not in retro, "it names as text an item it doesn't hold")
         expect('id="l1"' in retro and 'id="glossary"' in retro and "lesson adopted" in retro, "it holds the lessons, the figures and the glossary")
         expect('id="guides"' not in retro and 'id="guide-board"' not in retro, "but not the guides, which are about the project page")

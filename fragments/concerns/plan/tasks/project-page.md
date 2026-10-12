@@ -30,16 +30,16 @@ say what each field holds.
 python3 .agents/project-page/render.py <data directory> <out directory>
 ```
 
-It writes `index.html`, holding the phase in progress and the Calendar, and
-`phases/<phase>.html` for each other phase with content, which the page fetches
-when the reader picks that phase. `phases/guides.html` is tab 0: the guide to
-using the page, from `guide.html` beside the renderer, with its tables built
-from the renderer's own words, then the glossary. `--inline` puts every phase in `index.html`,
-for a preview opened from disk, where a page can't fetch a file.
-`--retrospective` writes `retrospective.html` instead: the Retrospective alone,
-without the tabs or the Calendar, naming as text the items it doesn't hold. A
-link written by hand to one of those fails the render there. It needs Python
-3.11 or later, and nothing else.
+It writes `index.html`, holding the calendar, the phase in progress and the
+Agenda, and `phases/<phase>.html` for each other phase with content, which the
+page fetches when the reader picks that phase. `phases/guides.html` is the
+Guides: the guide to using the page, from `guide.html` beside the renderer, with
+its tables built from the renderer's own words, then the glossary. `--inline`
+puts every phase in `index.html`, for a preview opened from disk, where a page
+can't fetch a file. `--retrospective` writes `retrospective.html` instead: the
+Retrospective alone, without the tabs, the calendar or the Agenda, naming as
+text the items it doesn't hold. A link written by hand to one of those fails the
+render there. It needs Python 3.11 or later, and nothing else.
 
 It writes nothing, and names the file and the item, when:
 
@@ -109,9 +109,9 @@ new changelog entry gets a warning.
 - Text is HTML, as the page shows it, and `[[D1]]` anywhere in it links to D1
   with its short title: name items that way, never by a bare number. Dates are
   TOML dates, such as `2026-10-07`.
-- The Calendar is built from every date the data holds: events, the days items
-  reached their status, amendments, the phases' dates, and log entries. Nothing
-  in it is written by hand.
+- The calendar and the Agenda are built from every date the data holds: events,
+  the days items reached their status, amendments, the phases' dates, and log
+  entries. Nothing in them is written by hand.
 - A `prose` section can take its `body` from a `file` instead, and `prefix`
   moves that file's ids, and the links to them, under a prefix: the way to
   bring in a page that predates the kit.

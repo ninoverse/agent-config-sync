@@ -35,8 +35,8 @@ since the user finds the page by it.
 - Publish to the same `url`, with the files that changed, and `null` for a
   phase file that no longer exists.
 - A session that neither published nor read the live page has to read it in
-  full before it can publish over it. The page holds only the phase in
-  progress and the Calendar, so that read stays small.
+  full before it can publish over it. The page holds only the calendar, the
+  phase in progress and the Agenda, so that read stays small.
 
 ## The Retrospective, alone
 

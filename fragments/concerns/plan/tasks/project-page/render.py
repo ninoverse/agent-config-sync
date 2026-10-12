@@ -857,7 +857,9 @@ def dated(project, phases):
     return found
 
 
-def month_grid(year, month, by_day):
+def month_grid(year, month, by_day, before, after, shown):
+    """One month of the header's calendar, with arrows to the months beside it. A day
+    with something on it links to that day in the agenda."""
     weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(year, month)
     head = "".join(f"<th>{name}</th>" for name in ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
     rows = []
@@ -872,16 +874,40 @@ def month_grid(year, month, by_day):
                 f'<li class="m-{cls}">{esc(label)}</li>' if label else f'<li class="m-{cls} dot" title="{esc(text_of(refs_as_text(text)))}"></li>'
                 for cls, text, label in by_day.get(date, [])
             )
-            cells.append(f'<td class="{" ".join(classes)}"><span class="dn">{date.day}</span>{f"<ul>{marks}</ul>" if marks else ""}</td>')
+            number = f'<a class="dn" href="#on-{date.isoformat()}">{date.day}</a>' if date in by_day else f'<span class="dn">{date.day}</span>'
+            cells.append(f'<td class="{" ".join(classes)}">{number}{f"<ul>{marks}</ul>" if marks else ""}</td>')
         rows.append("<tr>" + "".join(cells) + "</tr>")
-    return f'<div class="month"><h4>{calendar.month_name[month]} {year}</h4><table class="cal"><thead><tr>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+
+    def arrow(target, step, mark):
+        if target is None:
+            return f'<button type="button" class="step" disabled aria-label="No {"earlier" if step < 0 else "later"} month">{mark}</button>'
+        return f'<button type="button" class="step" data-step="{step}" aria-label="{calendar.month_name[target[1]]} {target[0]}">{mark}</button>'
+
+    hidden = "" if shown else " hidden"
+    return (
+        f'<div class="month"{hidden}><div class="month-head">{arrow(before, -1, "‹")}<h2>{calendar.month_name[month]} {year}</h2>{arrow(after, 1, "›")}</div>'
+        f'<table class="cal"><thead><tr>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+    )
 
 
 def calendar_view(project, phases):
+    """The header's calendar, every month the project spans with today's shown, and the
+    agenda: who holds the ball, what is coming up, the notes for the next session,
+    and what happened. Also the counts the header gives under the calendar."""
     found = dated(project, phases)
     by_day = {}
     for date, cls, text, label in found:
         by_day.setdefault(date, []).append((cls, text, label))
+    dates = [e[0] for e in found] + [TODAY]
+    first, last = min(dates), max(dates)
+    months, cursor = [], datetime.date(first.year, first.month, 1)
+    while cursor <= last:
+        months.append((cursor.year, cursor.month))
+        cursor = datetime.date(cursor.year + cursor.month // 12, cursor.month % 12 + 1, 1)
+    grid = "".join(
+        month_grid(year, month, by_day, months[i - 1] if i else None, months[i + 1] if i + 1 < len(months) else None, (year, month) == (TODAY.year, TODAY.month))
+        for i, (year, month) in enumerate(months)
+    )
     # What is still to come: later dates, and today's events.
     ahead = sorted((e for e in found if e[0] > TODAY or (e[0] == TODAY and e[1] == "event")), key=lambda e: e[0])
     you = [i for i, item in ITEMS.items() if item.get("status") == "open"]
@@ -893,33 +919,37 @@ def calendar_view(project, phases):
 
     you_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in you]
     me_rows = [f"<li>[[{i}]]</li>" for i in me]
-    date_rows = [f'<li><time>{weekday(date)}</time> {text}</li>' for date, cls, text, label in ahead[:6]]
-    ball = column("Waiting on you", you_rows, "Nothing.") + column("Next for me", me_rows, "Nothing ready.") + column("Waiting on a date", date_rows, "No date ahead.")
+    ball = column("Waiting on you", you_rows, "Nothing.") + column("Next for me", me_rows, "Nothing ready.")
     handoff = project.get("handoff")
     notes = ""
     if handoff and handoff.get("notes"):
         updated = f' <span class="on">{day(handoff["updated"])}</span>' if handoff.get("updated") else ""
-        notes = f'<section class="block handoff" id="next-session"><h3>Notes for the next session{updated}</h3><ul>{"".join(f"<li>{n}</li>" for n in handoff["notes"])}</ul></section>'
-    grid = ""
-    if found:
-        first, last = min(e[0] for e in found), max(e[0] for e in found)
-        months, cursor = [], datetime.date(first.year, first.month, 1)
-        while cursor <= last:
-            months.append((cursor.year, cursor.month))
-            cursor = datetime.date(cursor.year + cursor.month // 12, cursor.month % 12 + 1, 1)
-        grid = "".join(month_grid(year, month, by_day) for year, month in months[-6:])
-    agenda = []
-    for date in sorted(by_day, reverse=True):
-        when = "ahead" if date > TODAY else "today" if date == TODAY else "past"
-        rows = "".join(f'<li class="m-{cls}">{text}</li>' for cls, text, label in by_day[date])
-        agenda.append(f'<li class="{when}"><time>{weekday(date)}</time><ul>{rows}</ul></li>')
-    agenda_html = f'<ol class="agenda">{"".join(agenda)}</ol>' if agenda else '<p class="why">Nothing has a date yet.</p>'
-    body = f"""<div class="phase-head"><h2>Calendar</h2><span class="span">read on {weekday(TODAY)}</span></div>
-<section class="block" id="ball"><h3>Who holds the ball</h3><div class="ball">{ball}</div></section>
+        notes = f'<section class="block handoff" id="next-session"><h3>Notes for the next session{updated}</h3>{list_html(handoff["notes"])}</section>'
+    coming, happened = {}, {}
+    for date, cls, text, label in found:
+        upcoming = date > TODAY or (date == TODAY and cls == "event")
+        (coming if upcoming else happened).setdefault(date, []).append((cls, text))
+    anchors = set()
+
+    def days(groups, order):
+        rows = []
+        for date in order:
+            when = "ahead" if date > TODAY else "today" if date == TODAY else "past"
+            # Today can be in both lists; the calendar's link goes to the first.
+            anchor = f"on-{date.isoformat()}"
+            attr = "" if anchor in anchors else f' id="{anchor}"'
+            anchors.add(anchor)
+            entries = "".join(f'<li class="m-{cls}">{text}</li>' for cls, text in groups[date])
+            rows.append(f'<li class="{when}"{attr}><time>{weekday(date)}</time><ul>{entries}</ul></li>')
+        return f'<ol class="agenda">{"".join(rows)}</ol>'
+
+    coming_html = days(coming, sorted(coming)) if coming else '<p class="why">No date ahead.</p>'
+    happened_html = days(happened, sorted(happened, reverse=True)) if happened else '<p class="why">Nothing yet.</p>'
+    body = f"""<section class="block" id="ball"><h3>Who holds the ball</h3><div class="ball">{ball}</div></section>
+<section class="block" id="coming-up"><h3>Coming up, soonest first</h3>{coming_html}</section>
 {notes}
-<section class="block" id="months"><h3>The calendar</h3><div class="months">{grid}</div></section>
-<section class="block" id="agenda"><h3>Every date, newest first</h3>{agenda_html}</section>"""
-    return expand_refs(body, "the calendar"), len(you), len(me), (ahead[0] if ahead else None)
+<section class="block" id="history"><h3>What happened, newest first</h3>{happened_html}</section>"""
+    return expand_refs(body, "the agenda"), grid, len(you), len(me), len(ahead)
 
 
 def glossary_groups(entries, level):
@@ -957,7 +987,7 @@ def opening_phase(statuses):
     return PHASES[0][0]
 
 
-# ------------------------------------------------------------------ tab 0, the guides
+# ------------------------------------------------------------------ the guides
 
 
 def statuses_table():
@@ -991,7 +1021,8 @@ def sample_chips():
 
 
 def guides_view(project):
-    """Tab 0: how to use the page, the same on every project, then the project's glossary."""
+    """The guides: how to use the page, the same on every project, then the project's
+    glossary. Its title is on the sheet that holds it."""
     guide = (HERE / "guide.html").read_text(encoding="utf-8")
     for mark, generated in (("<!--statuses-->", statuses_table()), ("<!--kinds-->", kinds_list()), ("<!--chips-->", sample_chips())):
         guide = guide.replace(mark, generated)
@@ -1003,7 +1034,6 @@ def guides_view(project):
         parts.append(("glossary", "Glossary"))
     contents = "".join(f'<li><a href="#{anchor}">{title}</a></li>' for anchor, title in parts)
     return "\n".join([
-        '<div class="phase-head"><h2>Guides</h2></div>',
         "<p class=\"lede\">How to use this page, then the project's glossary. The guide is the same on every project page; the glossary is this project's own.</p>",
         f'<nav class="contents" aria-label="In this view"><ol>{contents}</ol></nav>',
         guide.strip(),
@@ -1255,12 +1285,33 @@ def progress():
     return counts
 
 
-def page(project, sections, opening, inline, data_dir, calendar_html, glance, guides_html):
+ICONS = {
+    "agenda": '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>',
+    "guides": '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M6.2 6.3a1.85 1.85 0 1 1 2.7 1.6c-.6.33-.9.75-.9 1.35v.25"/><path d="M8 11.4v.1"/></svg>',
+    "close": '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+}
+
+
+def sheet(key, name, note, inner, src=""):
+    """A view that isn't a phase: a sheet over the whole page, its title and its close
+    button on a bar that stays in sight."""
+    span = f'<span class="span">{note}</span>' if note else ""
+    return (
+        f'<dialog class="sheet" aria-labelledby="{key}-title">\n'
+        f'  <div class="sheet-bar"><div class="sheet-in"><h2 id="{key}-title">{name}</h2>{span}'
+        f'<button type="button" class="close" aria-label="Close the {name.lower()}">{ICONS["close"]}</button></div></div>\n'
+        f'  <div class="sheet-in"><section class="phase" id="{key}" data-phase="{key}"{src}>{inner}</section></div>\n'
+        "</dialog>"
+    )
+
+
+def page(project, sections, opening, inline, data_dir, agenda_html, months_html, glance, guides_html):
     css = stylesheet(project, data_dir)
     title = f'{project.get("repo", "")}-{project.get("objective", "")}'
     counts = progress()
-    # Tab 0 is the guides: not a phase of the project, so it has no state of its own.
-    tabs = ['<li><a href="#guides" data-phase="guides" class="t-guides"><span class="n">0</span><span class="name">Guides</span><span class="state">How to use</span></a></li>']
+    # The views that aren't phases: the agenda, and the guides to using the page.
+    views = "".join(f'<a href="#{key}" data-phase="{key}">{ICONS[key]}<span>{name}</span></a>' for key, name in (("agenda", "Agenda"), ("guides", "Guides")))
+    tabs = []
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
         current = ' aria-current="true"' if key == opening else ""
@@ -1274,11 +1325,6 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance, gu
             f'<span class="name">{name}</span><span class="state">{state}</span></a></li>'
         )
     shells, files = [], {}
-    if inline:
-        shells.append(f'<section class="phase" id="guides" data-phase="guides" hidden>\n{guides_html}\n</section>')
-    else:
-        files["guides"] = guides_html + "\n"
-        shells.append('<section class="phase" id="guides" data-phase="guides" data-src="phases/guides.html" hidden></section>')
     for key, _ in PHASES:
         hidden = "" if key == opening else " hidden"
         if inline or key == opening or not sections[key][1]:
@@ -1286,8 +1332,15 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance, gu
         else:
             files[key] = sections[key][0] + "\n"
             shells.append(f'<section class="phase" id="{key}" data-phase="{key}" data-src="phases/{key}.html" hidden></section>')
-    shells.append(f'<section class="phase view" id="calendar" data-phase="calendar" hidden>\n{calendar_html}\n</section>')
+    sheets = [sheet("agenda", "Agenda", f"as of {weekday(TODAY)}", f"\n{agenda_html}\n")]
+    if inline:
+        sheets.append(sheet("guides", "Guides", "", f"\n{guides_html}\n"))
+    else:
+        files["guides"] = guides_html + "\n"
+        sheets.append(sheet("guides", "Guides", "", "", ' data-src="phases/guides.html"'))
     read_at = project["read_at"]
+    # What the agent reads again before each publish is the PRs, from GitHub.
+    read = "PR statuses" if any(item["type"] == "pr" for item in ITEMS.values()) else "Statuses"
     return title, files, f"""<meta charset="utf-8">
 <title>{esc(title)}</title>
 {FONTS}
@@ -1296,17 +1349,25 @@ def page(project, sections, opening, inline, data_dir, calendar_html, glance, gu
 </style>
 <div class="wrap">
 <header class="top">
-  <p class="eyebrow">{esc(project.get("repo", ""))} · project page</p>
+  <div class="bar">
+    <p class="eyebrow">{esc(project.get("repo", ""))} · project page</p>
+    <nav class="views" aria-label="Views">{views}</nav>
+  </div>
   <h1>{esc(title)}</h1>
   <p class="lede">{project.get("summary", "")}</p>
+  <div class="now">
+    <div class="months" role="group" aria-label="Calendar">{months_html}</div>
+    <div class="glance">
+      <p class="readat">{read} as of {read_at.day} {read_at:%b %Y}, {read_at:%H:%M} UTC.</p>
+      <ul>{glance}</ul>
+    </div>
+  </div>
   <nav class="phases" aria-label="Phases"><ol>{"".join(tabs)}</ol></nav>
-  <p class="glance"><a class="to-cal" href="#calendar" data-phase="calendar">Calendar</a>{glance}</p>
-  <p class="readat">State read on {read_at.day} {read_at:%B %Y} at {read_at:%H:%M} UTC.</p>
 </header>
 <main id="phases" data-open="{opening}">
 {chr(10).join(shells)}
 </main>
-{site_footer("", "Built with <code>/project-page</code> from the TOML files published beside this page.")}
+{chr(10).join(sheets)}
 </div>
 """
 
@@ -1423,13 +1484,15 @@ def main(argv):
     sections = {}
     for key, _ in PHASES:
         sections[key] = (render_phase(key, project["status"][key], phases.get(key), data_dir), key in phases)
-    calendar_html, waiting_count, next_count, next_date = calendar_view(project, phases)
-    glance = f' <span>{waiting_count} waiting on you</span> <span>{next_count} next for me</span>'
-    if next_date:
-        glance += f' <span>Next date: {weekday(next_date[0])}, {expand_refs(next_date[2], "the calendar")}</span>'
+    agenda_html, months_html, waiting_count, next_count, coming_count = calendar_view(project, phases)
+    # Under the calendar, each count opens the part of the agenda it counts.
+    glance = "".join(
+        f'<li><a href="#{anchor}"><b>{count}</b> {words}</a></li>'
+        for anchor, count, words in (("ball", waiting_count, "waiting on you"), ("ball", next_count, "next for me"), ("coming-up", coming_count, "coming up"))
+    )
     opening = opening_phase(project["status"])
     guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")
-    title, files, shell = page(project, sections, opening, inline, data_dir, calendar_html, glance, guides_html)
+    title, files, shell = page(project, sections, opening, inline, data_dir, agenda_html, months_html, glance, guides_html)
     shell = expand_refs(shell, "project.toml")
     fragments = [("the page", shell)] + [(f"phases/{key}.html", text) for key, text in files.items()]
     check(fragments)
@@ -1437,7 +1500,7 @@ def main(argv):
         return 1
     # Which view holds each id, so a link into a phase not loaded yet opens it.
     phase_of = {}
-    for key, (text, _) in list(sections.items()) + [("calendar", (calendar_html, True)), ("guides", (guides_html, True))]:
+    for key, (text, _) in list(sections.items()) + [("agenda", (agenda_html, True)), ("guides", (guides_html, True))]:
         holder = Check(key)
         holder.feed(text)
         holder.close()

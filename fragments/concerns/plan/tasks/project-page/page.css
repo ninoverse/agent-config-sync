@@ -102,10 +102,21 @@
   li + li { margin-top: 6px; }
   pre { margin: 16px 0 0; padding: 12px 14px; overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--corner-md); font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.55; }
 
-  /* The header: the name, what the project is for, and the phases. */
-  .eyebrow { margin: 0 0 14px; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+  /* The header: the views that aren't phases, the name, what the project is
+     for, the calendar, and the phases. */
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 14px; }
+  .eyebrow { margin: 0; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+  nav.views { display: flex; gap: 8px; }
+  nav.views a {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 13px 5px 10px;
+    border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface);
+    color: var(--ink); text-decoration: none; font-family: var(--font-display); font-weight: 600; font-size: 0.9rem;
+  }
+  nav.views a:hover { border-color: var(--outline); }
+  nav.views a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); box-shadow: inset 0 -3px 0 var(--accent-fill); }
+  nav.views svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .lede { font-size: 1.12rem; margin-top: 16px; }
-  .readat { margin-top: 16px; font-size: 0.9rem; color: var(--ink-muted); }
+  .readat { font-size: 0.9rem; color: var(--ink-muted); }
 
   /* The phase indicator: nine phases in their order, each a link to its view,
      its name over its state so the nine fit one row on a laptop. */
@@ -128,17 +139,52 @@
   nav.phases a.t-not-needed { border-style: dashed; }
   nav.phases a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent-fill); }
 
-  /* The header's glance at the calendar: who holds the ball, and the next date. */
-  .glance { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; font-size: 0.92rem; }
-  .glance span { color: var(--ink-muted); }
-  .glance span + span::before { content: '·'; margin-right: 16px; color: var(--outline); }
-  a.to-cal {
-    font-family: var(--font-display); font-weight: 600; color: var(--ink); text-decoration: none;
-    padding: 4px 14px 5px; border: 1px solid var(--outline);
-    border-radius: var(--corner-full); background: var(--surface);
+  /* The calendar, on every view: one month, with arrows to the others; under
+     it, when the PR statuses were read, and what the agenda holds, counted. */
+  .now { margin-top: 24px; display: grid; gap: 12px; }
+  .months { min-width: 0; }
+  .month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .month-head h2 { font-size: 1.02rem; font-weight: 700; }
+  .step {
+    width: 32px; height: 32px; display: grid; place-items: center; padding: 0 0 2px;
+    border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface);
+    color: var(--ink); font: inherit; font-size: 1.2rem; line-height: 1; cursor: pointer;
   }
-  a.to-cal:hover { border-color: var(--accent-fill); }
-  a.to-cal[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); box-shadow: inset 0 -3px 0 var(--accent-fill); }
+  .step:hover:not(:disabled) { border-color: var(--accent-fill); }
+  .step:disabled { opacity: 0.35; cursor: default; }
+  .glance {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding: 12px 18px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: var(--corner-lg); font-size: 0.92rem;
+  }
+  .glance .readat { margin: 0; }
+  .glance ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; }
+  .glance li { margin: 0; }
+  .glance a { color: var(--ink); text-decoration: none; }
+  .glance a:hover { text-decoration: underline; }
+  .glance b { font-family: var(--font-display); font-size: 1.2rem; margin-right: 3px; font-variant-numeric: tabular-nums; }
+
+  /* The agenda and the guides: each a sheet over the whole page, its title and
+     its close button on a bar that stays in sight. */
+  dialog.sheet {
+    width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0 20px;
+    border: 0; background: var(--bg); color: var(--ink); overflow-y: auto; overscroll-behavior: contain;
+  }
+  dialog.sheet::backdrop { background: var(--bg); }
+  html:has(dialog.sheet[open]) { overflow: hidden; }
+  .sheet-in { max-width: 1080px; margin-inline: auto; }
+  .sheet-bar { position: sticky; top: 0; z-index: 1; background: var(--bg); }
+  .sheet-bar .sheet-in { display: flex; align-items: center; gap: 8px 14px; padding-block: 16px 14px; border-bottom: 1px solid var(--outline); }
+  .sheet-bar .span { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); }
+  .close {
+    flex: none; margin-left: auto; width: 40px; height: 40px; display: grid; place-items: center; padding: 0;
+    border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface); color: var(--ink); cursor: pointer;
+  }
+  .close:hover { border-color: var(--accent-fill); }
+  .close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  .sheet .phase { margin-top: 0; padding-top: 0; padding-bottom: 96px; border-top: 0; }
+  .sheet .phase > .block:first-child { margin-top: 24px; }
+  .sheet .phase > .block:first-child > h3 { padding-top: 0; border-top: 0; }
+  .sheet [id] { scroll-margin-top: 88px; }
 
   /* A phase's view. */
   .phase { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--outline); }
@@ -280,13 +326,13 @@
   .ball li.none { color: var(--ink-muted); }
   .ball time, .agenda time { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
   .handoff ul { max-width: 88ch; }
-  .months { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 44rem)); gap: 22px; }
-  .month h4 { font-size: 0.95rem; margin-bottom: 8px; }
   table.cal { table-layout: fixed; border: 1px solid var(--rule); background: var(--surface); }
   table.cal th { padding: 5px 4px; text-align: center; font-size: 0.66rem; }
-  table.cal td { height: 4.2rem; padding: 4px; border: 1px solid var(--rule); vertical-align: top; }
+  table.cal td { height: 3.3rem; padding: 4px; border: 1px solid var(--rule); vertical-align: top; }
   table.cal td.out { background: var(--bg); }
   table.cal .dn { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  table.cal a.dn { color: var(--accent); font-weight: 700; text-decoration: none; }
+  table.cal a.dn:hover { text-decoration: underline; }
   table.cal td.today { outline: 2px solid var(--accent-fill); outline-offset: -2px; }
   table.cal td.today .dn { color: var(--accent); font-weight: 700; }
   table.cal ul { list-style: none; padding: 0; margin: 3px 0 0; display: flex; flex-wrap: wrap; gap: 2px; }
@@ -303,8 +349,8 @@
   ol.agenda ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
   ol.agenda ul li { margin: 0; background: none !important; color: inherit !important; }
 
-  /* Tab 0, the guides: a contents line, then the guide's parts, its samples
-     drawn with the page's own styles, and the glossary. */
+  /* The guides: a contents line, then the guide's parts, its samples drawn
+     with the page's own styles, and the glossary. */
   .contents ol { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
   .contents li, .contents li + li { margin: 0; }
   .contents a { display: inline-block; padding: 3px 12px; border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface); color: var(--ink); text-decoration: none; font-size: 0.88rem; }
@@ -319,8 +365,7 @@
   #glossary h4:first-of-type { margin-top: 12px; }
   .block > ul { max-width: 88ch; }
 
-  /* The footer: how to use the page, and the glossary, one per project, side
-     by side where there is room. */
+  /* The footer of the Retrospective, when it stands alone: the glossary, folded. */
   footer.site { margin-top: 56px; }
   .aids { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 14px; align-items: start; }
   details.aid { padding: 14px 18px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--corner-lg); }
@@ -336,8 +381,9 @@
     ul.plain li, footer.changelog ol > li, ol.agenda > li { grid-template-columns: 1fr; }
     table.cal td { height: 2.6rem; }
     table.cal li:not(.dot) { width: 7px; height: 7px; padding: 0; font-size: 0; border-radius: 50%; align-self: center; }
-    .glance { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .glance span + span::before { content: none; }
+    .glance { padding: 10px 14px; gap: 6px; }
+    .glance ul { gap: 4px 16px; }
+    dialog.sheet { padding: 0 16px; }
     nav.phases ol { gap: 5px; }
     article.item { padding: 14px 14px 16px; }
     nav.phases a { padding: 5px 8px 6px 7px; column-gap: 5px; }
