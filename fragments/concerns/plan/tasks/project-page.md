@@ -30,16 +30,17 @@ say what each field holds.
 python3 .agents/project-page/render.py <data directory> <out directory>
 ```
 
-It writes `index.html`, holding the calendar, the phase in progress and the
-Agenda, and `phases/<phase>.html` for each other phase with content, which the
-page fetches when the reader picks that phase. `phases/guides.html` is the
-Guides: the guide to using the page, from `guide.html` beside the renderer, with
-its tables built from the renderer's own words, then the glossary. `--inline`
-puts every phase in `index.html`, for a preview opened from disk, where a page
-can't fetch a file. `--retrospective` writes `retrospective.html` instead: the
-Retrospective alone, without the tabs, the calendar or the Agenda, naming as
-text the items it doesn't hold. A link written by hand to one of those fails the
-render there. It needs Python 3.11 or later, and nothing else.
+It writes `index.html`, holding the calendar, who holds the ball, the phase in
+progress and the Agenda, and `phases/<phase>.html` for each other phase with
+content, which the page fetches when the reader picks that phase.
+`phases/guides.html` is the Guides: the guide to using the page, from
+`guide.html` beside the renderer, with its tables built from the renderer's own
+words, then the glossary. `--inline` puts every phase in `index.html`, for a
+preview opened from disk, where a page can't fetch a file. `--retrospective`
+writes `retrospective.html` instead: the Retrospective alone, without the tabs,
+the calendar or the Agenda, naming as text the items it doesn't hold. A link
+written by hand to one of those fails the render there. It needs Python 3.11 or
+later, and nothing else.
 
 It writes nothing, and names the file and the item, when:
 

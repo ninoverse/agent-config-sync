@@ -17,9 +17,10 @@ they answer.
 - Nine phases, always in this order, each a view the indicator at the top of
   the page switches to: Brief, Research, Analysis, Plan, Build, Verify, Reuse,
   Retrospective, For later. The page opens on the phase in progress. Above the
-  indicator, on every view, is the calendar. Two views aren't phases, and open
-  over the page from its top right: the Agenda, and the Guides, which say how
-  to use the page, chips and sections included, and hold the glossary.
+  indicator, on every view, are the calendar and who holds the ball. Two views
+  aren't phases, and open over the page from its top right: the Agenda, and the
+  Guides, which say how to use the page, chips and sections included, and hold
+  the glossary.
 - A phase is Done, Now, To come or Not needed. Not needed says why in one
   sentence; Reuse is the phase most often not needed. Build and Verify can both
   be Now: Verify starts with the first merge. A phase that is Now shows on its
@@ -97,10 +98,10 @@ from the lesson.
   each card lists what needs it and what names it.
 - Name an item with its number and its summary, never the number alone: the
   reader shouldn't have to look D12 up.
-- The Agenda says who holds the ball: the user, for every Open item; the
-  agent, for every Ready one. Then what is coming up, the notes for the next
-  session, and what happened. With the calendar, it holds every date the
-  project has. All of it is built from the statuses: never repeat a status in
+- Under the calendar, the page says who holds the ball: the user, for every
+  Open item; the agent, for every Ready one; or a date coming up. The Agenda
+  holds every date the project has, ahead and past, and the notes for the next
+  session. All of it is built from the statuses: never repeat a status in
   prose, which goes stale the next time it changes.
 - One glossary per project: the terms coined for it, and the terms borrowed. It
   sits in Guides, after the guide to using the page.

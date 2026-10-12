@@ -140,7 +140,7 @@
   nav.phases a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent-fill); }
 
   /* The calendar, on every view: one month, with arrows to the others; under
-     it, when the PR statuses were read, and what the agenda holds, counted. */
+     it, when the PR statuses were read, then who holds the ball. */
   .now { margin-top: 24px; display: grid; gap: 12px; }
   .months { min-width: 0; }
   .month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
@@ -152,16 +152,9 @@
   }
   .step:hover:not(:disabled) { border-color: var(--accent-fill); }
   .step:disabled { opacity: 0.35; cursor: default; }
-  .glance {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding: 12px 18px;
-    background: var(--surface); border: 1px solid var(--rule); border-radius: var(--corner-lg); font-size: 0.92rem;
-  }
-  .glance .readat { margin: 0; }
-  .glance ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; }
-  .glance li { margin: 0; }
-  .glance a { color: var(--ink); text-decoration: none; }
-  .glance a:hover { text-decoration: underline; }
-  .glance b { font-family: var(--font-display); font-size: 1.2rem; margin-right: 3px; font-variant-numeric: tabular-nums; }
+  .glance { margin: 0; padding: 10px 18px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--corner-lg); font-size: 0.92rem; color: var(--ink-muted); }
+  .hold { margin-top: 26px; }
+  .hold h2 { font-size: 1.12rem; }
 
   /* The agenda and the guides: each a sheet over the whole page, its title and
      its close button on a bar that stays in sight. */
@@ -317,14 +310,19 @@
   footer.changelog time { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
   .changed { margin-top: 4px; color: var(--ink-muted); }
 
-  /* The calendar view: who holds the ball, the months, and every date. */
-  .ball { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 14px; }
+  /* Who holds the ball, in three columns; the calendar's days; the agenda's dates. */
+  .ball { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 14px; }
   .ball .col { min-width: 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--corner-lg); }
   .ball h3 { font-size: 0.95rem; }
   .ball ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; font-size: 0.92rem; }
   .ball li { margin: 0; }
   .ball li.none { color: var(--ink-muted); }
   .ball time, .agenda time { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .ball li.dated { display: grid; grid-template-columns: 6.6rem minmax(0, 1fr); gap: 8px; align-items: baseline; }
+  .ball a.when { text-decoration: none; }
+  .ball a.when time { color: var(--accent); font-weight: 700; }
+  .ball a.when:hover time { text-decoration: underline; }
+  .ball .more { margin: 10px 0 0; font-size: 0.88rem; }
   .handoff ul { max-width: 88ch; }
   table.cal { table-layout: fixed; border: 1px solid var(--rule); background: var(--surface); }
   table.cal th { padding: 5px 4px; text-align: center; font-size: 0.66rem; }
@@ -381,8 +379,7 @@
     ul.plain li, footer.changelog ol > li, ol.agenda > li { grid-template-columns: 1fr; }
     table.cal td { height: 2.6rem; }
     table.cal li:not(.dot) { width: 7px; height: 7px; padding: 0; font-size: 0; border-radius: 50%; align-self: center; }
-    .glance { padding: 10px 14px; gap: 6px; }
-    .glance ul { gap: 4px 16px; }
+    .glance { padding: 10px 14px; }
     dialog.sheet { padding: 0 16px; }
     nav.phases ol { gap: 5px; }
     article.item { padding: 14px 14px 16px; }

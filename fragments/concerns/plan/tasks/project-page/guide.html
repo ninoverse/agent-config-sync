@@ -9,7 +9,9 @@
     <dt>Calendar</dt>
     <dd>The month the statuses were read in, that day outlined; the arrows step through the other months the project spans. Each day lists what happened or is coming: events, status changes in their status's colours, amendments, and the days phases start and end. A dot is a line of the log; point at it to read it. On a phone, every entry is a dot. A day with something on it opens the Agenda at that day.</dd>
     <dt>PR statuses as of</dt>
-    <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet; then how many items wait on you, how many are next for the agent, and how many dates are coming up, each a link to that part of the Agenda.</dd>
+    <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
+    <dt>Who holds the ball</dt>
+    <dd>Three columns. <strong>Waiting on you</strong>: every item that waits on you, each with what to do, such as Merge or Decide. <strong>Next for me</strong>: what the agent does next, the items that are Ready. <strong>Coming up</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest.</dd>
     <dt>Tabs</dt>
     <dd>
       <p>One per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
@@ -117,7 +119,7 @@
   <h3>Statuses</h3>
   <p class="intro">Every item is in one of five states, and the page words each one the way the item's type says it: a decision is Taken, a PR Merged, a risk Closed.</p>
   <ul>
-    <li><strong>Waits on you</strong>: you act next, such as merging a PR, taking a decision or changing a setting. The Agenda lists these under Waiting on you, each with what to do.</li>
+    <li><strong>Waits on you</strong>: you act next, such as merging a PR, taking a decision or changing a setting. The header lists these under Waiting on you, each with what to do.</li>
     <li><strong>Ready</strong>: everything it needs is done, and the agent can start it.</li>
     <li><strong>Blocked</strong>: it waits on something, which the page names: <em>waits on</em> an item or an event, or, for a risk, <em>closes with</em> the step that closes it.</li>
     <li><strong>Done</strong>: finished, with the day.</li>
@@ -148,12 +150,10 @@
 
 <section class="block" id="guide-agenda">
   <h3>The Agenda</h3>
-  <p class="intro">The Agenda button, top right, opens over the page who acts next and everything with a date, in the order you'd act on it.</p>
+  <p class="intro">The Agenda button, top right, opens over the page everything with a date, the ones still ahead first. Who holds the ball is in the header, on every view.</p>
   <dl class="defs">
-    <dt>Who holds the ball</dt>
-    <dd><strong>Waiting on you</strong>: every item that waits on you, each with what to do, such as Merge or Decide. <strong>Next for me</strong>: what the agent does next, the items that are Ready.</dd>
     <dt>Coming up</dt>
-    <dd>The dates still ahead, soonest first.</dd>
+    <dd>Every date still ahead, soonest first.</dd>
     <dt>Notes for the next session</dt>
     <dd>What is in flight, where, and what comes next, as the last session left them. A new session reads them before anything else.</dd>
     <dt>What happened</dt>

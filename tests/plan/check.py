@@ -123,12 +123,22 @@ def check_example(tmp):
     you, me = between(ball, "Waiting on you", "</ul>"), between(ball, "Next for me", "</ul>")
     expect("EX-2" in you and "EX-1" not in you and "Q1" not in you, f"Waiting on you lists the open items, and only those: {you}")
     expect("EX-3" in me and "EX-2" not in me, f"Next for me lists the ready items: {me}")
-    order = [page.find(mark) for mark in ('class="months"', 'class="glance"', '<nav class="phases"')]
-    expect(-1 not in order and order == sorted(order), f"the calendar, then the card under it, then the phases: {order}")
-    expect('<p class="readat">PR statuses as of 7 Oct 2026, 18:00 UTC.</p>' in page, "the card says when the PRs' statuses were read")
-    counts = '<li><a href="#ball"><b>1</b> waiting on you</a></li><li><a href="#ball"><b>1</b> next for me</a></li><li><a href="#coming-up"><b>2</b> coming up</a></li>'
-    expect(counts in page, "it counts who holds the ball and what is coming up, each a link into the agenda")
+    order = [page.find(mark) for mark in ('class="months"', 'class="glance"', 'id="ball"', '<nav class="phases"')]
+    expect(-1 not in order and order == sorted(order), f"the calendar, the card under it, who holds the ball, then the phases: {order}")
+    expect('<p class="glance">PR statuses as of 7 Oct 2026, 18:00 UTC.</p>' in page, "the card says when the PRs' statuses were read")
+    soon = re.findall(r'<li class="dated"><a class="when" href="#(on-[\d-]+)"><time>(.*?)</time></a> <span>(.*?)</span></li>', between(ball, "Coming up", "</ul>"))
+    expect(soon == [("on-2026-10-12", "Mon 12 Oct", "Renovate's weekly run"), ("on-2026-10-14", "Wed 14 Oct", "Production deploys freeze until the 21st")], f"a date coming up holds the ball too, soonest first, each linked to its day: {soon}")
+    expect('class="more"' not in ball, "with three dates or fewer ahead, nothing points to more")
+    expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
+    events = "".join(f'[[event]]\ndate = 2026-10-{day}\ntitle = "Release train {day}"\n\n' for day in (20, 27))
+    busy = copy_with(tmp, "busy", EXAMPLE, "project.toml", "[[event]]\ndate = 2026-10-12", events + "[[event]]\ndate = 2026-10-12")
+    if busy is not None:
+        render(busy, tmp / "busy-out")
+        index = tmp / "busy-out" / "index.html"
+        held = between(index.read_text(), 'id="ball"', "</section>") if index.exists() else ""
+        dates = re.findall(r'class="when" href="#on-([\d-]+)"', held)
+        expect(dates == ["2026-10-12", "2026-10-14", "2026-10-20"] and '<a href="#coming-up">1 more in the agenda</a>' in held, f"the header shows the next three dates, and links to the rest: {dates}")
     calendar = between(page, 'class="months"', 'class="glance"')
     expect("October 2026" in calendar and 'class="d today has"><a class="dn" href="#on-2026-10-07">7</a>' in calendar, "the month shows the day the state was read, and a day links into the agenda")
     first = re.search(r'<ol class="agenda"><li class="(\w+)" id="on-[\d-]+"><time>(.*?)</time>', between(page, 'id="coming-up"', "</section>"))
@@ -136,7 +146,8 @@ def check_example(tmp):
     first = re.search(r'<ol class="agenda"><li class="(\w+)" id="on-[\d-]+"><time>(.*?)</time>', between(page, 'id="history"', "</section>"))
     expect(first is not None and first.groups() == ("today", "Wed 7 Oct"), "what happened runs newest first, from the day the state was read")
     anchors = manifest(page)
-    expect('"ex-1":"plan"' in anchors and '"ball":"agenda"' in anchors and '"on-2026-10-12":"agenda"' in anchors, "a link to EX-1 opens the plan, and one to the ball or a day the agenda")
+    expect('"ex-1":"plan"' in anchors and '"coming-up":"agenda"' in anchors and '"on-2026-10-12":"agenda"' in anchors, "a link to EX-1 opens the plan, and one to what is coming up, or to a day, the agenda")
+    expect('"ball":' not in anchors, "who holds the ball is in the header, on every view, so no view opens for it")
     expect('"glossary":"guides"' in anchors and '"guide-board":"guides"' in anchors, "a link to the glossary, or into the guide, opens the guides")
 
     inline = tmp / "inline"
