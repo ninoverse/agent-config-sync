@@ -120,14 +120,18 @@ def check_example(tmp):
     expect('pill st-done">Passed · 6 Oct<' in phase["verify"] and 'pill st-blocked">Waiting<' in phase["verify"], "a check reads Passed, or Waiting")
 
     ball = between(page, 'id="ball"', "</section>")
-    you, me = between(ball, "Waiting on you", "</ul>"), between(ball, "Next for me", "</ul>")
-    expect("EX-2" in you and "EX-1" not in you and "Q1" not in you, f"Waiting on you lists the open items, and only those: {you}")
-    expect("EX-3" in me and "EX-2" not in me, f"Next for me lists the ready items: {me}")
+    owner, agent = between(ball, "<h3>The owner</h3>", "</ul>"), between(ball, "<h3>The agent</h3>", "</ul>")
+    expect("EX-2" in owner and "EX-1" not in owner and "Q1" not in owner, f"the owner's column lists the open items, and only those: {owner}")
+    expect("EX-3" in agent and "EX-2" not in agent, f"the agent's column lists the ready items: {agent}")
     order = [page.find(mark) for mark in ('class="months"', 'class="glance"', 'id="ball"', '<nav class="phases"')]
     expect(-1 not in order and order == sorted(order), f"the calendar, the card under it, who holds the ball, then the phases: {order}")
     expect('<p class="glance">PR statuses as of 7 Oct 2026, 18:00 UTC.</p>' in page, "the card says when the PRs' statuses were read")
-    soon = re.findall(r'<li class="dated"><a class="when" href="#(on-[\d-]+)"><time>(.*?)</time></a> <span>(.*?)</span></li>', between(ball, "Coming up", "</ul>"))
-    expect(soon == [("on-2026-10-12", "Mon 12 Oct", "Renovate's weekly run"), ("on-2026-10-14", "Wed 14 Oct", "Production deploys freeze until the 21st")], f"a date coming up holds the ball too, soonest first, each linked to its day: {soon}")
+    soon = re.findall(r'<li class="dated"><a class="when" href="#(on-[\d-]+)"><time>(.*?)</time></a> <span>(.*?)</span></li>', between(ball, "<h3>A date</h3>", "</ul>"))
+    renovate = ("on-2026-10-12", "Mon 12 Oct", 'Renovate\'s weekly run <span class="ci">CI</span>')
+    expect(soon == [renovate, ("on-2026-10-14", "Wed 14 Oct", "Production deploys freeze until the 21st")], f"a date coming up holds the ball too, soonest first, each linked to its day, and an automated run marked CI: {soon}")
+    expect('Renovate\'s weekly run <span class="ci">CI</span>' in between(page, 'id="coming-up"', "</section>"), "the agenda marks the automated run too")
+    expect("<th>Waits on the owner</th>" in phase["guides"] and "<th>The owner's part</th>" in phase["guides"], "the guide's statuses table names the owner, not you")
+    expect('<span class="pill k-owner">Owner</span>' in phase["plan"], "an item only the owner can do reads Owner")
     expect('class="more"' not in ball, "with three dates or fewer ahead, nothing points to more")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
@@ -249,6 +253,7 @@ BROKEN = [
     (EXAMPLE, "project.toml", "[phases.reuse]", "[phases.templating]", "[phases.templating] is not a phase"),
     (EXAMPLE, "project.toml", "read_at = 2026-10-07T18:00:00", 'read_at = "7 October"', "`read_at` is when the state was read"),
     (EXAMPLE, "project.toml", "date = 2026-10-12\n", "", "an event has a `date`"),
+    (EXAMPLE, "project.toml", 'short = "Renovate"\nci = true', 'short = "Renovate"\nci = "yes"', "`ci` is true or false"),
     (EXAMPLE, "plan.toml", 'pull/14"\nneeds = ["EX-1"]', 'pull/14"\nneeds = ["EX-9"]', "`needs` names EX-9, which no item has"),
     (EXAMPLE, "analysis.toml", 'chosen = "a"', 'chosen = "c"', "`chosen` is c, which no option has"),
     (EXAMPLE, "analysis.toml", '["b", "A second port', '["A second port', "`options` is a list of [key, text] pairs"),

@@ -98,11 +98,12 @@ from the lesson.
   each card lists what needs it and what names it.
 - Name an item with its number and its summary, never the number alone: the
   reader shouldn't have to look D12 up.
-- Under the calendar, the page says who holds the ball: the user, for every
-  Open item; the agent, for every Ready one; or a date coming up. The Agenda
-  holds every date the project has, ahead and past, and the notes for the next
-  session. All of it is built from the statuses: never repeat a status in
-  prose, which goes stale the next time it changes.
+- Under the calendar, the page says who holds the ball: the owner, the user
+  who decides, merges and changes settings, for every Open item; the agent, for
+  every Ready one; or a date coming up, with an automated run marked CI. The
+  Agenda holds every date the project has, ahead and past, and the notes for
+  the next session. All of it is built from the statuses: never repeat a status
+  in prose, which goes stale the next time it changes.
 - One glossary per project: the terms coined for it, and the terms borrowed. It
   sits in Guides, after the guide to using the page.
 

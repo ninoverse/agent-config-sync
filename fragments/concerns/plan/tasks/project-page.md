@@ -67,9 +67,10 @@ new changelog entry gets a warning.
   `read_at`, a date and time in UTC; a `[phases.<phase>]` table for each phase,
   with its `status`, its `why` when it is `not-needed`, and optionally its
   `start` and `end`; `[[event]]`s, the dates that aren't items, such as a
-  scheduled run or a freeze; `[handoff]`, the notes for the next session and the
-  day they were `updated`; `[[glossary]]` entries, `coined` or `borrowed`; and
-  `css`, stylesheets of the project's own, beside it.
+  scheduled run or a freeze, with `ci = true` on an automated run, which the
+  page marks CI; `[handoff]`, the notes for the next session and the day they
+  were `updated`; `[[glossary]]` entries, `coined` or `borrowed`; and `css`,
+  stylesheets of the project's own, beside it.
 - `<phase>.toml`: an optional `intro`, then `[[section]]`s, each with an `id`, a
   `title` and a `kind`: `prose`, `table`, `items`, `board`, `results`, `log`,
   `figures` or `defs`. Then `[[changelog]]` entries, newest first, each with a
@@ -85,7 +86,7 @@ new changelog entry gets a warning.
   pairs, where a text that holds several things, such as the decisions a PR
   carries out, is a list of them, shown as a list. Optionally, it has:
   - `short`, the name it goes by wherever it is linked;
-  - `kind`: `major`, `minor`, `patch`, `you` or `together`;
+  - `kind`: `major`, `minor`, `patch`, `owner` or `together`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
     `result`, once it lands;
   - `url`, the PR's address once it is open, where its state is read from;

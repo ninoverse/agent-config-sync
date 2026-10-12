@@ -49,7 +49,7 @@ PHASE_NAME = dict(PHASES)
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
-KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "you": "You", "together": "Together"}
+KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner", "together": "Together"}
 # What a status reads as for each type of item, and what the user does while one is open.
 TYPES = {
     "piece": {"labels": {}, "ask": "Read"},
@@ -82,8 +82,8 @@ KIND_MEANING = {
     "major": "Merging it releases a major version: what used the last one may need changing.",
     "minor": "Merging it releases a minor version: something new, and nothing that worked breaks.",
     "patch": "Merging it releases a patch: a fix, with nothing new.",
-    "you": "Only you can do it, such as a setting in a service you own.",
-    "together": "Done with the agent, in a session together.",
+    "owner": "Only the owner can do it, such as a setting in a service they own.",
+    "together": "The owner and the agent do it together, in a session.",
 }
 SECTION_KINDS = ("prose", "table", "items", "board", "results", "log", "figures", "defs")
 SOURCES = {"coined": "Coined for this project", "borrowed": "Borrowed from elsewhere"}
@@ -246,6 +246,8 @@ def read_project(data_dir):
         event["date"] = as_date(event.get("date"), where, "date")
         if event["date"] is None:
             problem(where, "an event has a `date`")
+        if not isinstance(event.get("ci", False), bool):
+            problem(where, "`ci` is true or false: true when the event is an automated run")
     handoff = project.get("handoff")
     if handoff is not None:
         handoff["updated"] = as_date(handoff.get("updated"), "project.toml [handoff]", "updated")
@@ -833,7 +835,9 @@ def dated(project, phases):
     found = []
     for event in project.get("event", []):
         if event.get("date"):
-            found.append((event["date"], "event", event.get("title", ""), event.get("short") or text_of(event.get("title", ""))))
+            # An automated run, such as a scheduled workflow, is marked CI wherever it is listed.
+            mark = ' <span class="ci">CI</span>' if event.get("ci") is True else ""
+            found.append((event["date"], "event", event.get("title", "") + mark, event.get("short") or text_of(event.get("title", ""))))
     for item_id, item in ITEMS.items():
         if item.get("on") and item.get("status") in ITEM_STATUS:
             found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id))
@@ -911,23 +915,23 @@ def calendar_view(project, phases):
     )
     # What is still to come: later dates, and today's events.
     ahead = sorted((e for e in found if e[0] > TODAY or (e[0] == TODAY and e[1] == "event")), key=lambda e: e[0])
-    you = [i for i, item in ITEMS.items() if item.get("status") == "open"]
-    me = [i for i, item in ITEMS.items() if item.get("status") == "ready"]
+    owner = [i for i, item in ITEMS.items() if item.get("status") == "open"]
+    agent = [i for i, item in ITEMS.items() if item.get("status") == "ready"]
 
     def column(title, rows, empty, more=""):
         body = "".join(rows) if rows else f'<li class="none">{empty}</li>'
         return f'<div class="col"><h3>{title}</h3><ul>{body}</ul>{more}</div>'
 
-    you_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in you]
-    me_rows = [f"<li>[[{i}]]</li>" for i in me]
+    owner_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in owner]
+    agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
     # The next three dates, each a link to its day in the agenda, which has them all.
     date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label in ahead[:3]]
     more = f'<p class="more"><a href="#coming-up">{len(ahead) - 3} more in the agenda</a></p>' if len(ahead) > 3 else ""
     ball = (
         '<section class="hold" id="ball" aria-labelledby="ball-title"><h2 id="ball-title">Who holds the ball</h2><div class="ball">'
-        + column("Waiting on you", you_rows, "Nothing.")
-        + column("Next for me", me_rows, "Nothing ready.")
-        + column("Coming up", date_rows, "No date ahead.", more)
+        + column("The owner", owner_rows, "Nothing to do.")
+        + column("The agent", agent_rows, "Nothing ready.")
+        + column("A date", date_rows, "No date ahead.", more)
         + "</div></section>"
     )
     handoff = project.get("handoff")
@@ -1007,7 +1011,7 @@ def statuses_table():
         name, example = TYPE_NAMES[key]
         words = [f'<span class="st st-{status}">{entry["labels"].get(status, ITEM_STATUS[status])}</span>' for status in order]
         rows.append([f'{name} <span class="letters">{example}</span>'] + words + [entry["ask"]])
-    return table_html(["Type", "Waits on you", "Ready", "Blocked", "Done", "Dropped", "Your part"], rows, 820, "statuses")
+    return table_html(["Type", "Waits on the owner", "Ready", "Blocked", "Done", "Dropped", "The owner's part"], rows, 820, "statuses")
 
 
 def kinds_list():

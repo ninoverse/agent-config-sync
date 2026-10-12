@@ -11,7 +11,7 @@
     <dt>PR statuses as of</dt>
     <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
-    <dd>Three columns. <strong>Waiting on you</strong>: every item that waits on you, each with what to do, such as Merge or Decide. <strong>Next for me</strong>: what the agent does next, the items that are Ready. <strong>Coming up</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest.</dd>
+    <dd>Three columns, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="ci">CI</span> marks an automated run, such as a scheduled workflow.</dd>
     <dt>Tabs</dt>
     <dd>
       <p>One per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
@@ -30,13 +30,13 @@
   <p class="intro">Each phase has a view of its own. Its head shows its state and its dates: <em>since 5 Oct</em> while it runs, <em>1 Oct – 2 Oct</em> once it's done.</p>
   <dl class="defs">
     <dt>1 Brief</dt>
-    <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), the repositories involved, and the ground rules (G1, G2…): how you want the project run. A ground rule holds until you change it.</dd>
+    <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), the repositories involved, and the ground rules (G1, G2…): how the owner wants the project run. A ground rule holds until the owner changes it.</dd>
     <dt>2 Research</dt>
     <dd>What exists today, one numbered piece at a time (R1, R2…), and what each piece raises: usually a decision for the Analysis.</dd>
     <dt>3 Analysis</dt>
     <dd>The decisions (D1, D2…), each with its options, a recommendation and its reasons, and your answer with its date. When the decisions are many, they come in batches, each a section with its evidence and what it costs.</dd>
     <dt>4 Plan</dt>
-    <dd>The PRs as you approved them, one at a time in each repository; the settings only you can change (S1…); and the risk register (RK1…), each risk with the step that closes it. Its first lines say when you approved it, and list anything added since, each with its date and why.</dd>
+    <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. Its first lines say when the owner approved it, and list anything added since, each with its date and why.</dd>
     <dt>5 Build</dt>
     <dd>Where everything stands: the board, the results, the questions the work raises (Q1…), and the log.</dd>
     <dt>6 Verify</dt>
@@ -101,7 +101,7 @@
     <dt>Title</dt>
     <dd>The full title, when the summary is shorter. A PR's is the title it merges with.</dd>
     <dt>Options</dt>
-    <dd>A decision's options, as a list. Until you choose, the recommended one is grey; once you have, only the one you chose is marked, in green. The reasons for the recommendation follow.</dd>
+    <dd>A decision's options, as a list. Until the owner chooses, the recommended one is grey; once they have, only the one chosen is marked, in green. The reasons for the recommendation follow.</dd>
     <dt>Fields</dt>
     <dd>The longer facts, each a label and its text, such as Branch, Changes, or <em>Done when</em>: what proves a PR works. A field that holds several things, such as the decisions a PR carries out, is a list.</dd>
     <dt>Waits on, Why</dt>
@@ -119,13 +119,13 @@
   <h3>Statuses</h3>
   <p class="intro">Every item is in one of five states, and the page words each one the way the item's type says it: a decision is Taken, a PR Merged, a risk Closed.</p>
   <ul>
-    <li><strong>Waits on you</strong>: you act next, such as merging a PR, taking a decision or changing a setting. The header lists these under Waiting on you, each with what to do.</li>
+    <li><strong>Waits on the owner</strong>: the owner acts next, such as merging a PR, taking a decision or changing a setting. The header lists these under The owner, each with what to do.</li>
     <li><strong>Ready</strong>: everything it needs is done, and the agent can start it.</li>
     <li><strong>Blocked</strong>: it waits on something, which the page names: <em>waits on</em> an item or an event, or, for a risk, <em>closes with</em> the step that closes it.</li>
     <li><strong>Done</strong>: finished, with the day.</li>
     <li><strong>Dropped</strong>: struck through, with why.</li>
   </ul>
-  <p>Each row below is a type of item, in the words its statuses take, and what you do while one waits on you:</p>
+  <p>Each row below is a type of item, in the words its statuses take, and what the owner does while one waits on them:</p>
   <!--statuses-->
 </section>
 
@@ -182,11 +182,11 @@
 
 <section class="block" id="guide-answering">
   <h3>Answering</h3>
-  <p>The page only shows the state: nothing on it changes anything. Answer in your chat with the agent, naming items by number:</p>
+  <p>The page only shows the state: nothing on it changes anything. The owner answers in the chat with the agent, naming items by number:</p>
   <ul>
     <li><em>D3: b</em>, to take option b of a decision;</li>
-    <li><em>EX-2 is merged</em>, once you've merged a PR;</li>
-    <li><em>S1 is set</em>, once you've changed a setting.</li>
+    <li><em>EX-2 is merged</em>, once the PR is merged;</li>
+    <li><em>S1 is set</em>, once the setting is changed.</li>
   </ul>
   <p>The agent updates the project's data and publishes the page again, and the changelog of each phase it touched says what changed.</p>
 </section>

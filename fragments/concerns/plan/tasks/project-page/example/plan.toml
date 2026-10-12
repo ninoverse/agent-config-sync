@@ -2,7 +2,7 @@
 # risk register. Their statuses live in build.toml, under [status], so this
 # phase keeps the plan as it was approved. An item added after `approved` says
 # so with `amended`.
-intro = "One PR at a time, each with what proves it works, and one setting only you can change."
+intro = "One PR at a time, each with what proves it works, and one setting only the owner can change."
 approved = 2026-10-03
 
 [[section]]
@@ -11,7 +11,7 @@ title = "The PRs"
 kind = "items"
 type = "pr"
 
-# `kind` is what a merge releases (major, minor, patch), or you or together.
+# `kind` is what a merge releases (major, minor, patch), or owner or together.
 # `short` names the item wherever it is linked. `needs` lists what has to be
 # done first: it decides the board's waves, and a loop in it fails the render.
 # `url` is the PR's address once it is open, where its state is read from. A
@@ -61,7 +61,7 @@ fields = [
 
 [[section]]
 id = "settings"
-title = "Settings only you can change"
+title = "Settings only the owner can change"
 kind = "items"
 type = "setting"
 
@@ -69,7 +69,7 @@ type = "setting"
 id = "S1"
 title = "Point the platform's probes at the new routes"
 short = "Probe routes"
-kind = "you"
+kind = "owner"
 needs = ["EX-1"]
 fields = [["Where", "The service's deployment settings."]]
 

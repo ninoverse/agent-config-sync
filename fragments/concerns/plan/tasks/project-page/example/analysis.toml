@@ -2,7 +2,7 @@
 # `recommended` names the option recommended, with its reasons in the fields,
 # and `chosen` the one the user picked. The page marks the recommended option
 # until one is chosen, and then only the chosen one. A decision waiting on the
-# user is "open": it reads To decide, and shows in Waiting on you; once
+# user is "open": it reads To decide, and shows under The owner; once
 # answered, "done" reads Taken, and `on` is the day it was taken. Its card
 # lists the PRs that name it, so "lands in" needs no field of its own.
 [[section]]
