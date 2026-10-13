@@ -32,7 +32,8 @@ python3 .agents/project-page/render.py <data directory> <out directory>
 
 It writes `index.html`, holding the calendar, who holds the ball, the phase in
 progress and the Agenda, and `phases/<phase>.html` for each other phase with
-content, which the page fetches when the reader picks that phase.
+content, which the page fetches when the reader picks that phase. A phase
+without content has a tab that doesn't open.
 `phases/guides.html` is the Guides: the guide to using the page, from
 `guide.html` beside the renderer, with its tables built from the renderer's own
 words, then the glossary. `--inline` puts every phase in `index.html`, for a
@@ -44,6 +45,7 @@ later, and nothing else.
 
 It writes nothing, and names the file and the item, when:
 
+- no phase has content yet;
 - an id is used twice anywhere on the page, a link points at an id nothing
   has, or a `[[ref]]` or a `needs` names no item;
 - a status is unknown, a Blocked item doesn't say what it waits on, a Dropped
@@ -72,17 +74,17 @@ new changelog entry gets a warning.
   its own, which the page marks Automated; `[handoff]`, the notes for the next
   session and the day they were `updated`; `[[glossary]]` entries, `coined` or
   `borrowed`; and `css`, stylesheets of the project's own, beside it.
-- `<phase>.toml`: an optional `intro`, then `[[section]]`s, each with an `id`, a
-  `title` and a `kind`: `prose`, `table`, `repos`, `items`, `board`,
-  `results`, `figures` or `defs`. Then `[[changelog]]` entries, newest first, each with a
-  `date`, its `text`, and `changed`, the sections and items it changed. A phase
-  the user approves, such as the Plan, has `approved`, the day they did.
+- `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
+  `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`.
+  Then `[[changelog]]` entries, newest first, each with a `date`, its `text`,
+  and `changed`, the sections and items it changed. A phase the user approves,
+  such as the Plan, has `approved`, the day they did.
 - An `items` section has a `type`, which sets the words its statuses take:
   `piece`, `rule`, `criterion` (Met, Not met yet), `decision` (To decide,
   Taken), `question` (To answer, Answered), `pr` (To merge, Merged), `setting`
   (To set, Set), `risk` (Open, Closed, Accepted), `check` (Waiting, Passed),
-  `lesson` (To review, Adopted) or `deferred` (Waiting, Picked up). An item can set
-  its own.
+  `lesson` (To review, Adopted) or `deferred` (Waiting, Picked up). An item can
+  set its own.
 - An item is a card: an `id`, a `title`, and its `fields` as `[label, text]`
   pairs, where a text that holds several things, such as the decisions a PR
   carries out, is a list of them, shown as a list. Optionally, it has:

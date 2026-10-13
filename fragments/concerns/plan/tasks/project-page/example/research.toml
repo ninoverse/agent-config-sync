@@ -1,5 +1,4 @@
 # Research: what exists, one numbered piece at a time, and what each raises.
-intro = "What the service has today, and what the platform expects of it."
 
 # Every section has an id, a title and a kind. "items" holds cards: each has an
 # id, a title, and its fields as [label, text] pairs. Its `type` sets the words

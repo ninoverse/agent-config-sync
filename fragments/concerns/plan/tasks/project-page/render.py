@@ -534,9 +534,9 @@ def refs_list(ids, plain=False):
     return ", ".join(f"{i} {short_of(ITEMS[i])}" if plain else f"[[{i}]]" for i in ids if i in ITEMS)
 
 
-def state_line(item, plain=False):
-    """The status badge, with when it was reached, what a Blocked item waits on, or
-    why one was Dropped. `plain` writes references as text, for a line inside a link."""
+def state_line(item):
+    """A board chip's status badge, with when it was reached, what a Blocked item waits
+    on, or why one was Dropped, its references as text, since the chip is a link."""
     status = item.get("status")
     if not status or status not in ITEM_STATUS:
         return ""
@@ -551,23 +551,48 @@ def state_line(item, plain=False):
     elif status == "dropped":
         note = item.get("why", "")
     if note:
-        line += f' <span class="waits">{refs_as_text(note) if plain else note}</span>'
+        line += f' <span class="waits">{refs_as_text(note)}</span>'
     return line
+
+
+def card_html(number, title, tags=(), rows=(), anchor=None, says=False):
+    """A card: its number and title on its first line, its chips under the title, then
+    its fields, each a label and its text. `says` writes the title as a sentence rather
+    than a heading, for a card that records something, such as a changelog entry. A
+    card with neither number nor title is its fields alone."""
+    parts = []
+    if number is not None or title is not None:
+        name = f'<p class="says">{title}</p>' if says else f"<h4>{title}</h4>"
+        parts.append(f'<div class="item-head"><span class="n">{number or ""}</span>{name}</div>')
+    if tags:
+        parts.append(f'<div class="item-tags">{"".join(tags)}</div>')
+    if rows:
+        parts.append("<dl>" + "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows) + "</dl>")
+    attr = f' id="{anchor}"' if anchor else ""
+    return f'  <article class="item"{attr}>\n    ' + "\n    ".join(parts) + "\n  </article>"
+
+
+def status_pill(item):
+    """An item's status as a chip, in the words of its type, with the day it got there."""
+    when = f' · {day(item["on"])}' if item.get("on") else ""
+    return f'<span class="pill st-{item["status"]}">{label_of(item)}{when}</span>'
+
+
+def waits_label(item):
+    return TYPES.get(item.get("type"), {}).get("waits", "waits on").capitalize()
 
 
 def card(item):
     """An item's card: its number and summary; then chips, for what a word or two says;
     then its fields; then the items that need it or mention it."""
     short = item.get("short")
-    head = f'<div class="item-head"><span class="n">{esc(item["id"])}</span><h4>{short or item.get("title", "")}</h4></div>'
     tags = []
     if item.get("kind") in KINDS:
         tags.append(f'<span class="pill k-{item["kind"]}">{KINDS[item["kind"]]}</span>')
     # A status set from another phase shows there: the card keeps the record as written.
     own = item.get("status_from") == item["phase"] and item.get("status") in ITEM_STATUS
     if own:
-        when = f' · {day(item["on"])}' if item.get("on") else ""
-        tags.append(f'<span class="pill st-{item["status"]}">{label_of(item)}{when}</span>')
+        tags.append(status_pill(item))
     if item["amended"]:
         when = f' {day(item["amended"]["on"])}' if item["amended"]["on"] else ""
         tags.append(f'<span class="pill amended">Amended{when}</span>')
@@ -581,7 +606,7 @@ def card(item):
         rows.append(("Options", options_html(item)))
     rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in item.get("fields", []) if is_field(field)]
     if own and item["status"] == "blocked" and item.get("waits"):
-        rows.append((TYPES.get(item["type"], {}).get("waits", "waits on").capitalize(), item["waits"]))
+        rows.append((waits_label(item), item["waits"]))
     if own and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
     if item["needs"]:
@@ -595,10 +620,24 @@ def card(item):
     rows += [(label, refs_ul(ids)) for label, ids in needed_by.items()]
     if item["mentioned_in"]:
         rows.append(("Mentioned in", refs_ul(item["mentioned_in"])))
-    dl = "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows)
-    chips = f'\n    <div class="item-tags">{"".join(tags)}</div>' if tags else ""
-    body = f"\n    <dl>{dl}</dl>" if dl else ""
-    return f'  <article class="item" id="{anchor_of(item["id"])}">\n    {head}{chips}{body}\n  </article>'
+    return card_html(esc(item["id"]), short or item.get("title", ""), tags, rows, anchor_of(item["id"]))
+
+
+def result_card(item):
+    """Where an item stands, in the phase that keeps its status: its number, and its
+    summary linked to its own card; its status as a chip; then what it waits on, why
+    it was dropped, or what came of it."""
+    name = short_of(item)
+    if LINKABLE is None or item["id"] in LINKABLE:
+        name = f'<a class="ref" href="#{anchor_of(item["id"])}">{name}</a>'
+    status, rows = item.get("status"), []
+    if status == "blocked":
+        rows.append((waits_label(item), item.get("waits") or refs_ul(item["needs"])))
+    elif status == "dropped":
+        rows.append(("Why", item.get("why", "")))
+    if item.get("result"):
+        rows.append(("Result", item["result"]))
+    return card_html(esc(item["id"]), name, [status_pill(item)] if status in ITEM_STATUS else [], rows)
 
 
 def chip(item):
@@ -606,7 +645,7 @@ def chip(item):
     classes = ["chip"]
     if item.get("status") in ITEM_STATUS:
         classes.append(f's-{item["status"]}')
-    line = state_line(item, plain=True)
+    line = state_line(item)
     if item.get("kind") in KINDS:
         line += f' <span class="kind">{KINDS[item["kind"]]}</span>'
     tail = f'<span class="w">{line.strip()}</span>' if line else ""
@@ -691,8 +730,6 @@ def render_section(section, key, data, data_dir):
         problem(where, "`min_width` is a number of pixels")
         return ""
     parts = []
-    if section.get("intro"):
-        parts.append(f'  <p class="intro">{section["intro"]}</p>')
     if kind == "prose":
         body = section.get("body")
         if section.get("file"):
@@ -740,15 +777,11 @@ def render_section(section, key, data, data_dir):
             cells.append(rendered)
         parts.append(table_html(head, cells, section.get("min_width", 160 * len(columns) + 140), "board"))
     elif kind == "results":
-        ids = section.get("ids") or list(data.get("status", {}))
-        rows = []
-        for item_id in ids:
+        for item_id in section.get("ids") or list(data.get("status", {})):
             if item_id not in ITEMS:
                 problem(where, f"`ids` names {item_id}, which no item has")
                 continue
-            item = ITEMS[item_id]
-            rows.append([ref_html(item_id), state_line(item), item.get("result", "")])
-        parts.append(table_html(["Item", "Status", "Result"], rows, section.get("min_width", 760), "results"))
+            parts.append(result_card(ITEMS[item_id]))
     elif kind == "figures":
         # With `auto`, the figures the data can count come first, then those written out.
         auto = COUNTED if section.get("auto") else []
@@ -762,31 +795,36 @@ def render_section(section, key, data, data_dir):
         if note:
             parts.append(f'  <p class="note">{note}</p>')
     elif kind == "defs":
-        rows = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in section.get("def", []))
-        parts.append(f'  <dl class="defs">{rows}</dl>')
+        parts.append(card_html(None, None, rows=[(entry.get("term", ""), entry.get("text", "")) for entry in section.get("def", [])]))
     title = f'  <h3>{section["title"]}</h3>\n' if section.get("title") else ""
     return f'<section class="block" id="{section_id}">\n{title}' + "\n".join(parts) + "\n</section>"
 
 
-def amendments(key, data):
-    """The items amended into a phase after its approval, listed above its sections."""
+def approval(key, data):
+    """A phase's approval, after its sections: a card with the day, and the items
+    amended into the phase since, each with its day and why."""
     amended = [item for item in ITEMS.values() if item["phase"] == key and item["amended"]]
     if not data.get("approved") and not amended:
         return ""
-    lead = f'Approved on {day(data["approved"])}.' if data.get("approved") else ""
-    if not amended:
-        return f'<p class="approved">{lead} Nothing has been amended since.</p>'
+    when = day(data["approved"]) if data.get("approved") else ""
     rows = [
         f'[[{item["id"]}]]{", " + day(item["amended"]["on"]) if item["amended"]["on"] else ""}, because {item["amended"]["why"]}'
         for item in amended
     ]
-    return f'<div class="approved"><p>{lead} Amended since:</p>{list_html(rows)}</div>'
+    says = "Approved." if data.get("approved") else "Not approved yet."
+    if rows:
+        body = card_html(when, says, rows=[("Amended since", list_html(rows))], says=True)
+    else:
+        body = card_html(when, f"{says} Nothing has been amended since.", says=True)
+    return f'<section class="block" id="{key}-approval">\n  <h3>Approval</h3>\n{body}\n</section>'
 
 
 def changelog(key, entries, targets):
+    """The phase's changelog, newest first: a card for each entry, its day where an
+    item's number goes, and what it changed as a list."""
     if not entries:
         return ""
-    rows = []
+    cards = []
     for index, entry in enumerate(entries):
         where = f"{key}.toml [[changelog]] {index + 1}"
         required(entry, "text", where)
@@ -798,31 +836,26 @@ def changelog(key, entries, targets):
                 problem(where, f"`changed` names {target}, which is no section or item in this phase")
                 continue
             links.append(f'<a href="#{target}">{targets[target]}</a>')
-        changed = f'<div class="changed">Changed:{list_html(links)}</div>' if links else ""
         date = day(entry["date"]) if entry.get("date") else ""
-        rows.append(f'<li><time>{date}</time><div>{entry.get("text", "")}{changed}</div></li>')
-    return f'<footer class="changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n  <ol>{"".join(rows)}</ol>\n</footer>'
+        cards.append(card_html(date, entry.get("text", ""), rows=[("Changed", list_html(links))] if links else [], says=True))
+    return f'<footer class="block changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n' + "\n".join(cards) + "\n</footer>"
 
 
-def render_phase(key, state, data, data_dir, head=True):
+def render_phase(key, data, data_dir, head=True):
     """A phase's view: its name, for screen readers only, since its tab shows the name
-    and the state, unless it stands alone; then its sections and changelog."""
+    and the state, unless it stands alone; then its sections, its approval and its
+    changelog."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
-    if data is None:
-        parts.append('<p class="why">Nothing here yet.</p>' if state["status"] == "to-come" else "")
-    if data:
-        if data.get("intro"):
-            parts.append(f'<p class="lede">{data["intro"]}</p>')
-        parts.append(amendments(key, data))
-        targets = {}
-        for section in data.get("section", []):
-            parts.append(render_section(section, key, data, data_dir))
-            if section.get("id"):
-                targets[section["id"]] = section.get("title") or section["id"]
-            for item in section.get("item", []) if section.get("kind") == "items" else []:
-                if item.get("id") in ITEMS:
-                    targets[anchor_of(item["id"])] = f'<b>{esc(item["id"])}</b> {short_of(ITEMS[item["id"]])}'
-        parts.append(changelog(key, data.get("changelog", []), targets))
+    targets = {}
+    for section in data.get("section", []):
+        parts.append(render_section(section, key, data, data_dir))
+        if section.get("id"):
+            targets[section["id"]] = section.get("title") or section["id"]
+        for item in section.get("item", []) if section.get("kind") == "items" else []:
+            if item.get("id") in ITEMS:
+                targets[anchor_of(item["id"])] = f'<b>{esc(item["id"])}</b> {short_of(ITEMS[item["id"]])}'
+    parts.append(approval(key, data))
+    parts.append(changelog(key, data.get("changelog", []), targets))
     return expand_refs("\n".join(part for part in parts if part), f"{key}.toml")
 
 
@@ -981,12 +1014,14 @@ def site_footer(aids, line):
     return f'<footer class="site">{panels}\n<p>{line}</p>\n</footer>'
 
 
-def opening_phase(statuses):
+def opening_phase(statuses, shown):
+    """The phase in progress, or else the next to come, or else the first: of those
+    with something to show."""
     for wanted in ("now", "to-come"):
-        for key, _ in PHASES:
+        for key in shown:
             if statuses[key]["status"] == wanted:
                 return key
-    return next((key for key, _ in PHASES if statuses[key]["status"] != "not-needed"), PHASES[0][0])
+    return next(iter(shown))
 
 
 # ------------------------------------------------------------------ the guides
@@ -1041,7 +1076,6 @@ def guides_view(project):
         parts.append(("glossary", "Glossary"))
     contents = "".join(f'<li><a href="#{anchor}">{title}</a></li>' for anchor, title in parts)
     return "\n".join([
-        "<p class=\"lede\">How to use this page, then the project's glossary. The guide is the same on every project page; the glossary is this project's own.</p>",
         f'<nav class="contents" aria-label="In this view"><ol>{contents}</ol></nav>',
         guide.strip(),
         terms,
@@ -1316,8 +1350,8 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
         status = project["status"][key]["status"]
         state = PHASE_STATUS[status]
         inner = f'<span class="n">{number}</span><span class="name">{name}</span>'
-        # A phase that is not needed has nothing to show, so its tab doesn't open.
-        if status == "not-needed":
+        # A phase with nothing to show, not needed or not written yet, has a tab that doesn't open.
+        if key not in sections:
             tabs.append(f'<li><span class="off t-{status}">{inner}<span class="state">{state}</span></span></li>')
             continue
         current = ' aria-current="true"' if key == opening else ""
@@ -1327,12 +1361,12 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
             state += f' <span class="count" title="{done} of {total} done, dropped items aside">{done}/{total}</span>'
         tabs.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
     shells, files = [], {}
-    for key in sections:
+    for key, text in sections.items():
         hidden = "" if key == opening else " hidden"
-        if inline or key == opening or not sections[key][1]:
-            shells.append(f'<section class="phase" id="{key}" data-phase="{key}"{hidden}>\n{sections[key][0]}\n</section>')
+        if inline or key == opening:
+            shells.append(f'<section class="phase" id="{key}" data-phase="{key}"{hidden}>\n{text}\n</section>')
         else:
-            files[key] = sections[key][0] + "\n"
+            files[key] = text + "\n"
             shells.append(f'<section class="phase" id="{key}" data-phase="{key}" data-src="phases/{key}.html" hidden></section>')
     sheets = [sheet("agenda", "Agenda", f"as of {weekday(TODAY)}", f"\n{agenda_html}\n")]
     if inline:
@@ -1362,7 +1396,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     <p class="glance">{read} as of {read_at.day} {read_at:%b %Y}, {read_at:%H:%M} UTC.</p>
   </div>
   {ball_html}
-  <nav class="phases" aria-label="Phases"><ol>{"".join(tabs)}</ol></nav>
+  <div class="hold"><h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title"><ol>{"".join(tabs)}</ol></nav></div>
 </header>
 <main id="phases" data-open="{opening}">
 {chr(10).join(shells)}
@@ -1405,7 +1439,7 @@ def retrospective_page(project, phases, data_dir):
         problem("retrospective.toml", "the Retrospective has no data yet")
         return title, ""
     LINKABLE = {item_id for item_id, item in ITEMS.items() if item["phase"] == "retrospective"}
-    body = render_phase("retrospective", project["status"]["retrospective"], data, data_dir, head=False)
+    body = render_phase("retrospective", data, data_dir, head=False)
     read_at = project["read_at"]
     text = f"""<meta charset="utf-8">
 <title>{esc(title)}</title>
@@ -1481,12 +1515,14 @@ def main(argv):
             print_changes(changes)
         return 0
     inline = "--inline" in flags
-    sections = {}
-    for key, _ in PHASES:
-        if project["status"][key]["status"] != "not-needed":
-            sections[key] = (render_phase(key, project["status"][key], phases.get(key), data_dir), key in phases)
+    # Only a phase with something to show has a view; the others' tabs don't open.
+    sections = {key: render_phase(key, phases[key], data_dir) for key, _ in PHASES if key in phases}
+    if not sections:
+        problem("project.toml", "no phase has anything to show yet: a project starts with its Brief, in brief.toml")
+        failed()
+        return 1
     agenda_html, months_html, ball_html = calendar_view(project, phases)
-    opening = opening_phase(project["status"])
+    opening = opening_phase(project["status"], sections)
     guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")
     title, files, shell = page(project, sections, opening, inline, data_dir, agenda_html, months_html, ball_html, guides_html)
     shell = expand_refs(shell, "project.toml")
@@ -1496,7 +1532,7 @@ def main(argv):
         return 1
     # Which view holds each id, so a link into a phase not loaded yet opens it.
     phase_of = {}
-    for key, (text, _) in list(sections.items()) + [("agenda", (agenda_html, True)), ("guides", (guides_html, True))]:
+    for key, text in list(sections.items()) + [("agenda", agenda_html), ("guides", guides_html)]:
         holder = Check(key)
         holder.feed(text)
         holder.close()

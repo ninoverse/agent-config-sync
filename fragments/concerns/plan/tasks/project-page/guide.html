@@ -12,22 +12,23 @@
     <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
     <dd>Three blocks, one under another, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
-    <dt>Tabs</dt>
+    <dt>Phases</dt>
     <dd>
-      <p>One per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
+      <p>A tab per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
       <ul>
         <li><strong>Done</strong>: the phase is over, and its view is the record of it.</li>
         <li><strong>Now</strong>: in progress. Its tab also counts the items it tracks that are done, such as 3/6; dropped items aren't counted. Two phases can be Now at once: Verify starts with the first merge, while Build goes on.</li>
         <li><strong>To come</strong>: not started yet.</li>
-        <li><strong>Not needed</strong>: skipped. Its tab has a dashed border, and doesn't open: there is nothing to read.</li>
+        <li><strong>Not needed</strong>: skipped.</li>
       </ul>
+      <p>A tab with a dashed border doesn't open: its phase is Not needed, or nothing is written in it yet.</p>
     </dd>
   </dl>
 </section>
 
 <section class="block" id="guide-phases">
   <h3>The phases</h3>
-  <p class="intro">Each phase has a view of its own, which its tab opens. The tab shows the phase's state, and the calendar the days it started and ended.</p>
+  <p class="intro">Each phase has a view of its own, which its tab opens once something is written in it. The tab shows the phase's state, and the calendar the days it started and ended.</p>
   <dl class="defs">
     <dt>1 Brief</dt>
     <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), each with the checks that verify it, the repositories involved, each with what the project does with it, and the ground rules (G1, G2…): how the owner wants the project run. A ground rule holds until the owner changes it.</dd>
@@ -36,13 +37,13 @@
     <dt>3 Analysis</dt>
     <dd>The decisions (D1, D2…), each with its options, a recommendation and its reasons, and your answer with its date. When the decisions are many, they come in batches, each a section with its evidence and what it costs.</dd>
     <dt>4 Plan</dt>
-    <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. Its first lines say when the owner approved it, and list anything added since, each with its date and why.</dd>
+    <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. It ends with its approval: the day the owner approved it, and anything added since, each with its date and why.</dd>
     <dt>5 Build</dt>
     <dd>Where everything stands: the board, the results, and the questions the work raises (Q1…).</dd>
     <dt>6 Verify</dt>
     <dd>The checks (C1…) that prove each PR does what its <em>Done when</em> says, where it runs, and the Brief's success criteria, Met or Not met yet. Build ends with the last merge; Verify ends with the last check.</dd>
     <dt>7 Reuse</dt>
-    <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead. Often Not needed, with why.</dd>
+    <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead. Often Not needed.</dd>
     <dt>8 Retrospective</dt>
     <dd>The project told for a portfolio, in your voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
     <dt>9 Deferred</dt>
@@ -52,7 +53,7 @@
 
 <section class="block" id="guide-sections">
   <h3>Sections</h3>
-  <p class="intro">A phase is a stack of sections, each with a title, and often a grey line under it saying what it holds. They come in a few kinds.</p>
+  <p class="intro">A phase is a stack of sections, each with a title. They come in a few kinds.</p>
   <dl class="defs">
     <dt>Cards</dt>
     <dd>One card per item: a decision, a PR, a setting, a check. The next part of this guide takes one apart.</dd>
@@ -63,15 +64,17 @@
     <dt>Board</dt>
     <dd>The order of the work, in waves. It has a part of this guide to itself.</dd>
     <dt>Results</dt>
-    <dd>One row per item: its status, the day it got there, and what came of it, such as the version a merge released or what a check showed.</dd>
+    <dd>A card per item whose status the phase keeps: the status, the day it got there, and what came of it, such as the version a merge released, or what the item waits on.</dd>
     <dt>Figures</dt>
     <dd>Headline numbers. The note under them says which were counted from the project's data, and on what day.</dd>
     <dt>Definitions</dt>
-    <dd>A term and what it means here, such as the Brief's Problem and Objective.</dd>
+    <dd>A card of terms, each with what it means here, such as the Brief's Problem and Objective.</dd>
     <dt>Imported pages</dt>
     <dd>A page written before this one, kept whole inside a phase, such as an earlier version of the Analysis.</dd>
+    <dt>Approval</dt>
+    <dd>At the end of a phase the owner approves, such as the Plan: the day they did, and the items added since.</dd>
     <dt>Changelog</dt>
-    <dd>At the foot of every phase: what changed in it, and when.</dd>
+    <dd>At the foot of every phase, a card for each change: its day, what changed, and links to the sections and items it changed.</dd>
   </dl>
 </section>
 
@@ -174,7 +177,7 @@
 <section class="block" id="guide-changes">
   <h3>What changed, and when</h3>
   <ul>
-    <li>Each phase ends with its changelog, newest first: what changed on each day, with links to the sections and items it changed. A correction is an entry of its own, saying what was wrong.</li>
+    <li>Each phase ends with its changelog, newest first: a card for each day something changed, with links to the sections and items it changed. A correction is an entry of its own, saying what was wrong.</li>
     <li>Under the calendar, the header says when the PR statuses were last read. Anything later isn't on the page yet.</li>
     <li>The Agenda holds all of it by day: what is coming up, soonest first, then what happened, newest first.</li>
   </ul>

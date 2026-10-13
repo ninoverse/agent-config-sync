@@ -2,7 +2,6 @@
 # another phase: done, open (waiting on the user), ready, blocked (with `waits`
 # or the item's `needs`) or dropped (with `why`); `on`, the day it got there;
 # and a `result` once it lands.
-intro = "Where each PR, setting and risk stands."
 
 [status.EX-1]
 status = "done"

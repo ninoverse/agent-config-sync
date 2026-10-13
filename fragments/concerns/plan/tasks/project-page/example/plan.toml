@@ -1,8 +1,7 @@
 # Plan: the PRs as approved, the settings only the user can change, and the
 # risk register. Their statuses live in build.toml, under [status], so this
 # phase keeps the plan as it was approved. An item added after `approved` says
-# so with `amended`.
-intro = "One PR at a time, each with what proves it works, and one setting only the owner can change."
+# so with `amended`, and the Plan ends with its approval and those items.
 approved = 2026-10-03
 
 [[section]]

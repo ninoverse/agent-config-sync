@@ -1,6 +1,5 @@
 # Brief: what the project is for, how it will be judged, and the ground rules
 # the user set for working on it. The next session reads this first.
-intro = "Agreed on 1 October, before any research."
 
 [[section]]
 id = "the-project"
@@ -64,7 +63,6 @@ part = "What the platform expects of a probe, and its defaults."
 [[section]]
 id = "ground-rules"
 title = "Ground rules"
-intro = "How the user wants this project run. They hold until the user changes them."
 kind = "items"
 type = "rule"
 

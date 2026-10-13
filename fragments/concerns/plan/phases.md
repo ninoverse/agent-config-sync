@@ -22,10 +22,11 @@ they answer.
   Guides, which say how to use the page, chips and sections included, and hold
   the glossary.
 - A phase is Done, Now, To come or Not needed. Not needed says why in one
-  sentence, in the data, and its tab doesn't open, since there is nothing to
-  read; Reuse is the phase most often not needed. Build and Verify can both be
-  Now: Verify starts with the first merge. A phase that is Now shows on its tab
-  how many of its items are done.
+  sentence, in the data; Reuse is the phase most often not needed. A tab opens
+  only once its phase has something to show, so the tab of a phase not needed,
+  or not written yet, doesn't open. Build and Verify can both be Now: Verify
+  starts with the first merge. A phase that is Now shows on its tab how many
+  of its items are done.
 - The page shows the current state. Each publish that changes a phase adds an
   entry to that phase's changelog, at its foot, newest first, naming the
   sections it changed; rendering against the data as last published lists
@@ -57,7 +58,7 @@ they answer.
   proves it works. The settings only the user can change. The risk register:
   each risk, and the step that closes it. The Plan stays as approved: an item
   added after the approval is an amendment, dated and saying why, and the Plan
-  lists its amendments under the approval's date.
+  ends with its approval: the day, and its amendments.
 - **Build**: the live state. A board of the PRs and settings in waves, built
   from what each needs; each PR's *Result* once it merges; and the questions
   the work raises. What happened is in each phase's changelog and in the
