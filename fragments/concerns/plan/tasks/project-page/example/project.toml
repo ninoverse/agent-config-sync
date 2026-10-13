@@ -56,13 +56,13 @@ status = "to-come"
 status = "now"
 
 # Dates that aren't items: scheduled runs, deadlines, changes outside the
-# project. `short` labels the event in a calendar cell, and `ci = true` marks
-# an automated run, such as a scheduled workflow.
+# project. `short` labels the event in a calendar cell, and `automated = true`
+# marks a run that starts on its own, such as a scheduled workflow.
 [[event]]
 date = 2026-10-12
 title = "Renovate's weekly run"
 short = "Renovate"
-ci = true
+automated = true
 
 [[event]]
 date = 2026-10-14

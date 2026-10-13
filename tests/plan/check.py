@@ -127,9 +127,9 @@ def check_example(tmp):
     expect(-1 not in order and order == sorted(order), f"the calendar, the card under it, who holds the ball, then the phases: {order}")
     expect('<p class="glance">PR statuses as of 7 Oct 2026, 18:00 UTC.</p>' in page, "the card says when the PRs' statuses were read")
     soon = re.findall(r'<li class="dated"><a class="when" href="#(on-[\d-]+)"><time>(.*?)</time></a> <span>(.*?)</span></li>', between(ball, "<h3>A date</h3>", "</ul>"))
-    renovate = ("on-2026-10-12", "Mon 12 Oct", 'Renovate\'s weekly run <span class="ci">CI</span>')
-    expect(soon == [renovate, ("on-2026-10-14", "Wed 14 Oct", "Production deploys freeze until the 21st")], f"a date coming up holds the ball too, soonest first, each linked to its day, and an automated run marked CI: {soon}")
-    expect('Renovate\'s weekly run <span class="ci">CI</span>' in between(page, 'id="coming-up"', "</section>"), "the agenda marks the automated run too")
+    renovate = ("on-2026-10-12", "Mon 12 Oct", 'Renovate\'s weekly run <span class="automated">Automated</span>')
+    expect(soon == [renovate, ("on-2026-10-14", "Wed 14 Oct", "Production deploys freeze until the 21st")], f"a date coming up holds the ball too, soonest first, each linked to its day, and an automated run marked Automated: {soon}")
+    expect('Renovate\'s weekly run <span class="automated">Automated</span>' in between(page, 'id="coming-up"', "</section>"), "the agenda marks the automated run too")
     expect("<th>Waits on the owner</th>" in phase["guides"] and "<th>The owner's part</th>" in phase["guides"], "the guide's statuses table names the owner, not you")
     expect('<span class="pill k-owner">Owner</span>' in phase["plan"], "an item only the owner can do reads Owner")
     expect('class="more"' not in ball, "with three dates or fewer ahead, nothing points to more")
@@ -253,7 +253,7 @@ BROKEN = [
     (EXAMPLE, "project.toml", "[phases.reuse]", "[phases.templating]", "[phases.templating] is not a phase"),
     (EXAMPLE, "project.toml", "read_at = 2026-10-07T18:00:00", 'read_at = "7 October"', "`read_at` is when the state was read"),
     (EXAMPLE, "project.toml", "date = 2026-10-12\n", "", "an event has a `date`"),
-    (EXAMPLE, "project.toml", 'short = "Renovate"\nci = true', 'short = "Renovate"\nci = "yes"', "`ci` is true or false"),
+    (EXAMPLE, "project.toml", 'short = "Renovate"\nautomated = true', 'short = "Renovate"\nautomated = "yes"', "`automated` is true or false"),
     (EXAMPLE, "plan.toml", 'pull/14"\nneeds = ["EX-1"]', 'pull/14"\nneeds = ["EX-9"]', "`needs` names EX-9, which no item has"),
     (EXAMPLE, "analysis.toml", 'chosen = "a"', 'chosen = "c"', "`chosen` is c, which no option has"),
     (EXAMPLE, "analysis.toml", '["b", "A second port', '["A second port', "`options` is a list of [key, text] pairs"),

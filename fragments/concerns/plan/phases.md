@@ -100,8 +100,8 @@ from the lesson.
   reader shouldn't have to look D12 up.
 - Under the calendar, the page says who holds the ball: the owner, the user
   who decides, merges and changes settings, for every Open item; the agent, for
-  every Ready one; or a date coming up, with an automated run marked CI. The
-  Agenda holds every date the project has, ahead and past, and the notes for
+  every Ready one; or a date coming up, with an automated run marked as such.
+  The Agenda holds every date the project has, ahead and past, and the notes for
   the next session. All of it is built from the statuses: never repeat a status
   in prose, which goes stale the next time it changes.
 - One glossary per project: the terms coined for it, and the terms borrowed. It

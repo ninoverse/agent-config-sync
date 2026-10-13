@@ -67,10 +67,10 @@ new changelog entry gets a warning.
   `read_at`, a date and time in UTC; a `[phases.<phase>]` table for each phase,
   with its `status`, its `why` when it is `not-needed`, and optionally its
   `start` and `end`; `[[event]]`s, the dates that aren't items, such as a
-  scheduled run or a freeze, with `ci = true` on an automated run, which the
-  page marks CI; `[handoff]`, the notes for the next session and the day they
-  were `updated`; `[[glossary]]` entries, `coined` or `borrowed`; and `css`,
-  stylesheets of the project's own, beside it.
+  scheduled run or a freeze, with `automated = true` on a run that starts on
+  its own, which the page marks Automated; `[handoff]`, the notes for the next
+  session and the day they were `updated`; `[[glossary]]` entries, `coined` or
+  `borrowed`; and `css`, stylesheets of the project's own, beside it.
 - `<phase>.toml`: an optional `intro`, then `[[section]]`s, each with an `id`, a
   `title` and a `kind`: `prose`, `table`, `items`, `board`, `results`, `log`,
   `figures` or `defs`. Then `[[changelog]]` entries, newest first, each with a

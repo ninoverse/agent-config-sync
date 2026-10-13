@@ -246,8 +246,8 @@ def read_project(data_dir):
         event["date"] = as_date(event.get("date"), where, "date")
         if event["date"] is None:
             problem(where, "an event has a `date`")
-        if not isinstance(event.get("ci", False), bool):
-            problem(where, "`ci` is true or false: true when the event is an automated run")
+        if not isinstance(event.get("automated", False), bool):
+            problem(where, "`automated` is true or false: true for a run that starts on its own, such as a scheduled workflow")
     handoff = project.get("handoff")
     if handoff is not None:
         handoff["updated"] = as_date(handoff.get("updated"), "project.toml [handoff]", "updated")
@@ -835,8 +835,8 @@ def dated(project, phases):
     found = []
     for event in project.get("event", []):
         if event.get("date"):
-            # An automated run, such as a scheduled workflow, is marked CI wherever it is listed.
-            mark = ' <span class="ci">CI</span>' if event.get("ci") is True else ""
+            # A run that starts on its own, such as a scheduled workflow, is marked Automated wherever it is listed.
+            mark = ' <span class="automated">Automated</span>' if event.get("automated") is True else ""
             found.append((event["date"], "event", event.get("title", "") + mark, event.get("short") or text_of(event.get("title", ""))))
     for item_id, item in ITEMS.items():
         if item.get("on") and item.get("status") in ITEM_STATUS:

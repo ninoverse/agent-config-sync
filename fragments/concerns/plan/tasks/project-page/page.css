@@ -220,7 +220,7 @@
   .st-dropped { color: var(--na); background: var(--na-soft); text-decoration: line-through; }
   .waits { color: var(--ink-muted); font-size: 0.88rem; }
   /* An automated run, wherever a date is listed. */
-  .ci { display: inline-block; padding: 0 6px; border-radius: var(--corner-full); font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; line-height: 1.5; vertical-align: 1px; color: var(--ready); background: var(--ready-soft); }
+  .automated { display: inline-block; padding: 0 6px; border-radius: var(--corner-full); font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; line-height: 1.5; vertical-align: 1px; color: var(--ready); background: var(--ready-soft); }
 
   /* Tables: only these may be wider than a phone, each scrolling in its own box. */
   .scroll { overflow-x: auto; margin-top: 18px; border: 1px solid var(--rule); border-radius: var(--corner-lg); background: var(--surface); }
