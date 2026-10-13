@@ -17,8 +17,9 @@ summary = "An example project: give <code>example-service</code> the liveness an
 read_at = 2026-10-07T18:00:00
 
 # Every phase, in order. A phase is done, now, to-come or not-needed, and one
-# that is not needed says why. A phase left out is to-come. `start` and `end`
-# are optional, and put the phase on the calendar.
+# that is not needed says why, here only: its tab doesn't open, and it has no
+# <phase>.toml. A phase left out is to-come. `start` and `end` are optional,
+# and put the phase on the calendar.
 [phases.brief]
 status = "done"
 start = 2026-10-01
@@ -52,7 +53,7 @@ why = "Two routes are too little for another project to take. The service templa
 [phases.retrospective]
 status = "to-come"
 
-[phases.later]
+[phases.deferred]
 status = "now"
 
 # Dates that aren't items: scheduled runs, deadlines, changes outside the

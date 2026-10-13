@@ -47,7 +47,8 @@ It writes nothing, and names the file and the item, when:
 - an id is used twice anywhere on the page, a link points at an id nothing
   has, or a `[[ref]]` or a `needs` names no item;
 - a status is unknown, a Blocked item doesn't say what it waits on, a Dropped
-  item doesn't say why, or a phase that is Not needed doesn't say why;
+  item doesn't say why, or a phase that is Not needed doesn't say why, or has
+  a `<phase>.toml`: its tab doesn't open, so nothing in it would show;
 - an item's status is set both on the item and in a `[status]` table;
 - `needs` loops, or a date isn't one;
 - the HTML in a field doesn't nest.
@@ -72,15 +73,15 @@ new changelog entry gets a warning.
   session and the day they were `updated`; `[[glossary]]` entries, `coined` or
   `borrowed`; and `css`, stylesheets of the project's own, beside it.
 - `<phase>.toml`: an optional `intro`, then `[[section]]`s, each with an `id`, a
-  `title` and a `kind`: `prose`, `table`, `items`, `board`, `results`, `log`,
-  `figures` or `defs`. Then `[[changelog]]` entries, newest first, each with a
+  `title` and a `kind`: `prose`, `table`, `repos`, `items`, `board`,
+  `results`, `figures` or `defs`. Then `[[changelog]]` entries, newest first, each with a
   `date`, its `text`, and `changed`, the sections and items it changed. A phase
   the user approves, such as the Plan, has `approved`, the day they did.
 - An `items` section has a `type`, which sets the words its statuses take:
   `piece`, `rule`, `criterion` (Met, Not met yet), `decision` (To decide,
   Taken), `question` (To answer, Answered), `pr` (To merge, Merged), `setting`
   (To set, Set), `risk` (Open, Closed, Accepted), `check` (Waiting, Passed),
-  `lesson` (To review, Adopted) or `later` (Waiting, Picked up). An item can set
+  `lesson` (To review, Adopted) or `deferred` (Waiting, Picked up). An item can set
   its own.
 - An item is a card: an `id`, a `title`, and its `fields` as `[label, text]`
   pairs, where a text that holds several things, such as the decisions a PR
@@ -90,7 +91,8 @@ new changelog entry gets a warning.
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
     `result`, once it lands;
   - `url`, the PR's address once it is open, where its state is read from;
-  - `needs`, the ids of the items to finish first;
+  - `needs`, the ids of the items to finish first; a success criterion's are
+    the checks that prove it, which its card shows as Verified by;
   - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
     one each by its key: a decision's choices, shown as a list that marks the
     recommended one until one is chosen, and then only the chosen one;
@@ -98,6 +100,9 @@ new changelog entry gets a warning.
     phase's approval;
   - `repo`, the board row it goes in;
   - `ask`, when what the user does while it is Open isn't what its type says.
+- A `repos` section lists the repositories, each a `[[section.repo]]` with its
+  `name`, its `use`, `change`, `read` or `new`, shown as a chip, and its
+  `part`.
 - A `[status.<id>]` table sets the `status`, `on`, `waits`, `why` and `result`
   of an item kept in another phase. The Plan's items keep theirs this way in
   `build.toml`, and the Brief's success criteria theirs in `verify.toml`, so the
@@ -112,8 +117,8 @@ new changelog entry gets a warning.
   with its short title: name items that way, never by a bare number. Dates are
   TOML dates, such as `2026-10-07`.
 - The calendar and the Agenda are built from every date the data holds: events,
-  the days items reached their status, amendments, the phases' dates, and log
-  entries. Nothing in them is written by hand.
+  the days items reached their status, amendments, and the phases' dates.
+  Nothing in them is written by hand.
 - A `prose` section can take its `body` from a `file` instead, and `prefix`
   moves that file's ids, and the links to them, under a prefix: the way to
   bring in a page that predates the kit.

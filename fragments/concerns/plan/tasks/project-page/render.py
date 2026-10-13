@@ -43,18 +43,19 @@ PHASES = [
     ("verify", "Verify"),
     ("reuse", "Reuse"),
     ("retrospective", "Retrospective"),
-    ("later", "For later"),
+    ("deferred", "Deferred"),
 ]
 PHASE_NAME = dict(PHASES)
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
 KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner", "together": "Together"}
-# What a status reads as for each type of item, and what the user does while one is open.
+# What a status reads as for each type of item, and what the user does while one is open;
+# for some, what its `needs` read as on its card, and on the cards of what it needs.
 TYPES = {
     "piece": {"labels": {}, "ask": "Read"},
     "rule": {"labels": {"dropped": "Retired"}, "ask": "Confirm"},
-    "criterion": {"labels": {"open": "To agree", "blocked": "Not met yet", "done": "Met"}, "ask": "Agree"},
+    "criterion": {"labels": {"open": "To agree", "blocked": "Not met yet", "done": "Met"}, "ask": "Agree", "needs": "Verified by", "needed_by": "Verifies"},
     "decision": {"labels": {"open": "To decide", "done": "Taken", "dropped": "Withdrawn"}, "ask": "Decide"},
     "question": {"labels": {"open": "To answer", "done": "Answered", "dropped": "Withdrawn"}, "ask": "Answer"},
     "pr": {"labels": {"open": "To merge", "done": "Merged", "dropped": "Closed"}, "ask": "Merge"},
@@ -62,7 +63,7 @@ TYPES = {
     "risk": {"labels": {"open": "To accept", "blocked": "Open", "done": "Closed", "dropped": "Accepted"}, "ask": "Accept", "waits": "closes with"},
     "check": {"labels": {"open": "To check", "blocked": "Waiting", "done": "Passed", "dropped": "Skipped"}, "ask": "Check"},
     "lesson": {"labels": {"open": "To review", "done": "Adopted", "dropped": "Not adopted"}, "ask": "Review"},
-    "later": {"labels": {"blocked": "Waiting", "done": "Picked up"}, "ask": "Start"},
+    "deferred": {"labels": {"blocked": "Waiting", "done": "Picked up"}, "ask": "Start"},
 }
 # How the guide names each type of item, with what its numbers start with.
 TYPE_NAMES = {
@@ -76,7 +77,7 @@ TYPE_NAMES = {
     "risk": ("Risk", "RK1"),
     "check": ("Check", "C1"),
     "lesson": ("Lesson", "L1"),
-    "later": ("Later work", "T1"),
+    "deferred": ("Deferred work", "T1"),
 }
 KIND_MEANING = {
     "major": "Merging it releases a major version: what used the last one may need changing.",
@@ -85,8 +86,15 @@ KIND_MEANING = {
     "owner": "Only the owner can do it, such as a setting in a service they own.",
     "together": "The owner and the agent do it together, in a session.",
 }
-SECTION_KINDS = ("prose", "table", "items", "board", "results", "log", "figures", "defs")
+SECTION_KINDS = ("prose", "table", "repos", "items", "board", "results", "figures", "defs")
 SOURCES = {"coined": "Coined for this project", "borrowed": "Borrowed from elsewhere"}
+# What a project does with each repository it involves, as the chip beside its name says.
+USES = {"change": "Change", "read": "Read", "new": "New"}
+USE_MEANING = {
+    "change": "The project's PRs land in it.",
+    "read": "The project reads it, and changes nothing in it.",
+    "new": "The project creates it.",
+}
 
 KEBAB = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 ITEM_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
@@ -161,18 +169,6 @@ def as_date(value, where, field):
             pass
     problem(where, f"`{field}` is a date, such as 2026-10-07")
     return None
-
-
-def quiet_date(value):
-    """As as_date, without reporting: for a second reading of a date already checked."""
-    if isinstance(value, datetime.datetime):
-        return value.date()
-    if isinstance(value, datetime.date):
-        return value
-    try:
-        return datetime.date.fromisoformat(value) if isinstance(value, str) else None
-    except ValueError:
-        return None
 
 
 def day(date):
@@ -256,11 +252,14 @@ def read_project(data_dir):
     return project
 
 
-def read_phases(data_dir):
+def read_phases(data_dir, statuses):
     data = {}
-    for key, _ in PHASES:
+    for key, name in PHASES:
         path = data_dir / f"{key}.toml"
-        if path.is_file():
+        if path.is_file() and statuses[key]["status"] == "not-needed":
+            # Its tab doesn't open, so nothing in the file would show.
+            problem(path.name, f"{name} is not needed, so it holds nothing: remove the file, or give the phase another status")
+        elif path.is_file():
             loaded = load(path)
             if loaded is not None:
                 data[key] = loaded
@@ -382,7 +381,7 @@ def collect_items(phases):
 def link_items():
     """`needs` checked for unknown ids and loops; backlinks from needs and references."""
     for item_id, item in ITEMS.items():
-        item["needed_by"], item["named_by"] = [], []
+        item["needed_by"], item["mentioned_in"] = [], []
         for need in item["needs"]:
             if need not in ITEMS:
                 problem(item["where"], f"`needs` names {need}, which no item has")
@@ -413,8 +412,8 @@ def link_items():
         if item["amended"]:
             texts.append(item["amended"]["why"])
         for ref in REF.findall(" ".join(str(text) for text in texts)):
-            if ref in ITEMS and ref != item_id and ref not in item["needs"] and item_id not in ITEMS[ref]["named_by"]:
-                ITEMS[ref]["named_by"].append(item_id)
+            if ref in ITEMS and ref != item_id and ref not in item["needs"] and item_id not in ITEMS[ref]["mentioned_in"]:
+                ITEMS[ref]["mentioned_in"].append(item_id)
 
 
 def check_states(project, phases):
@@ -427,7 +426,7 @@ def check_states(project, phases):
         if status in UNFINISHED and item["status_from"] and statuses[item["status_from"]]["status"] == "done":
             warn(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`")
         if item["type"] == "decision" and status == "done" and has_prs:
-            if not any(ITEMS[other]["type"] == "pr" for other in item["needed_by"] + item["named_by"]):
+            if not any(ITEMS[other]["type"] == "pr" for other in item["needed_by"] + item["mentioned_in"]):
                 warn(where, f"{item_id} is a decision taken, but no PR names it or needs it")
         if item["type"] == "pr" and status == "done" and not item.get("result"):
             warn(where, f"{item_id} is a merged PR without a `result`")
@@ -558,7 +557,7 @@ def state_line(item, plain=False):
 
 def card(item):
     """An item's card: its number and summary; then chips, for what a word or two says;
-    then its fields; then the items that need it or name it."""
+    then its fields; then the items that need it or mention it."""
     short = item.get("short")
     head = f'<div class="item-head"><span class="n">{esc(item["id"])}</span><h4>{short or item.get("title", "")}</h4></div>'
     tags = []
@@ -586,13 +585,16 @@ def card(item):
     if own and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
     if item["needs"]:
-        rows.append(("Needs", refs_ul(item["needs"])))
+        rows.append((TYPES.get(item["type"], {}).get("needs", "Needs"), refs_ul(item["needs"])))
     if item["amended"]:
         rows.append(("Why amended", item["amended"]["why"]))
-    if item["needed_by"]:
-        rows.append(("Needed by", refs_ul(item["needed_by"])))
-    if item["named_by"]:
-        rows.append(("Named by", refs_ul(item["named_by"])))
+    # What needs this item, in the words of its type: a check Verifies the criteria that need it.
+    needed_by = {}
+    for other in item["needed_by"]:
+        needed_by.setdefault(TYPES.get(ITEMS[other]["type"], {}).get("needed_by", "Needed by"), []).append(other)
+    rows += [(label, refs_ul(ids)) for label, ids in needed_by.items()]
+    if item["mentioned_in"]:
+        rows.append(("Mentioned in", refs_ul(item["mentioned_in"])))
     dl = "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows)
     chips = f'\n    <div class="item-tags">{"".join(tags)}</div>' if tags else ""
     body = f"\n    <dl>{dl}</dl>" if dl else ""
@@ -710,6 +712,17 @@ def render_section(section, key, data, data_dir):
         if not rows or any(len(row) != len(head) for row in rows):
             problem(where, "a table has rows, each with as many cells as `head`")
         parts.append(table_html(head, rows, section.get("min_width")))
+    elif kind == "repos":
+        rows = []
+        for index, repo in enumerate(section.get("repo", [])):
+            at = f"{where} repo {index + 1}"
+            required(repo, "name", at)
+            use = repo.get("use")
+            if use not in USES:
+                problem(at, f"`use` is what the project does with it: {', '.join(USES)}")
+                continue
+            rows.append([f'<code>{esc(repo.get("name", ""))}</code> <span class="pill u-{use}">{USES[use]}</span>', repo.get("part", "")])
+        parts.append(table_html(["Repository", "Its part"], rows, section.get("min_width"), "repos"))
     elif kind == "items":
         parts.extend(card(ITEMS[item["id"]]) for item in section.get("item", []) if item.get("id") in ITEMS)
     elif kind == "board":
@@ -736,12 +749,6 @@ def render_section(section, key, data, data_dir):
             item = ITEMS[item_id]
             rows.append([ref_html(item_id), state_line(item), item.get("result", "")])
         parts.append(table_html(["Item", "Status", "Result"], rows, section.get("min_width", 760), "results"))
-    elif kind == "log":
-        entries = []
-        for index, entry in enumerate(section.get("entry", [])):
-            date = as_date(entry.get("date"), f"{where} entry {index + 1}", "date")
-            entries.append(f'<li><span class="who">{day(date) if date else ""}</span><span>{entry.get("text", "")}</span></li>')
-        parts.append(f'  <ul class="plain log">{"".join(entries)}</ul>')
     elif kind == "figures":
         # With `auto`, the figures the data can count come first, then those written out.
         auto = COUNTED if section.get("auto") else []
@@ -798,19 +805,11 @@ def changelog(key, entries, targets):
 
 
 def render_phase(key, state, data, data_dir, head=True):
-    """A phase's view: its head, unless it stands alone, then its sections and changelog."""
-    status = state["status"]
-    span = ""
-    if state["start"]:
-        when = f'{day(state["start"])} – {day(state["end"])}' if state["end"] else f'since {day(state["start"])}'
-        span = f'<span class="span">{when}</span>'
-    parts = []
-    if head:
-        parts.append(f'<div class="phase-head"><h2>{PHASE_NAME[key]}</h2><span class="ph ph-{status}">{PHASE_STATUS[status]}</span>{span}</div>')
-    if status == "not-needed":
-        parts.append(f'<p class="why">{state["why"]}</p>')
-    elif data is None:
-        parts.append('<p class="why">Nothing here yet.</p>' if status == "to-come" else "")
+    """A phase's view: its name, for screen readers only, since its tab shows the name
+    and the state, unless it stands alone; then its sections and changelog."""
+    parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
+    if data is None:
+        parts.append('<p class="why">Nothing here yet.</p>' if state["status"] == "to-come" else "")
     if data:
         if data.get("intro"):
             parts.append(f'<p class="lede">{data["intro"]}</p>')
@@ -851,13 +850,6 @@ def dated(project, phases):
     for key, data in phases.items():
         if data.get("approved"):
             found.append((data["approved"], "phase", f"{PHASE_NAME[key]} approved", f"{PHASE_NAME[key]} approved"))
-        for section in data.get("section", []):
-            if section.get("kind") != "log":
-                continue
-            for entry in section.get("entry", []):
-                date = quiet_date(entry.get("date"))
-                if date:
-                    found.append((date, "log", entry.get("text", ""), None))
     return found
 
 
@@ -874,10 +866,7 @@ def month_grid(year, month, by_day, before, after, shown):
                 cells.append('<td class="out"></td>')
                 continue
             classes = ["d"] + (["today"] if date == TODAY else []) + (["has"] if date in by_day else [])
-            marks = "".join(
-                f'<li class="m-{cls}">{esc(label)}</li>' if label else f'<li class="m-{cls} dot" title="{esc(text_of(refs_as_text(text)))}"></li>'
-                for cls, text, label in by_day.get(date, [])
-            )
+            marks = "".join(f'<li class="m-{cls}">{esc(label)}</li>' for cls, text, label in by_day.get(date, []))
             number = f'<a class="dn" href="#on-{date.isoformat()}">{date.day}</a>' if date in by_day else f'<span class="dn">{date.day}</span>'
             cells.append(f'<td class="{" ".join(classes)}">{number}{f"<ul>{marks}</ul>" if marks else ""}</td>')
         rows.append("<tr>" + "".join(cells) + "</tr>")
@@ -997,7 +986,7 @@ def opening_phase(statuses):
         for key, _ in PHASES:
             if statuses[key]["status"] == wanted:
                 return key
-    return PHASES[0][0]
+    return next((key for key, _ in PHASES if statuses[key]["status"] != "not-needed"), PHASES[0][0])
 
 
 # ------------------------------------------------------------------ the guides
@@ -1019,6 +1008,11 @@ def kinds_list():
     return f'<dl class="defs kinds">{rows}</dl>'
 
 
+def uses_list():
+    rows = "".join(f'<dt><span class="pill u-{key}">{name}</span></dt><dd>{USE_MEANING[key]}</dd>' for key, name in USES.items())
+    return f'<dl class="defs kinds">{rows}</dl>'
+
+
 def sample_chips():
     """A chip in each status, drawn as the board draws them, but not links: they are examples."""
     samples = [
@@ -1037,7 +1031,7 @@ def guides_view(project):
     """The guides: how to use the page, the same on every project, then the project's
     glossary. Its title is on the sheet that holds it."""
     guide = (HERE / "guide.html").read_text(encoding="utf-8")
-    for mark, generated in (("<!--statuses-->", statuses_table()), ("<!--kinds-->", kinds_list()), ("<!--chips-->", sample_chips())):
+    for mark, generated in (("<!--statuses-->", statuses_table()), ("<!--kinds-->", kinds_list()), ("<!--uses-->", uses_list()), ("<!--chips-->", sample_chips())):
         guide = guide.replace(mark, generated)
     parts = re.findall(r'<section class="block" id="([^"]+)">\s*<h3>(.*?)</h3>', guide)
     entries = project.get("glossary", [])
@@ -1157,13 +1151,6 @@ def changes_since(data_dir, published):
         name = text_of(after.get("title") or section_id)
         if before is None:
             note(key, f"{name} added", section_id)
-        elif after.get("kind") == "log" and before.get("kind") == "log":
-            added = [e for e in after.get("entry", []) if e not in before.get("entry", [])]
-            gone = [e for e in before.get("entry", []) if e not in after.get("entry", [])]
-            if gone or {k: v for k, v in before.items() if k != "entry"} != {k: v for k, v in after.items() if k != "entry"}:
-                note(key, f"{name} edited", section_id)
-            elif added:
-                note(key, f"{name}: {len(added)} {'entry' if len(added) == 1 else 'entries'} added", section_id)
         elif {k: v for k, v in before.items() if k != "item"} != {k: v for k, v in after.items() if k != "item"}:
             note(key, f"{name} edited", section_id)
     for (key, section_id), before in old_sections.items():
@@ -1327,18 +1314,20 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     tabs = []
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
-        current = ' aria-current="true"' if key == opening else ""
         state = PHASE_STATUS[status]
+        inner = f'<span class="n">{number}</span><span class="name">{name}</span>'
+        # A phase that is not needed has nothing to show, so its tab doesn't open.
+        if status == "not-needed":
+            tabs.append(f'<li><span class="off t-{status}">{inner}<span class="state">{state}</span></span></li>')
+            continue
+        current = ' aria-current="true"' if key == opening else ""
         # A phase in progress says how far it is.
         if status == "now" and key in counts:
             done, total = counts[key]
             state += f' <span class="count" title="{done} of {total} done, dropped items aside">{done}/{total}</span>'
-        tabs.append(
-            f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}><span class="n">{number}</span>'
-            f'<span class="name">{name}</span><span class="state">{state}</span></a></li>'
-        )
+        tabs.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
     shells, files = [], {}
-    for key, _ in PHASES:
+    for key in sections:
         hidden = "" if key == opening else " hidden"
         if inline or key == opening or not sections[key][1]:
             shells.append(f'<section class="phase" id="{key}" data-phase="{key}"{hidden}>\n{sections[key][0]}\n</section>')
@@ -1472,7 +1461,7 @@ def main(argv):
         return 2
     data_dir, out_dir = Path(args[0]), Path(args[1])
     project = read_project(data_dir)
-    phases = read_phases(data_dir)
+    phases = read_phases(data_dir, project["status"])
     collect_items(phases)
     link_items()
     if not problems:
@@ -1494,7 +1483,8 @@ def main(argv):
     inline = "--inline" in flags
     sections = {}
     for key, _ in PHASES:
-        sections[key] = (render_phase(key, project["status"][key], phases.get(key), data_dir), key in phases)
+        if project["status"][key]["status"] != "not-needed":
+            sections[key] = (render_phase(key, project["status"][key], phases.get(key), data_dir), key in phases)
     agenda_html, months_html, ball_html = calendar_view(project, phases)
     opening = opening_phase(project["status"])
     guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")

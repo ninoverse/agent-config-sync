@@ -60,19 +60,6 @@ fields = [
   ["Answer", "Ten. A false failure takes the process out of service, and a slow answer costs nothing."],
 ]
 
-[[section]]
-id = "log"
-title = "Log"
-kind = "log"
-
-[[section.entry]]
-date = 2026-10-07
-text = "[[EX-2]] opened, green. Your answer to [[Q1]] adds [[EX-3]] to the plan."
-
-[[section.entry]]
-date = 2026-10-06
-text = "[[EX-1]] merged and released 1.4.0. You set [[S1]]."
-
 [[changelog]]
 date = 2026-10-07
 text = "[[EX-2]] is open, and [[EX-3]] is new, from [[Q1]]."

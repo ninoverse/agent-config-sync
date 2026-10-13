@@ -7,11 +7,11 @@
     <dt>Title</dt>
     <dd>The main repository and the project's objective, joined by a dash, such as <code>example-service-health-checks</code>. The line under it says what the project is for.</dd>
     <dt>Calendar</dt>
-    <dd>The month the statuses were read in, that day outlined; the arrows step through the other months the project spans. Each day lists what happened or is coming: events, status changes in their status's colours, amendments, and the days phases start and end. A dot is a line of the log; point at it to read it. On a phone, every entry is a dot. A day with something on it opens the Agenda at that day.</dd>
+    <dd>The month the statuses were read in, that day outlined; the arrows step through the other months the project spans. Each day lists what happened or is coming: events, status changes in their status's colours, amendments, and the days phases start and end. On a phone, every entry is a dot. A day with something on it opens the Agenda at that day.</dd>
     <dt>PR statuses as of</dt>
     <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
-    <dd>Three columns, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
+    <dd>Three blocks, one under another, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
     <dt>Tabs</dt>
     <dd>
       <p>One per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
@@ -19,7 +19,7 @@
         <li><strong>Done</strong>: the phase is over, and its view is the record of it.</li>
         <li><strong>Now</strong>: in progress. Its tab also counts the items it tracks that are done, such as 3/6; dropped items aren't counted. Two phases can be Now at once: Verify starts with the first merge, while Build goes on.</li>
         <li><strong>To come</strong>: not started yet.</li>
-        <li><strong>Not needed</strong>: skipped. Its tab has a dashed border, and its view says why.</li>
+        <li><strong>Not needed</strong>: skipped. Its tab has a dashed border, and doesn't open: there is nothing to read.</li>
       </ul>
     </dd>
   </dl>
@@ -27,10 +27,10 @@
 
 <section class="block" id="guide-phases">
   <h3>The phases</h3>
-  <p class="intro">Each phase has a view of its own. Its head shows its state and its dates: <em>since 5 Oct</em> while it runs, <em>1 Oct – 2 Oct</em> once it's done.</p>
+  <p class="intro">Each phase has a view of its own, which its tab opens. The tab shows the phase's state, and the calendar the days it started and ended.</p>
   <dl class="defs">
     <dt>1 Brief</dt>
-    <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), the repositories involved, and the ground rules (G1, G2…): how the owner wants the project run. A ground rule holds until the owner changes it.</dd>
+    <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), each with the checks that verify it, the repositories involved, each with what the project does with it, and the ground rules (G1, G2…): how the owner wants the project run. A ground rule holds until the owner changes it.</dd>
     <dt>2 Research</dt>
     <dd>What exists today, one numbered piece at a time (R1, R2…), and what each piece raises: usually a decision for the Analysis.</dd>
     <dt>3 Analysis</dt>
@@ -38,14 +38,14 @@
     <dt>4 Plan</dt>
     <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. Its first lines say when the owner approved it, and list anything added since, each with its date and why.</dd>
     <dt>5 Build</dt>
-    <dd>Where everything stands: the board, the results, the questions the work raises (Q1…), and the log.</dd>
+    <dd>Where everything stands: the board, the results, and the questions the work raises (Q1…).</dd>
     <dt>6 Verify</dt>
     <dd>The checks (C1…) that prove each PR does what its <em>Done when</em> says, where it runs, and the Brief's success criteria, Met or Not met yet. Build ends with the last merge; Verify ends with the last check.</dd>
     <dt>7 Reuse</dt>
     <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead. Often Not needed, with why.</dd>
     <dt>8 Retrospective</dt>
     <dd>The project told for a portfolio, in your voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
-    <dt>9 For later</dt>
+    <dt>9 Deferred</dt>
     <dd>What was deferred (T1…), what each item waits on, and where it goes when that comes. Deferring an item here lets the Retrospective go ahead without it.</dd>
   </dl>
 </section>
@@ -57,13 +57,13 @@
     <dt>Cards</dt>
     <dd>One card per item: a decision, a PR, a setting, a check. The next part of this guide takes one apart.</dd>
     <dt>Tables</dt>
-    <dd>Facts in rows, such as the repositories involved. On a narrow screen, a wide table scrolls sideways in its own box, while the page stays put.</dd>
+    <dd>Facts in rows. On a narrow screen, a wide table scrolls sideways in its own box, while the page stays put.</dd>
+    <dt>Repositories</dt>
+    <dd>The Brief's table of the repositories the project involves, each with a chip for what the project does with it:<!--uses--></dd>
     <dt>Board</dt>
     <dd>The order of the work, in waves. It has a part of this guide to itself.</dd>
     <dt>Results</dt>
     <dd>One row per item: its status, the day it got there, and what came of it, such as the version a merge released or what a check showed.</dd>
-    <dt>Log</dt>
-    <dd>What happened, by day, newest first.</dd>
     <dt>Figures</dt>
     <dd>Headline numbers. The note under them says which were counted from the project's data, and on what day.</dd>
     <dt>Definitions</dt>
@@ -86,7 +86,7 @@
   <article class="item sample">
     <div class="item-head"><span class="n">D1</span><h4>Where the probes live</h4></div>
     <div class="item-tags"><span class="pill st-done">Taken · 2 Oct</span></div>
-    <dl><dt>Options</dt><dd><ol class="options"><li class="chosen"><span class="key">a</span><span><code>/healthz</code> and <code>/readyz</code> beside <code>/api</code>.<span class="vh"> (chosen)</span></span></li><li><span class="key">b</span><span>A second port that serves only the probes.</span></li></ol></dd><dt>Reasons</dt><dd>One port keeps the platform's settings to two lines.</dd><dt>Named by</dt><dd><ul class="list"><li><span class="ref"><b>EX-1</b> Liveness probe</span></li><li><span class="ref"><b>EX-2</b> Readiness probe</span></li></ul></dd></dl>
+    <dl><dt>Options</dt><dd><ol class="options"><li class="chosen"><span class="key">a</span><span><code>/healthz</code> and <code>/readyz</code> beside <code>/api</code>.<span class="vh"> (chosen)</span></span></li><li><span class="key">b</span><span>A second port that serves only the probes.</span></li></ol></dd><dt>Reasons</dt><dd>One port keeps the platform's settings to two lines.</dd><dt>Mentioned in</dt><dd><ul class="list"><li><span class="ref"><b>EX-1</b> Liveness probe</span></li><li><span class="ref"><b>EX-2</b> Readiness probe</span></li></ul></dd></dl>
   </article>
   <article class="item sample">
     <div class="item-head"><span class="n">D3</span><h4>How long a probe may take</h4></div>
@@ -95,7 +95,7 @@
   </article>
   <dl class="defs">
     <dt>First line</dt>
-    <dd>The item's number and its summary: the name it goes by wherever it's linked. The number never changes and is never reused, and its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T later work. A PR carries its repository's prefix, such as AC-1.</dd>
+    <dd>The item's number and its summary: the name it goes by wherever it's linked. The number never changes and is never reused, and its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T deferred work. A PR carries its repository's prefix, such as AC-1.</dd>
     <dt>Chips</dt>
     <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved; and the link to where the item lives, such as its PR on GitHub. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, and Verify says whether they're met.</dd>
     <dt>Title</dt>
@@ -107,11 +107,11 @@
     <dt>Waits on, Why</dt>
     <dd>What a blocked item waits on, or, for a risk, the step it closes with; and why a dropped one was dropped.</dd>
     <dt>Needs</dt>
-    <dd>What has to be done first. The board's waves come from it.</dd>
+    <dd>What has to be done first. The board's waves come from it. On a success criterion, it reads <em>Verified by</em>: the checks that prove the criterion is met.</dd>
     <dt>Why amended</dt>
     <dd>Why the item was added after its phase was approved.</dd>
-    <dt>Needed by, Named by</dt>
-    <dd>The items that need this one, and the items that mention it, each a list: a decision's card lists the PRs that carry it out.</dd>
+    <dt>Needed by, Mentioned in</dt>
+    <dd>The items that need this one, and the items that mention it, each a list: a decision's card lists the PRs that carry it out. On a check, the criteria that need it read <em>Verifies</em>.</dd>
   </dl>
 </section>
 
@@ -167,7 +167,7 @@
     <li>A number with its name, such as <span class="ref"><b>D1</b> Where the probes live</span>, is a link to that item's card. It opens the card even when another phase holds it.</li>
     <li>The tabs switch phases, and a phase opens where you are, without scrolling. The buttons top right open the Agenda and the Guides over the page, and their close button, or Escape, closes them. A day in the calendar opens the Agenda at that day.</li>
     <li>A phase other than the one in progress loads the first time you open it. If it can't, the page says so, with a button to try again.</li>
-    <li>On a card, Needs, Needed by and Named by link to the items around it, so you can follow a decision to the PRs that carry it out, and on to the checks that prove them.</li>
+    <li>On a card, Needs, Needed by and Mentioned in link to the items around it, so you can follow a decision to the PRs that carry it out, and on to the checks that prove them.</li>
   </ul>
 </section>
 

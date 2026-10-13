@@ -1,8 +1,8 @@
 [[section]]
-id = "deferred"
-title = "Deferred"
+id = "work"
+title = "Deferred work"
 kind = "items"
-type = "later"
+type = "deferred"
 
 [[section.item]]
 id = "T1"

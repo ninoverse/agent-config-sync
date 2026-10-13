@@ -23,7 +23,9 @@ text = "The two routes, the platform's settings that point at them, and their ti
 term = "Out of scope"
 text = "Dashboards for the probes: that is [[T1]]."
 
-# Success criteria are judged in Verify, which sets their status.
+# Success criteria are judged in Verify, which sets their status. A criterion's
+# `needs` are the checks that prove it: its card says Verified by, and each
+# check's says Verifies.
 [[section]]
 id = "criteria"
 title = "Success criteria"
@@ -42,12 +44,22 @@ title = "A process without its database gets no traffic"
 short = "No traffic without a database"
 needs = ["C2"]
 
+# Each repository the project involves, and what it does with it: `change`
+# (its PRs land there), `read` (nothing in it changes) or `new` (it creates it).
 [[section]]
 id = "repositories"
 title = "Repositories"
-kind = "table"
-head = ["Repository", "Its part"]
-rows = [["<code>example-service</code>", "The routes, and the deployment settings."]]
+kind = "repos"
+
+[[section.repo]]
+name = "example-service"
+use = "change"
+part = "The routes, and the deployment settings."
+
+[[section.repo]]
+name = "platform-docs"
+use = "read"
+part = "What the platform expects of a probe, and its defaults."
 
 [[section]]
 id = "ground-rules"

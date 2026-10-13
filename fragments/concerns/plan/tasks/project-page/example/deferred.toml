@@ -1,10 +1,10 @@
-# For later: each deferred item, what it waits on, and where it goes when that
+# Deferred: each deferred item, what it waits on, and where it goes when that
 # comes. A lesson the Retrospective turns into a rule change waits here too.
 [[section]]
-id = "deferred"
-title = "Deferred"
+id = "work"
+title = "Deferred work"
 kind = "items"
-type = "later"
+type = "deferred"
 
 [[section.item]]
 id = "T1"

@@ -24,6 +24,13 @@ value = "15 s"
 label = "between scrapes"
 
 [[section]]
+id = "cost"
+title = "What it cost"
+kind = "table"
+head = ["Item", "Days"]
+rows = [["[[MX-1]]", "3"], ["Verify", "1"]]
+
+[[section]]
 id = "lessons"
 title = "What was learned"
 kind = "items"
