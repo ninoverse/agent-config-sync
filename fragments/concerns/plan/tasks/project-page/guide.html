@@ -37,11 +37,11 @@
     <dt>3 Analysis</dt>
     <dd>The decisions (D1, D2…), each with its options, a recommendation and its reasons, and your answer with its date. When the decisions are many, they come in batches, each a section with its evidence and what it costs.</dd>
     <dt>4 Plan</dt>
-    <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. It ends with its approval: the day the owner approved it, and anything added since, each with its date and why.</dd>
+    <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. It ends with its approval: the day the owner approved it, and the items added since, whose cards say when and why.</dd>
     <dt>5 Build</dt>
     <dd>Where everything stands: the board, the results, and the questions the work raises (Q1…).</dd>
     <dt>6 Verify</dt>
-    <dd>The checks (C1…) that prove each PR does what its <em>Done when</em> says, where it runs, and the Brief's success criteria, Met or Not met yet. Build ends with the last merge; Verify ends with the last check.</dd>
+    <dd>The checks (C1…), each titled by how it is checked, that prove each PR does what its <em>Done when</em> says, where it runs, and the Brief's success criteria, Met or Not met yet. Build ends with the last merge; Verify ends with the last check.</dd>
     <dt>7 Reuse</dt>
     <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead. Often Not needed.</dd>
     <dt>8 Retrospective</dt>
@@ -64,7 +64,7 @@
     <dt>Board</dt>
     <dd>The order of the work, in waves. It has a part of this guide to itself.</dd>
     <dt>Results</dt>
-    <dd>A card per item whose status the phase keeps: the status, the day it got there, and what came of it, such as the version a merge released, or what the item waits on.</dd>
+    <dd>A card per item whose status the phase keeps: the status, the day it got there, and what the item waits on, or what came of it, such as the version a merge released. An item the board shows is here only once it has a result, and then with the result alone, since the board says the rest.</dd>
     <dt>Figures</dt>
     <dd>Headline numbers. The note under them says which were counted from the project's data, and on what day.</dd>
     <dt>Definitions</dt>
@@ -110,11 +110,11 @@
     <dt>Waits on, Why</dt>
     <dd>What a blocked item waits on, or, for a risk, the step it closes with; and why a dropped one was dropped.</dd>
     <dt>Needs</dt>
-    <dd>What has to be done first. The board's waves come from it. On a success criterion, it reads <em>Verified by</em>: the checks that prove the criterion is met.</dd>
+    <dd>What has to be done first. The board's waves come from it. On a success criterion, it reads <em>Verified by</em>: the checks that prove the criterion is met; on a risk, <em>Closes with</em>: the step that closes it.</dd>
     <dt>Why amended</dt>
     <dd>Why the item was added after its phase was approved.</dd>
     <dt>Needed by, Mentioned in</dt>
-    <dd>The items that need this one, and the items that mention it, each a list: a decision's card lists the PRs that carry it out. On a check, the criteria that need it read <em>Verifies</em>.</dd>
+    <dd>The items that need this one, and the items that mention it, each a list: a decision's card lists the PRs that carry it out. On a check, the criteria that need it read <em>Verifies</em>; on a step, the risks it closes read <em>Closes</em>.</dd>
   </dl>
 </section>
 
@@ -134,7 +134,7 @@
 
 <section class="block" id="guide-kinds">
   <h3>Kinds</h3>
-  <p class="intro">The first chip on a card, and the word at the end of a chip on the board, say what kind of change an item is.</p>
+  <p class="intro">The first chip on a card, and the word at the end of a chip on the board, say what kind of change an item is. A PR's kind is what its merge releases, so no field repeats it.</p>
   <!--kinds-->
 </section>
 

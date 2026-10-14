@@ -15,5 +15,5 @@ status = "blocked"
 waits = "the metrics stack"
 fields = [
   ["What", "Chart each probe's failures beside the restarts they caused."],
-  ["Goes to", "A PR of its own in Plan, once the metrics stack runs."],
+  ["Goes to", "A PR of its own in Plan."],
 ]

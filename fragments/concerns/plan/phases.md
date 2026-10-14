@@ -54,17 +54,19 @@ they answer.
   batches, one section each, with the evidence and what the batch costs,
   discussed and answered together.
 - **Plan**: the PRs as approved, one at a time in each repository, each with its
-  branch, what it needs first, what its merge releases, and *Done when*: what
-  proves it works. The settings only the user can change. The risk register:
-  each risk, and the step that closes it. The Plan stays as approved: an item
-  added after the approval is an amendment, dated and saying why, and the Plan
-  ends with its approval: the day, and its amendments.
+  branch, what it needs first, what its merge releases, as its kind, and *Done
+  when*: what proves it works. The settings only the user can change. The risk
+  register: each risk, and the step that closes it. The Plan stays as
+  approved: an item added after the approval is an amendment, dated and saying
+  why, and the Plan ends with its approval: the day, and its amendments.
 - **Build**: the live state. A board of the PRs and settings in waves, built
   from what each needs; each PR's *Result* once it merges; and the questions
   the work raises. What happened is in each phase's changelog and in the
   Agenda, so Build keeps no log of its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
-  success criteria, Met or Not met yet. Build ends with the last merge, Verify
+  success criteria, Met or Not met yet. A check's title says how it is
+  checked: what it proves is already on the PR it needs and the criterion it
+  verifies. Build ends with the last merge, Verify
   with the last check.
 - **Reuse**: what another project can take from this one, such as a template, a
   shared rule, a shared workflow, or a page to link instead.
@@ -107,7 +109,8 @@ from the lesson.
   every Ready one; or a date coming up, with an automated run marked as such.
   The Agenda holds every date the project has, ahead and past, and the notes for
   the next session. All of it is built from the statuses: never repeat a status
-  in prose, which goes stale the next time it changes.
+  in prose, which goes stale the next time it changes. Say each fact once: a
+  field doesn't repeat a chip, such as a PR's kind, nor a card another card.
 - One glossary per project: the terms coined for it, and the terms borrowed. It
   sits in Guides, after the guide to using the page.
 

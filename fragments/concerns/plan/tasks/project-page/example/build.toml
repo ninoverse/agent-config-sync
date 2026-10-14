@@ -16,7 +16,6 @@ result = "Both probes point at the new routes."
 [status.EX-2]
 status = "open"
 on = 2026-10-07
-result = "Open and green, waiting for your merge."
 
 [status.EX-3]
 status = "ready"

@@ -100,13 +100,18 @@ def check_example(tmp):
     expect('pill st-blocked">Open<' in page and "<dt>Closes with</dt>" in page, "an open risk names the step that closes it")
     results = between(page, 'id="results"', "</section>")
     expect("<table" not in results and '<span class="n">EX-1</span><h4><a class="ref" href="#ex-1">Liveness probe</a></h4>' in results and "<dt>Result</dt><dd>Released 1.4.0." in results, "results are cards, each linking to its item's own card")
+    shown = re.findall(r'<span class="n">(.*?)</span>', results)
+    ex1 = between(results, '<span class="n">EX-1</span>', "</article>")
+    expect(shown == ["EX-1", "S1", "RK1"] and "pill" not in ex1 and 'pill st-blocked">Open<' in results, f"what the board shows is in the results only once it has a result, and then the result alone: {shown}")
+    rk1, ex3 = between(phase["plan"], 'id="rk1"', "</article>"), between(phase["plan"], 'id="ex-3"', "</article>")
+    expect("<dt>Closes with</dt>" in rk1 and "<dt>Closes</dt>" in ex3 and "Needed by" not in ex3, "a risk's needs read Closes with, and the step that closes it says Closes")
     for chip in re.findall(r'<a class="chip.*?</a>', page):
         expect("<a " not in chip[2:], f"a chip holds no link of its own: {chip[:80]}")
 
     expect('class="st ' not in phase["plan"], "the plan shows its items as approved, without the build's statuses")
     expect('<a class="ref" href="#ex-1"><b>EX-1</b> Liveness probe</a>' in phase["plan"], "[[EX-1]] links with its short title")
-    approved = '<span class="n">3 Oct</span><p class="says">Approved.</p></div>\n    <dl><dt>Amended since</dt><dd><ul class="list"><li><a class="ref" href="#ex-3">'
-    expect(approved in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so, and the plan's approval lists it")
+    approved = '<span class="n"></span><p class="says">Approved.</p></div>\n    <div class="item-tags"><span class="pill day">3 Oct</span></div>\n    <dl><dt>Amended since</dt><dd><ul class="list"><li><a class="ref" href="#ex-3"><b>EX-3</b> Ten seconds in production</a></li></ul></dd></dl>'
+    expect(approved in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so, with when and why, and the plan's approval only lists it")
     expect(phase["plan"].index('id="plan-approval"') > phase["plan"].index('id="risks"'), "the approval comes after the plan's sections")
     link = '<a class="pill link" href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a>'
     expect(link in phase["plan"], "a PR's url is a chip linking to it, named as GitHub names it")
@@ -129,8 +134,9 @@ def check_example(tmp):
         analysis = tmp / "unchosen-out" / "phases" / "analysis.html"
         d1 = between(analysis.read_text(), 'id="d1"', "</article>") if analysis.exists() else ""
         expect('<li class="recommended"><span class="key">a</span>' in d1 and 'class="chosen"' not in d1, "until one is chosen, the recommended option is marked")
-    entry = '<span class="n">7 Oct</span><p class="says"><a class="ref" href="#ex-2">'
-    expect(entry in page and '<dt>Changed</dt><dd><ul class="list"><li><a href="#results">Results</a>' in page, "a changelog entry is a card, its day where an item's number goes, listing what it changed")
+    entry = '<span class="n"></span><p class="says"><a class="ref" href="#ex-2">'
+    expect(entry in page and '<span class="pill day">7 Oct</span>' in page and '<dt>Changed</dt><dd><ul class="list"><li><a href="#results">Results</a>' in page, "a changelog entry is a card, its day a chip under what it says, listing what it changed")
+    expect(not re.search(r'<div class="item-head"><span class="n">\d', "".join(views)), "no card has a date where an item's number goes")
     project = between(phase["brief"], 'id="the-project"', "</section>")
     expect('<article class="item">\n    <dl><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
 
@@ -229,7 +235,7 @@ def check_full(tmp):
     build = (out / "phases" / "build.html").read_text()
     expect(board_cells(build) == ["example-service", ["MX-1"], ["MX-2"]], f"a board can name its columns and rows: {board_cells(build)}")
     order = re.findall(r'<span class="n">(.*?)</span>', between(build, 'id="results"', "</section>"))
-    expect(order == ["MX-2", "MX-1"], f"results follow `ids`: {order}")
+    expect(order == ["RK1", "MX-1"], f"results follow `ids`, leaving out what the board shows without a result: {order}")
     expect("st-dropped" in build and "The first one covers it." in build, "a dropped item says why")
     deferred = (out / "phases" / "deferred.html").read_text()
     expect('st-blocked">Waiting<' in deferred and 'href="#l2"' in deferred, "a rule change waits in Deferred, on its lesson")
@@ -329,7 +335,7 @@ def check_since(tmp):
     expect(render(EXAMPLE, tmp / "since-none", "--since", str(tmp / "nowhere")).returncode == 2, "--since names a directory that exists")
 
     merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-09\nresult = "Released 1.5.0."'
-    data = copy_with(tmp, "since", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07\nresult = "Open and green, waiting for your merge."', merged)
+    data = copy_with(tmp, "since", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
     if data is None:
         return
     added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\n\n[[section]]\nid = "settings"'

@@ -112,6 +112,8 @@ new changelog entry gets a warning.
 - A `board` with `auto = true` builds its waves from `needs`, over the item
   `types` it names, and its rows from each item's `repo`, or `rows_default`;
   `waves` subtitles each wave. Without `auto`, it takes `columns` and `row`s.
+  A `results` section in the same phase leaves out what the board shows until
+  it has a `result`, and then shows the result alone.
 - A `figures` section with `auto = true` starts with what the data counts: PRs
   merged, releases, decisions taken, settings changed by hand, lessons adopted,
   and the days from the first date to the last. Its `figure`s follow.

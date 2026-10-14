@@ -10,7 +10,8 @@ title = "The PRs"
 kind = "items"
 type = "pr"
 
-# `kind` is what a merge releases (major, minor, patch), or owner or together.
+# `kind` is what a merge releases (major, minor, patch), or owner or together;
+# its chip says so, so no field repeats it.
 # `short` names the item wherever it is linked. `needs` lists what has to be
 # done first: it decides the board's waves, and a loop in it fails the render.
 # `url` is the PR's address once it is open, where its state is read from. A
@@ -25,7 +26,6 @@ fields = [
   ["Branch", "<code>feat/liveness-probe</code>"],
   ["Changes", "A <code>/healthz</code> route that answers 200 while the process runs."],
   ["Carries out", "[[D1]]"],
-  ["Releases", "A minor version."],
   ["Done when", "In staging, a process whose <code>/healthz</code> stops answering is restarted."],
 ]
 
@@ -40,7 +40,6 @@ fields = [
   ["Branch", "<code>feat/readiness-probe</code>"],
   ["Changes", "A <code>/readyz</code> route that answers 200 only while the database connection is up."],
   ["Carries out", ["[[D1]]", "[[D2]]"]],
-  ["Releases", "A minor version."],
   ["Done when", "In staging, a process that loses its database gets no traffic until the connection is back."],
 ]
 
@@ -54,13 +53,12 @@ amended = { on = 2026-10-07, why = "the answer to [[Q1]]" }
 fields = [
   ["Branch", "<code>fix/readiness-timeout</code>"],
   ["Changes", "The production readiness probe allows ten seconds instead of five."],
-  ["Releases", "A patch."],
   ["Done when", "A slow night in production takes no process out of service."],
 ]
 
 [[section]]
 id = "settings"
-title = "Settings only the owner can change"
+title = "Settings"
 kind = "items"
 type = "setting"
 

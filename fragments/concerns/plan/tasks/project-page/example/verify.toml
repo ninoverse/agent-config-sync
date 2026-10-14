@@ -1,6 +1,7 @@
 # Verify: what proves the merged work does what it should, in the world, and
 # the Brief's success criteria. Build ends at the last merge; Verify at the
-# last check.
+# last check. A check's title says how it is checked: what it proves is the
+# Done when of the PR it needs, and the criterion it verifies.
 
 [status.SC1]
 status = "done"
@@ -17,20 +18,18 @@ type = "check"
 
 [[section.item]]
 id = "C1"
-title = "A process whose <code>/healthz</code> stops answering is restarted"
-short = "Restart on a hang"
+title = "In staging, block <code>/healthz</code> on one process and watch the platform's events"
+short = "Block /healthz in staging"
 needs = ["EX-1"]
 status = "done"
 on = 2026-10-06
-fields = [["How", "In staging, block <code>/healthz</code> on one process and watch the platform's events."]]
 
 [[section.item]]
 id = "C2"
-title = "A process without its database gets no traffic"
-short = "No traffic without a database"
+title = "In staging, cut one process off its database and watch its share of requests"
+short = "Cut the database in staging"
 needs = ["EX-2"]
 status = "blocked"
-fields = [["How", "In staging, cut one process off its database and watch its share of requests."]]
 
 [[section]]
 id = "criteria-met"

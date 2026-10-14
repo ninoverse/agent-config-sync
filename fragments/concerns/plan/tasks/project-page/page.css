@@ -189,6 +189,9 @@
   .why { color: var(--ink-muted); }
   .on { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
   .pill.amended { color: var(--ready); background: var(--ready-soft); }
+  /* The day a record card is about, such as a changelog entry's. */
+  .pill.day { color: var(--ink-muted); background: var(--surface-high); }
+  .pill.day::before { content: none; }
   .block { margin-top: 40px; }
   .block > h3 { padding-top: 14px; border-top: 1px solid var(--rule); }
   .intro { color: var(--ink-muted); }
@@ -379,6 +382,8 @@
     nav.phases ol { gap: 5px; }
     article.item { padding: 14px 14px 16px; }
     .item-head { grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
+    .item-head:has(.n:empty) { display: block; }
+    .item-head .n:empty { display: none; }
     .item-tags { margin-left: 0; }
     article.item dl { grid-template-columns: 1fr; }
     nav.phases :is(a, .off) { padding: 5px 8px 6px 7px; column-gap: 5px; }

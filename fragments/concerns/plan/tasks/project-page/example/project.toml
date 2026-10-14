@@ -75,7 +75,7 @@ short = "Freeze"
 [handoff]
 updated = 2026-10-07
 notes = [
-  "[[EX-2]] is open on <code>feat/readiness-probe</code>, green, waiting for your merge.",
+  "[[EX-2]] is on <code>feat/readiness-probe</code>, its checks green.",
   "Then: [[EX-3]], cut from an up-to-date <code>main</code> once [[EX-2]] merges, since each repository has one PR in flight.",
 ]
 
