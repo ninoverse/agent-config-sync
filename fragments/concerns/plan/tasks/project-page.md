@@ -35,9 +35,8 @@ progress and the Agenda, and `phases/<phase>.html` for each other phase with
 content, which the page fetches when the reader picks that phase. A phase
 without content has a tab that doesn't open. Each item's card shows its number,
 summary and chips, and opens on a click, or a link to it, to its fields; a
-phase's changelog shows its newest three entries and folds the rest; and a
-calendar day with more than three things on it counts what happened to more than
-one item, such as 18 merged.
+phase's changelog shows its newest three entries and folds the rest; and the
+calendar counts each day's items by what happened to them, such as 18 merged.
 `phases/guides.html` is the Guides: the guide to using the page, from
 `guide.html` beside the renderer, with its tables built from the renderer's own
 words, then the glossary. `--inline` puts every phase in `index.html`, for a

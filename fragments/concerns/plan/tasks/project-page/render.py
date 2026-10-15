@@ -117,7 +117,6 @@ TODAY = None  # the day the state was read
 LINKABLE = None  # the ids a reference links to, on a page that holds only some; None for all
 COUNTED = []  # the headline figures counted from the data, for a `figures` section with `auto`
 SCRIPTED = True  # whether the page runs page.js; the Retrospective alone doesn't
-BUSY = 3  # the most marks a calendar day shows one by one
 SHOWN_CHANGES = 3  # the changelog entries a phase shows before the rest fold
 
 
@@ -925,20 +924,26 @@ def dated(project, phases):
     return found
 
 
+def day_mark(cls, label, count=None):
+    """One mark in a calendar day: an event or a phase's date by name, or a count of
+    items with what happened to them, such as 18 merged. On a phone a mark is a box,
+    and a count's box shows its number; the word stays for screen readers."""
+    if count is None:
+        return f'<li class="m-{cls}">{esc(label)}</li>'
+    return f'<li class="m-{cls} count"><b>{count}</b><span class="word"> {esc(label)}</span></li>'
+
+
 def day_marks(entries):
-    """A day's marks in the calendar: each one, or, on a day with more than BUSY,
-    its events and phase dates, then its items counted by what happened to them,
-    such as 18 merged, where more than one item shares it. The day's link opens
-    the Agenda, which lists them all."""
-    if len(entries) <= BUSY:
-        return [(cls, label) for cls, text, label, word in entries]
-    marks, groups = [], {}
+    """A day's marks in the calendar: its events and phase dates, then its items
+    counted by what happened to them. The day's link opens the Agenda, which lists
+    each item."""
+    marks, counts = [], {}
     for cls, text, label, word in entries:
         if word is None:
-            marks.append((cls, label))
+            marks.append(day_mark(cls, label))
         else:
-            groups.setdefault((cls, word), []).append(label)
-    return marks + [(cls, labels[0] if len(labels) == 1 else f"{len(labels)} {word}") for (cls, word), labels in groups.items()]
+            counts[(cls, word)] = counts.get((cls, word), 0) + 1
+    return "".join(marks + [day_mark(cls, word, count) for (cls, word), count in counts.items()])
 
 
 def month_grid(year, month, by_day, before, after, shown):
@@ -954,7 +959,7 @@ def month_grid(year, month, by_day, before, after, shown):
                 cells.append('<td class="out"></td>')
                 continue
             classes = ["d"] + (["today"] if date == TODAY else []) + (["has"] if date in by_day else [])
-            marks = "".join(f'<li class="m-{cls}">{esc(label)}</li>' for cls, label in day_marks(by_day.get(date, [])))
+            marks = day_marks(by_day.get(date, []))
             number = f'<a class="dn" href="#on-{date.isoformat()}">{date.day}</a>' if date in by_day else f'<span class="dn">{date.day}</span>'
             cells.append(f'<td class="{" ".join(classes)}">{number}{f"<ul>{marks}</ul>" if marks else ""}</td>')
         rows.append("<tr>" + "".join(cells) + "</tr>")

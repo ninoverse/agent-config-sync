@@ -177,8 +177,9 @@ def check_example(tmp):
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
     expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the changelogs and the agenda hold what happened")
-    sixth = between(calendar_of(page), 'href="#on-2026-10-06">6</a>', "</td>")
-    expect(all(f">{item}<" in sixth for item in ("Verify", "SC1", "EX-1", "S1", "C1")), f"a busy day where each thing happened once keeps every id: {sixth}")
+    marks = re.findall(r'<li class="(m-[\w-]+)(?: count)?">(.*?)</li>', between(calendar_of(page), 'href="#on-2026-10-06">6</a>', "</td>"))
+    counted = [("m-phase", "Verify"), ("m-s-done", '<b>1</b><span class="word"> met</span>'), ("m-s-done", '<b>1</b><span class="word"> merged</span>'), ("m-s-done", '<b>1</b><span class="word"> set</span>'), ("m-s-done", '<b>1</b><span class="word"> passed</span>')]
+    expect(marks == counted, f"a day names its events and phase dates, then counts its items by what happened to them, the number apart for a phone: {marks}")
     merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-06\nresult = "Released 1.5.0."'
     crowded = copy_with(tmp, "crowded", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
     if crowded is not None:
@@ -186,9 +187,8 @@ def check_example(tmp):
         index = tmp / "crowded-out" / "index.html"
         text = index.read_text() if index.exists() else ""
         sixth = between(calendar_of(text), 'href="#on-2026-10-06">6</a>', "</td>")
-        marks = re.findall(r'<li class="(m-[\w-]+)">(.*?)</li>', sixth)
-        expected = [("m-phase", "Verify"), ("m-s-done", "SC1"), ("m-s-done", "2 merged"), ("m-s-done", "S1"), ("m-s-done", "C1")]
-        expect(marks == expected, f"a busy day counts what happened to more than one item, events and phases first: {marks}")
+        marks = re.findall(r'<li class="m-s-done count"><b>(\d+)</b><span class="word"> (.*?)</span></li>', sixth)
+        expect(marks == [("1", "met"), ("2", "merged"), ("1", "set"), ("1", "passed")], f"two items that merged the same day are counted together: {marks}")
         day = between(text, 'id="on-2026-10-06"', "</ul>")
         expect('href="#ex-1"' in day and 'href="#ex-2"' in day, "and the agenda still lists each item that day")
     entries = "".join(f'[[changelog]]\ndate = 2026-10-0{n}\ntext = "Change {n}."\n\n' for n in (6, 5, 4))
