@@ -279,6 +279,29 @@
   article.item dd code { background: var(--bg); }
   /* A card's second line: chips for what a word or two says. */
   .item-tags { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 12px 0 0 calc(var(--label) + 16px); }
+  /* A folded card: its number, summary and chips open its fields, and a chevron
+     at the end of its first line says which way it is. */
+  details.fold > summary { list-style: none; cursor: pointer; grid-template-columns: var(--label) minmax(0, 1fr) auto; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::after {
+    content: ''; grid-column: 3; grid-row: 1; align-self: center; width: 7px; height: 7px; margin: 0 3px 4px 14px;
+    border-right: 2px solid var(--ink-muted); border-bottom: 2px solid var(--ink-muted); transform: rotate(-45deg);
+  }
+  details.fold[open] > summary::after { transform: rotate(45deg); margin-bottom: 8px; }
+  details.fold > summary:hover::after { border-color: var(--accent); }
+  details.fold > summary .item-tags { grid-column: 2; margin-left: 0; }
+  .fold-all { margin: 10px 0 0; display: flex; justify-content: flex-end; }
+  .open-all { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  /* A changelog past its newest entries: the rest under one line that says how many. */
+  details.earlier { margin-top: 14px; }
+  details.earlier > summary {
+    list-style: none; cursor: pointer; display: inline-block; padding: 4px 14px;
+    border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface); font-size: 0.9rem; font-weight: 600;
+  }
+  details.earlier > summary::-webkit-details-marker { display: none; }
+  details.earlier > summary::before { content: '▸ '; }
+  details.earlier[open] > summary::before { content: '▾ '; }
+  details.earlier > summary:hover { border-color: var(--accent-fill); }
   .pill.link { color: var(--accent); background: transparent; text-decoration: none; }
   .pill.link::before { content: none; }
   .pill.link::after { content: '↗'; }
@@ -385,6 +408,8 @@
     .item-head:has(.n:empty) { display: block; }
     .item-head .n:empty { display: none; }
     .item-tags { margin-left: 0; }
+    details.fold > summary { grid-template-columns: auto minmax(0, 1fr) auto; }
+    details.fold > summary .item-tags { grid-column: 1 / -1; }
     article.item dl { grid-template-columns: 1fr; }
     nav.phases :is(a, .off) { padding: 5px 8px 6px 7px; column-gap: 5px; }
   }

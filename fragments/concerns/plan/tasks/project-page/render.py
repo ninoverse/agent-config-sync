@@ -116,6 +116,9 @@ ITEMS = {}  # every item of every phase, by id, in phase order
 TODAY = None  # the day the state was read
 LINKABLE = None  # the ids a reference links to, on a page that holds only some; None for all
 COUNTED = []  # the headline figures counted from the data, for a `figures` section with `auto`
+SCRIPTED = True  # whether the page runs page.js; the Retrospective alone doesn't
+BUSY = 3  # the most marks a calendar day shows one by one
+SHOWN_CHANGES = 3  # the changelog entries a phase shows before the rest fold
 
 
 def problem(where, text):
@@ -555,11 +558,18 @@ def state_line(item):
     return line
 
 
-def card_html(number, title, tags=(), rows=(), anchor=None, says=False):
+def card_html(number, title, tags=(), rows=(), anchor=None, says=False, fold=False):
     """A card: its number and title on its first line, its chips under the title, then
     its fields, each a label and its text. `says` writes the title as a sentence rather
     than a heading, for a card that records something, such as a changelog entry. A
-    card with neither number nor title is its fields alone."""
+    card with neither number nor title is its fields alone. `fold` shows the first
+    two layers and keeps the fields behind them, opened by a click."""
+    attr = f' id="{anchor}"' if anchor else ""
+    if fold and rows:
+        tagline = f'<span class="item-tags">{"".join(tags)}</span>' if tags else ""
+        fields = "<dl>" + "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows) + "</dl>"
+        summary = f'<summary class="item-head"><span class="n">{number or ""}</span><h4>{title}</h4>{tagline}</summary>'
+        return f'  <article class="item"{attr}>\n    <details class="fold">\n      {summary}\n      {fields}\n    </details>\n  </article>'
     parts = []
     if number is not None or title is not None:
         name = f'<p class="says">{title}</p>' if says else f"<h4>{title}</h4>"
@@ -568,7 +578,6 @@ def card_html(number, title, tags=(), rows=(), anchor=None, says=False):
         parts.append(f'<div class="item-tags">{"".join(tags)}</div>')
     if rows:
         parts.append("<dl>" + "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows) + "</dl>")
-    attr = f' id="{anchor}"' if anchor else ""
     return f'  <article class="item"{attr}>\n    ' + "\n    ".join(parts) + "\n  </article>"
 
 
@@ -589,7 +598,8 @@ def waits_label(item):
 
 def card(item):
     """An item's card: its number and summary; then chips, for what a word or two says;
-    then its fields; then the items that need it or mention it."""
+    then, folded behind those until the reader opens them, its fields, and the items
+    that need it or mention it."""
     short = item.get("short")
     tags = []
     if item.get("kind") in KINDS:
@@ -625,7 +635,7 @@ def card(item):
     rows += [(label, refs_ul(ids)) for label, ids in needed_by.items()]
     if item["mentioned_in"]:
         rows.append(("Mentioned in", refs_ul(item["mentioned_in"])))
-    return card_html(esc(item["id"]), short or item.get("title", ""), tags, rows, anchor_of(item["id"]))
+    return card_html(esc(item["id"]), short or item.get("title", ""), tags, rows, anchor_of(item["id"]), fold=True)
 
 
 def result_card(item, on_board=False):
@@ -782,7 +792,11 @@ def render_section(section, key, data, data_dir):
             rows.append([f'<code>{esc(repo.get("name", ""))}</code> <span class="pill u-{use}">{USES[use]}</span>', repo.get("part", "")])
         parts.append(table_html(["Repository", "Its part"], rows, section.get("min_width"), "repos"))
     elif kind == "items":
-        parts.extend(card(ITEMS[item["id"]]) for item in section.get("item", []) if item.get("id") in ITEMS)
+        cards = [card(ITEMS[item["id"]]) for item in section.get("item", []) if item.get("id") in ITEMS]
+        # One button opens, or closes, every folded card in the section.
+        if SCRIPTED and sum('<details class="fold">' in c for c in cards) > 1:
+            parts.append('  <p class="fold-all"><button type="button" class="open-all">Open all</button></p>')
+        parts.extend(cards)
     elif kind == "board":
         board = board_rows(section, where)
         if board is None:
@@ -840,7 +854,7 @@ def approval(key, data):
 
 def changelog(key, entries, targets):
     """The phase's changelog, newest first: a card for each entry, its day as a chip
-    under what it says, and what it changed as a list."""
+    under what it says, and what it changed as a list; past the newest few, folded."""
     if not entries:
         return ""
     cards = []
@@ -857,7 +871,11 @@ def changelog(key, entries, targets):
             links.append(f'<a href="#{target}">{targets[target]}</a>')
         tags = [day_pill(entry["date"])] if entry.get("date") else []
         cards.append(card_html("", entry.get("text", ""), tags, [("Changed", list_html(links))] if links else [], says=True))
-    return f'<footer class="block changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n' + "\n".join(cards) + "\n</footer>"
+    # The newest entries show; the rest fold under one line that says how many.
+    shown, earlier = cards[:SHOWN_CHANGES], cards[SHOWN_CHANGES:]
+    if earlier:
+        shown.append(f'  <details class="earlier">\n  <summary>Earlier changes ({len(earlier)})</summary>\n' + "\n".join(earlier) + "\n  </details>")
+    return f'<footer class="block changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n' + "\n".join(shown) + "\n</footer>"
 
 
 def render_phase(key, data, data_dir, head=True):
@@ -882,27 +900,45 @@ def render_phase(key, data, data_dir, head=True):
 
 
 def dated(project, phases):
-    """Everything with a date: (date, class, html), in no order yet."""
+    """Everything with a date: (date, class, html, label, word), in no order yet. The
+    word is what happened to an item, which a busy day counts; an event or a phase's
+    date has none, and shows on its own."""
     found = []
     for event in project.get("event", []):
         if event.get("date"):
             # A run that starts on its own, such as a scheduled workflow, is marked Automated wherever it is listed.
             mark = ' <span class="automated">Automated</span>' if event.get("automated") is True else ""
-            found.append((event["date"], "event", event.get("title", "") + mark, event.get("short") or text_of(event.get("title", ""))))
+            found.append((event["date"], "event", event.get("title", "") + mark, event.get("short") or text_of(event.get("title", "")), None))
     for item_id, item in ITEMS.items():
         if item.get("on") and item.get("status") in ITEM_STATUS:
-            found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id))
+            found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id, label_of(item).lower()))
         if item["amended"] and item["amended"]["on"]:
-            found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended"))
+            found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended", "amended"))
     for key, state in project["status"].items():
         if state["start"]:
-            found.append((state["start"], "phase", f"{PHASE_NAME[key]} starts", PHASE_NAME[key]))
+            found.append((state["start"], "phase", f"{PHASE_NAME[key]} starts", PHASE_NAME[key], None))
         if state["end"]:
-            found.append((state["end"], "phase", f"{PHASE_NAME[key]} ends", f"{PHASE_NAME[key]} ends"))
+            found.append((state["end"], "phase", f"{PHASE_NAME[key]} ends", f"{PHASE_NAME[key]} ends", None))
     for key, data in phases.items():
         if data.get("approved"):
-            found.append((data["approved"], "phase", f"{PHASE_NAME[key]} approved", f"{PHASE_NAME[key]} approved"))
+            found.append((data["approved"], "phase", f"{PHASE_NAME[key]} approved", f"{PHASE_NAME[key]} approved", None))
     return found
+
+
+def day_marks(entries):
+    """A day's marks in the calendar: each one, or, on a day with more than BUSY,
+    its events and phase dates, then its items counted by what happened to them,
+    such as 18 merged, where more than one item shares it. The day's link opens
+    the Agenda, which lists them all."""
+    if len(entries) <= BUSY:
+        return [(cls, label) for cls, text, label, word in entries]
+    marks, groups = [], {}
+    for cls, text, label, word in entries:
+        if word is None:
+            marks.append((cls, label))
+        else:
+            groups.setdefault((cls, word), []).append(label)
+    return marks + [(cls, labels[0] if len(labels) == 1 else f"{len(labels)} {word}") for (cls, word), labels in groups.items()]
 
 
 def month_grid(year, month, by_day, before, after, shown):
@@ -918,7 +954,7 @@ def month_grid(year, month, by_day, before, after, shown):
                 cells.append('<td class="out"></td>')
                 continue
             classes = ["d"] + (["today"] if date == TODAY else []) + (["has"] if date in by_day else [])
-            marks = "".join(f'<li class="m-{cls}">{esc(label)}</li>' for cls, text, label in by_day.get(date, []))
+            marks = "".join(f'<li class="m-{cls}">{esc(label)}</li>' for cls, label in day_marks(by_day.get(date, [])))
             number = f'<a class="dn" href="#on-{date.isoformat()}">{date.day}</a>' if date in by_day else f'<span class="dn">{date.day}</span>'
             cells.append(f'<td class="{" ".join(classes)}">{number}{f"<ul>{marks}</ul>" if marks else ""}</td>')
         rows.append("<tr>" + "".join(cells) + "</tr>")
@@ -942,8 +978,8 @@ def calendar_view(project, phases):
     and what happened."""
     found = dated(project, phases)
     by_day = {}
-    for date, cls, text, label in found:
-        by_day.setdefault(date, []).append((cls, text, label))
+    for date, cls, text, label, word in found:
+        by_day.setdefault(date, []).append((cls, text, label, word))
     dates = [e[0] for e in found] + [TODAY]
     first, last = min(dates), max(dates)
     months, cursor = [], datetime.date(first.year, first.month, 1)
@@ -966,7 +1002,7 @@ def calendar_view(project, phases):
     owner_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in owner]
     agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
     # The next three dates, each a link to its day in the agenda, which has them all.
-    date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label in ahead[:3]]
+    date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word in ahead[:3]]
     more = f'<p class="more"><a href="#coming-up">{len(ahead) - 3} more in the agenda</a></p>' if len(ahead) > 3 else ""
     ball = (
         '<section class="hold" id="ball" aria-labelledby="ball-title"><h2 id="ball-title">Who holds the ball</h2><div class="ball">'
@@ -981,7 +1017,7 @@ def calendar_view(project, phases):
         updated = f' <span class="on">{day(handoff["updated"])}</span>' if handoff.get("updated") else ""
         notes = f'<section class="block handoff" id="next-session"><h3>Notes for the next session{updated}</h3>{list_html(handoff["notes"])}</section>'
     coming, happened = {}, {}
-    for date, cls, text, label in found:
+    for date, cls, text, label, word in found:
         upcoming = date > TODAY or (date == TODAY and cls == "event")
         (coming if upcoming else happened).setdefault(date, []).append((cls, text))
     anchors = set()
@@ -1451,13 +1487,15 @@ def counted(project, phases):
 def retrospective_page(project, phases, data_dir):
     """The Retrospective alone, as a page to share: no tabs, no calendar and no
     script, and the items it doesn't hold named as text rather than linked."""
-    global LINKABLE
+    global LINKABLE, SCRIPTED
     title = f'{project.get("repo", "")}-{project.get("objective", "")}-retrospective'
     data = phases.get("retrospective")
     if not data:
         problem("retrospective.toml", "the Retrospective has no data yet")
         return title, ""
     LINKABLE = {item_id for item_id, item in ITEMS.items() if item["phase"] == "retrospective"}
+    # Without the page's script, folded cards still open on a click, one at a time.
+    SCRIPTED = False
     body = render_phase("retrospective", data, data_dir, head=False)
     read_at = project["read_at"]
     text = f"""<meta charset="utf-8">

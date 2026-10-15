@@ -119,6 +119,13 @@ def check_example(tmp):
     layers = [ex2.find(mark) for mark in ('<h4>Readiness probe</h4>', 'class="item-tags"', "<dl>")]
     expect(-1 not in layers and layers == sorted(layers), f"a card reads number and summary, then chips, then fields: {layers}")
     expect("<dt>Title</dt><dd><code>feat: add the readiness probe</code></dd>" in ex2, "a title longer than the summary is a field")
+    folded = '<details class="fold">\n      <summary class="item-head"><span class="n">EX-2</span><h4>Readiness probe</h4><span class="item-tags">'
+    expect(folded in ex2 and "</summary>\n      <dl>" in ex2, "a card folds its fields behind its number, summary and chips")
+    unfolded = [m for view in views for m in re.findall(r'<article class="item" id="[^"]+">\n    (?!<details class="fold">)', view)]
+    expect(not unfolded, f"every item's card folds: {unfolded[:2]}")
+    expect('class="fold"' not in results and 'class="fold"' not in between(page, 'id="build-changelog"', "</footer>"), "a result or a changelog entry doesn't fold, since what it says is the point")
+    prs, risks = between(phase["plan"], 'id="prs"', "</section>"), between(phase["plan"], 'id="risks"', "</section>")
+    expect('<p class="fold-all"><button type="button" class="open-all">Open all</button></p>' in prs and "open-all" not in risks, "a section with several folded cards can open them all, and one with a single card has no need")
     expect('<dt>Carries out</dt><dd><ul class="list"><li><a class="ref" href="#d1">' in ex2, "a field that holds several things is a list")
     needed = between(between(phase["plan"], 'id="ex-1"', "</article>"), "Needed by", "</dd>")
     expect('<ul class="list">' in needed and all(f'href="#{i}"' in needed for i in ("ex-2", "s1", "c1")), f"a card lists what needs it: {needed}")
@@ -170,6 +177,28 @@ def check_example(tmp):
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
     expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the changelogs and the agenda hold what happened")
+    sixth = between(calendar_of(page), 'href="#on-2026-10-06">6</a>', "</td>")
+    expect(all(f">{item}<" in sixth for item in ("Verify", "SC1", "EX-1", "S1", "C1")), f"a busy day where each thing happened once keeps every id: {sixth}")
+    merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-06\nresult = "Released 1.5.0."'
+    crowded = copy_with(tmp, "crowded", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
+    if crowded is not None:
+        render(crowded, tmp / "crowded-out")
+        index = tmp / "crowded-out" / "index.html"
+        text = index.read_text() if index.exists() else ""
+        sixth = between(calendar_of(text), 'href="#on-2026-10-06">6</a>', "</td>")
+        marks = re.findall(r'<li class="(m-[\w-]+)">(.*?)</li>', sixth)
+        expected = [("m-phase", "Verify"), ("m-s-done", "SC1"), ("m-s-done", "2 merged"), ("m-s-done", "S1"), ("m-s-done", "C1")]
+        expect(marks == expected, f"a busy day counts what happened to more than one item, events and phases first: {marks}")
+        day = between(text, 'id="on-2026-10-06"', "</ul>")
+        expect('href="#ex-1"' in day and 'href="#ex-2"' in day, "and the agenda still lists each item that day")
+    entries = "".join(f'[[changelog]]\ndate = 2026-10-0{n}\ntext = "Change {n}."\n\n' for n in (6, 5, 4))
+    long = copy_with(tmp, "long-changelog", EXAMPLE, "build.toml", "[[changelog]]\ndate = 2026-10-06", entries + "[[changelog]]\ndate = 2026-10-06")
+    if long is not None:
+        render(long, tmp / "long-out")
+        index = tmp / "long-out" / "index.html"
+        footer = between(index.read_text(), 'id="build-changelog"', "</footer>") if index.exists() else ""
+        shown = between(footer, "<h3>", '<details class="earlier">')
+        expect(shown.count('<p class="says">') == 3 and "<summary>Earlier changes (2)</summary>" in footer, f"a changelog shows its newest three entries, and folds the rest under how many: {footer[:200]}")
     events = "".join(f'[[event]]\ndate = 2026-10-{day}\ntitle = "Release train {day}"\n\n' for day in (20, 27))
     busy = copy_with(tmp, "busy", EXAMPLE, "project.toml", "[[event]]\ndate = 2026-10-12", events + "[[event]]\ndate = 2026-10-12")
     if busy is not None:
@@ -255,6 +284,7 @@ def check_full(tmp):
         expect('<span class="ref"><b>MX-1</b>' in retro and 'href="#mx-1"' not in retro, "it names as text an item it doesn't hold")
         expect('id="l1"' in retro and 'id="glossary"' in retro and "lesson adopted" in retro, "it holds the lessons, the figures and the glossary")
         expect('id="guides"' not in retro and 'id="guide-board"' not in retro, "but not the guides, which are about the project page")
+        expect('<details class="fold">' in retro and 'class="open-all"' not in retro, "its cards fold too, one at a time, since it has no script to open them all")
     linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
     if linked is not None:
         expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")

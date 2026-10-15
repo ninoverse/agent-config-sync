@@ -2,7 +2,9 @@
 // the agenda and the guides, each a sheet over the whole page that its close
 // button, or Escape, closes. A link to any id on the page opens the view that
 // holds it; a view published as its own file is fetched the first time it is
-// shown. The calendar shows one month, and its arrows step through the others.
+// shown, and a folded card opens when a link names it. The calendar shows one
+// month, and its arrows step through the others. A section's Open all opens, or
+// closes, every folded card in it.
 (() => {
   const owner = JSON.parse(document.getElementById('anchors').textContent);
   const main = document.getElementById('phases');
@@ -74,9 +76,36 @@
     }
     mark(section.dataset.phase);
     await load(section);
-    // A view opens where the reader is; a link to an id inside one goes to it.
-    if (anchor && !views.has(anchor)) (document.getElementById(anchor) || section).scrollIntoView();
+    // A view opens where the reader is; a link to an id inside one goes to it,
+    // opening the card it names, or the folds around it.
+    if (anchor && !views.has(anchor)) {
+      const target = document.getElementById(anchor);
+      const fold = target?.querySelector(':scope > details.fold');
+      if (fold) fold.open = true;
+      for (let around = target?.parentElement?.closest('details'); around; around = around.parentElement?.closest('details')) around.open = true;
+      (target || section).scrollIntoView();
+    }
   }
+
+  // Open all says what a click does: open the section's folded cards while any is
+  // closed, and close them once all are open.
+  function label(button) {
+    const folds = [...button.closest('.block').querySelectorAll('details.fold')];
+    button.textContent = folds.some((fold) => !fold.open) ? 'Open all' : 'Close all';
+  }
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('button.open-all');
+    if (!button) return;
+    const folds = [...button.closest('.block').querySelectorAll('details.fold')];
+    const open = folds.some((fold) => !fold.open);
+    for (const fold of folds) fold.open = open;
+    label(button);
+  });
+  // A toggle doesn't bubble, so the document listens as it comes down.
+  document.addEventListener('toggle', (event) => {
+    const button = event.target.closest?.('.block')?.querySelector('button.open-all');
+    if (button) label(button);
+  }, true);
 
   for (const sheet of sheets) {
     sheet.querySelector('.close').addEventListener('click', () => sheet.close());
