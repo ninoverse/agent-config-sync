@@ -185,8 +185,8 @@ def check_example(tmp):
         render(asked, tmp / "asked-out")
         index = tmp / "asked-out" / "index.html"
         owner = between(between(index.read_text(), 'id="ball"', "</section>"), "<h3>The owner</h3>", "</ul>") if index.exists() else ""
-        line = re.search(r'<li><span class="pill ask">Merge</span> <a class="ref" href="#ex-2">.*?</a>, <a class="ref" href="#ex-3">', owner)
-        expect(line is not None and owner.count("<li>") == 1, f"the owner's items share a line for each thing to do: {owner}")
+        lines = re.findall(r'<li><span class="pill ask">Merge</span> <a class="ref" href="#(ex-\d)">', owner)
+        expect(lines == ["ex-2", "ex-3"], f"each of the owner's items has a line of its own, with what to do: {owner}")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
     expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the changelogs and the agenda hold what happened")
