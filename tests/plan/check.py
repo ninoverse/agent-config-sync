@@ -285,7 +285,7 @@ def check_full(tmp):
     page = (out / "index.html").read_text()
     expect('data-open="retrospective"' in page, "full/ opens on its retrospective")
     expect('<span class="off t-not-needed">' in page and "Nothing here is worth copying." not in page, "a phase that is not needed has a tab that doesn't open")
-    expect(page.count('<span class="off t-done">') == 4, "nor does a phase done but never written, such as full/'s Brief")
+    expect(page.count('<span class="off t-done">') == 3, "nor does a phase done but never written, such as full/'s Brief")
     expect('id="cost"' in page and "<th>Days</th>" in page, "a table renders")
     expect('id="old-status"' in page and 'href="#old-status"' in page, "an imported page's ids and links move under its prefix")
     expect('aria-labelledby="old-status-title"' in page and 'for="old-pick"' in page, "so do the attributes that name ids")
@@ -303,10 +303,11 @@ def check_full(tmp):
     expect(board_cells(build) == ["example-service", ["MX-1"], ["MX-2"]], f"a board can name its columns and rows: {board_cells(build)}")
     order = re.findall(r'<span class="n">(.*?)</span>', between(build, 'id="results"', "</section>"))
     expect(order == ["RK1", "MX-1"], f"results follow `ids`, leaving out what the board shows without a result: {order}")
-    expect("st-dropped" in build and "The first one covers it." in build, "a dropped item says why")
+    plan = (out / "phases" / "plan.html").read_text()
+    expect("st-dropped" in plan and "The first one covers it." in plan, "a dropped item says why")
     deferred = (out / "phases" / "deferred.html").read_text()
     expect('st-blocked">Waiting<' in deferred and 'href="#l2"' in deferred, "a rule change waits in Deferred, on its lesson")
-    expect("[[" not in page + build + deferred, "a title that names an item links it, and leaves no brackets in a short name")
+    expect("[[" not in page + plan + build + deferred, "a title that names an item links it, and leaves no brackets in a short name")
     september = between(page, '<div class="month" hidden>', "</table>")
     expect("<h2>September 2026</h2>" in september and 'disabled aria-label="No earlier month"' in september, "an earlier month waits behind the arrow, and the first has none before it")
     expect('data-step="-1" aria-label="September 2026">' in between(page, '<div class="month">', "</table>"), "the month shown is the one the state was read in, with an arrow back")
@@ -348,6 +349,8 @@ STALE = [
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
+    (EXAMPLE, "research.toml", 'type = "piece"', 'type = "decision"', "a card of type `decision` belongs in Analysis, not in Research"),
+    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "compared"\ntitle = "Compared"\nkind = "table"\nhead = ["Option"]\nrows = [["a"]]\n\n[[section]]\nid = "decisions"', "the Analysis holds only items and prose sections"),
     (EXAMPLE, "analysis.toml", 'id = "D2"', 'id = "D1"', "this id is used twice"),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"<a href=\\"#d9\\">D9</a>"', 'a link to "#d9"'),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"[[D9]]"', "[[D9]] names no item"),

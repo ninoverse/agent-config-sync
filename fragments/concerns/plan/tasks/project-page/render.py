@@ -81,6 +81,21 @@ TYPE_NAMES = {
     "lesson": ("Lesson", "L1"),
     "deferred": ("Deferred work", "T1"),
 }
+# The types of card each phase holds: a card of any other type belongs elsewhere.
+PHASE_TYPES = {
+    "brief": ("criterion", "rule"),
+    "research": ("piece",),
+    "analysis": ("decision",),
+    "plan": ("pr", "setting", "risk"),
+    "build": ("question",),
+    "verify": ("check",),
+    "reuse": (),
+    "retrospective": ("lesson",),
+    "deferred": ("deferred", "question"),
+}
+# The kinds of section a phase is held to, where it is: the Analysis is its decisions,
+# with a few lines of prose, and its evidence is in the Research.
+PHASE_KINDS = {"analysis": ("items", "prose")}
 KIND_MEANING = {
     "major": "Merging it releases a major version: what used the last one may need changing.",
     "minor": "Merging it releases a minor version: something new, and nothing that worked breaks.",
@@ -337,6 +352,9 @@ def collect_items(phases):
                 if item_type is not None and item_type not in TYPES:
                     problem(where, f"`type` is one of {', '.join(TYPES)}")
                     item_type = None
+                if item_type is not None and item_type not in PHASE_TYPES[key]:
+                    holders = " or ".join(PHASE_NAME[phase] for phase, types in PHASE_TYPES.items() if item_type in types)
+                    problem(where, f"a card of type `{item_type}` belongs in {holders}, not in {PHASE_NAME[key]}")
                 if item.get("kind") and item["kind"] not in KINDS:
                     problem(where, f"`kind` is one of {', '.join(KINDS)}")
                 if not all(is_field(field) for field in item.get("fields", [])):
@@ -780,6 +798,9 @@ def render_section(section, key, data, data_dir):
         return ""
     if kind not in SECTION_KINDS:
         problem(where, f"`kind` is one of {', '.join(SECTION_KINDS)}")
+        return ""
+    if kind not in PHASE_KINDS.get(key, SECTION_KINDS):
+        problem(where, f"the {PHASE_NAME[key]} holds only {' and '.join(PHASE_KINDS[key])} sections: evidence, such as a table, goes in the Research, and the cards link to it")
         return ""
     if kind != "prose":
         required(section, "title", where)

@@ -55,6 +55,8 @@ It writes nothing, and names the file and the item, when:
   item doesn't say why, or a phase that is Not needed doesn't say why, or has
   a `<phase>.toml`: its tab doesn't open, so nothing in it would show;
 - an item's status is set both on the item and in a `[status]` table;
+- an item is in a phase that doesn't hold its type, or the Analysis has a
+  section other than `items` and `prose`;
 - `needs` loops, or a date isn't one;
 - the HTML in a field doesn't nest.
 

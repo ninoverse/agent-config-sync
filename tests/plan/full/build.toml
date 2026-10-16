@@ -1,40 +1,4 @@
 [[section]]
-id = "prs"
-title = "PRs"
-kind = "items"
-type = "pr"
-
-[[section.item]]
-id = "MX-1"
-title = "Expose the metrics endpoint"
-kind = "minor"
-url = "https://github.com/example/example-service/pull/3"
-fields = [["Carries out", "[[D1]]"]]
-status = "done"
-on = 2026-10-06
-result = "Released 2.1.0."
-
-[[section.item]]
-id = "MX-2"
-title = "A second exporter"
-kind = "patch"
-status = "dropped"
-why = "The first one covers it."
-
-[[section]]
-id = "risks"
-title = "Risks"
-kind = "items"
-type = "risk"
-
-[[section.item]]
-id = "RK1"
-title = "The endpoint shows customer ids"
-status = "done"
-on = 2026-10-06
-result = "They are hashed before export."
-
-[[section]]
 id = "board"
 title = "The order"
 kind = "board"
