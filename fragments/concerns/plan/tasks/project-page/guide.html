@@ -73,8 +73,6 @@
     <dd>A page written before this one, kept whole inside a phase, such as an earlier version of the Analysis.</dd>
     <dt>Approval</dt>
     <dd>At the end of a phase the owner approves, such as the Plan: the day they did, and the items added since.</dd>
-    <dt>Changelog</dt>
-    <dd>At the foot of every phase, a card for each change: its day, what changed, and links to the sections and items it changed.</dd>
   </dl>
 </section>
 
@@ -100,7 +98,7 @@
     <dt>First line</dt>
     <dd>The item's number and its summary: the name it goes by wherever it's linked. The number never changes and is never reused, and its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T deferred work. A PR carries its repository's prefix, such as AC-1.</dd>
     <dt>Chips</dt>
-    <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved; and the link to where the item lives, such as its PR on GitHub. A project can add chips of its own, such as what a comparison found. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, <em>To agree</em> until the owner agrees them, and Verify says whether they're met.</dd>
+    <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved; and the link to where the item lives, such as its PR on GitHub. A project can add chips of its own, such as what a comparison found. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, <em>To agree</em> until the owner agrees them, or <em>Dropped</em>, and Verify says whether they're met.</dd>
     <dt>Title</dt>
     <dd>The full title, when the summary is shorter. A PR's is the title it merges with.</dd>
     <dt>Options</dt>
@@ -177,9 +175,9 @@
 <section class="block" id="guide-changes">
   <h3>What changed, and when</h3>
   <ul>
-    <li>Each phase ends with its changelog, newest first: a card for each day something changed, with links to the sections and items it changed. The newest three show, and <em>Earlier changes</em> opens the rest. A correction is an entry of its own, saying what was wrong.</li>
+    <li>The Agenda holds it all by day: what is coming up, soonest first, then what happened, newest first.</li>
+    <li>An item is never deleted. One that no longer belongs is Dropped, saying why, and the Agenda has the day.</li>
     <li>Under the calendar, the header says when the PR statuses were last read. Anything later isn't on the page yet.</li>
-    <li>The Agenda holds all of it by day: what is coming up, soonest first, then what happened, newest first.</li>
   </ul>
 </section>
 
@@ -191,5 +189,5 @@
     <li><em>EX-2 is merged</em>, once the PR is merged;</li>
     <li><em>S1 is set</em>, once the setting is changed.</li>
   </ul>
-  <p>The agent updates the project's data and publishes the page again, and the changelog of each phase it touched says what changed.</p>
+  <p>The agent updates the project's data, publishes the page again, and says in the chat what changed.</p>
 </section>

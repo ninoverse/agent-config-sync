@@ -25,10 +25,3 @@ fields = [
   ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],
   ["Raises", "[[D2]]"],
 ]
-
-# Each change after the first publish, newest first. `changed` names the
-# sections or items it changed, by id; an item's id is its own, lowercased.
-[[changelog]]
-date = 2026-10-02
-text = "[[R2]] says what the platform does when each probe fails."
-changed = ["r2"]

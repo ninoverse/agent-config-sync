@@ -34,9 +34,9 @@ It writes `index.html`, holding the calendar, who holds the ball, the phase in
 progress and the Agenda, and `phases/<phase>.html` for each other phase with
 content, which the page fetches when the reader picks that phase. A phase
 without content has a tab that doesn't open. Each item's card shows its number,
-summary and chips, and opens on a click, or a link to it, to its fields; a
-phase's changelog shows its newest three entries and folds the rest; and the
-calendar counts each day's items by what happened to them, such as 18 merged.
+summary and chips, and opens on a click, or a link to it, to its fields; and
+the calendar counts each day's items by what happened to them, such as 18
+merged.
 `phases/guides.html` is the Guides: the guide to using the page, from
 `guide.html` beside the renderer, with its tables built from the renderer's own
 words, then the glossary. `--inline` puts every phase in `index.html`, for a
@@ -63,9 +63,9 @@ and prints a warning naming it. Fix the data and render again, or tell the user
 why the warning stands.
 
 `--since <directory>`, given the data as it was last published, also prints
-what has changed in each phase since, statuses in their type's words, and the
-`changed` ids for that phase's changelog entry. A phase that changed without a
-new changelog entry gets a warning.
+what has changed in each phase since, statuses in their type's words. An item
+that is gone gets a warning: an item is never deleted, but `dropped`, with
+`why`.
 
 ## The data
 
@@ -80,10 +80,8 @@ new changelog entry gets a warning.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
   `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`.
   A section that carries on the one before it can go without a `title`, and
-  the changelog then names it by that section's.
-  Then `[[changelog]]` entries, newest first, each with a `date`, its `text`,
-  and `changed`, the sections and items it changed. A phase the user approves,
-  such as the Plan, has `approved`, the day they did.
+  `--since` then names it by that section's. A phase the user approves, such
+  as the Plan, has `approved`, the day they did.
 - An `items` section has a `type`, which sets the words its statuses take:
   `piece`, `rule`, `criterion` (Met, Not met yet), `decision` (To decide,
   Taken), `question` (To answer, Answered), `pr` (To merge, Merged), `setting`
@@ -149,8 +147,9 @@ GitHub.
   `blocked` while work remains.
 
 Then set `read_at` to now and render with `--since`, given the data as last
-published. Write each changed phase's changelog entry from what it prints,
-render again, and fix each warning or tell the user why it stands. Open the
+published, and fix each warning or tell the user why it stands. Open the
 `--inline` preview, or capture it with `/take-screenshot` where the repository
 has it, and look at the phase that changed. Then publish `index.html`, with
-`phases/` and the data files, as `src/`, beside it.
+`phases/` and the data files, as `src/`, beside it, and tell the user what
+changed, from what `--since` printed: a correction first, saying what was
+wrong.

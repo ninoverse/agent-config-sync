@@ -189,7 +189,7 @@
   .why { color: var(--ink-muted); }
   .on { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
   .pill.amended { color: var(--ready); background: var(--ready-soft); }
-  /* The day a record card is about, such as a changelog entry's. */
+  /* The day a record card is about, such as an approval's. */
   .pill.day { color: var(--ink-muted); background: var(--surface-high); }
   .pill.day::before { content: none; }
   .block { margin-top: 40px; }
@@ -285,7 +285,7 @@
   .item-head { display: grid; grid-template-columns: var(--label) minmax(0, 1fr); column-gap: 16px; align-items: baseline; }
   .item-head .n { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: var(--ink-muted); }
   .item-head h4 code { font-size: 0.9em; background: none; padding: 0; }
-  /* A card that records something, such as a changelog entry, says it in a sentence. */
+  /* A card that records something, such as an approval, says it in a sentence. */
   .item-head .says { margin: 0; }
   article.item > dl:first-child { margin-top: 0; }
   article.item dl { grid-template-columns: var(--label) minmax(0, 1fr); }
@@ -308,16 +308,6 @@
   details.fold > summary .item-tags { grid-column: 2; margin-left: 0; }
   .fold-all { margin: 10px 0 0; display: flex; justify-content: flex-end; }
   .open-all { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-  /* A changelog past its newest entries: the rest under one line that says how many. */
-  details.earlier { margin-top: 14px; }
-  details.earlier > summary {
-    list-style: none; cursor: pointer; display: inline-block; padding: 4px 14px;
-    border: 1px solid var(--rule); border-radius: var(--corner-full); background: var(--surface); font-size: 0.9rem; font-weight: 600;
-  }
-  details.earlier > summary::-webkit-details-marker { display: none; }
-  details.earlier > summary::before { content: '▸ '; }
-  details.earlier[open] > summary::before { content: '▾ '; }
-  details.earlier > summary:hover { border-color: var(--accent-fill); }
   .pill.link { color: var(--accent); background: transparent; text-decoration: none; }
   .pill.link::before { content: none; }
   .pill.link::after { content: '↗'; }

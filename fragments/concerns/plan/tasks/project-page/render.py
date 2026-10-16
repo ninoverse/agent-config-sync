@@ -9,8 +9,8 @@ every other phase with content, which the page loads when that phase is
 picked. --inline puts every phase in index.html instead, for a preview or a
 small project. --retrospective writes retrospective.html instead: the
 Retrospective alone, as a page to share. --since, given the data as it was
-last published, also prints what has changed in each phase since, for its
-changelog entry.
+last published, also prints what has changed in each phase since, to tell the
+user when publishing.
 
 Exits 0 once the page is written, after printing a warning for each state that
 looks stale; 1 when the data or the page has a problem, writing nothing and
@@ -117,7 +117,6 @@ TODAY = None  # the day the state was read
 LINKABLE = None  # the ids a reference links to, on a page that holds only some; None for all
 COUNTED = []  # the headline figures counted from the data, for a `figures` section with `auto`
 SCRIPTED = True  # whether the page runs page.js; the Retrospective alone doesn't
-SHOWN_CHANGES = 3  # the changelog entries a phase shows before the rest fold
 
 
 def problem(where, text):
@@ -266,8 +265,6 @@ def read_phases(data_dir, statuses):
             if loaded is not None:
                 data[key] = loaded
                 loaded["approved"] = as_date(loaded.get("approved"), f"{key}.toml", "approved")
-                for index, entry in enumerate(loaded.get("changelog", [])):
-                    entry["date"] = as_date(entry.get("date"), f"{key}.toml [[changelog]] {index + 1}", "date")
     return data
 
 
@@ -468,9 +465,10 @@ def check_states(project, phases):
             approved = phases.get(item["phase"], {}).get("approved")
             if approved and item["amended"]["on"] < approved:
                 warn(where, f"{item_id} is amended on {day(item['amended']['on'])}, before its phase was approved")
-    changed = [entry["date"] for data in phases.values() for entry in data.get("changelog", []) if entry.get("date")]
+    # The last change the data records: the newest day an item reached its status, or was amended.
+    changed = [item["on"] for item in ITEMS.values() if item.get("on")] + [item["amended"]["on"] for item in ITEMS.values() if item["amended"] and item["amended"]["on"]]
     if changed and max(changed) > TODAY:
-        warn("project.toml", f"`read_at` is older than the newest changelog entry, of {day(max(changed))}: read the state again")
+        warn("project.toml", f"`read_at` is older than the newest status, of {day(max(changed))}: read the state again")
     handoff = project.get("handoff")
     if handoff and handoff.get("updated") and changed and handoff["updated"] < max(changed):
         warn("project.toml [handoff]", f"the notes for the next session date from {day(handoff['updated'])}, before the last change")
@@ -576,7 +574,7 @@ def state_line(item):
 def card_html(number, title, tags=(), rows=(), anchor=None, says=False, fold=False):
     """A card: its number and title on its first line, its chips under the title, then
     its fields, each a label and its text. `says` writes the title as a sentence rather
-    than a heading, for a card that records something, such as a changelog entry. A
+    than a heading, for a card that records something, such as an approval. A
     card with neither number nor title is its fields alone. `fold` shows the first
     two layers and keeps the fields behind them, opened by a click."""
     attr = f' id="{anchor}"' if anchor else ""
@@ -624,10 +622,10 @@ def card(item):
     tags += [field[1].strip() for field in fields if is_chip(field[1])]
     # A status set from another phase shows there: the card keeps the record as written.
     own = item.get("status_from") == item["phase"] and item.get("status") in ITEM_STATUS
-    # A criterion is agreed in the Brief, though Verify keeps its status: until the
-    # owner agrees it, its card in the Brief says so.
-    agreeing = item["type"] == "criterion" and item.get("status") == "open"
-    if own or agreeing:
+    # A criterion is agreed in the Brief, though Verify keeps its status: its card in the
+    # Brief says so until the owner agrees it, and again once it is dropped, with why.
+    shown = own or (item["type"] == "criterion" and item.get("status") in ("open", "dropped"))
+    if shown:
         tags.append(status_pill(item))
     if item["amended"]:
         when = f' {day(item["amended"]["on"])}' if item["amended"]["on"] else ""
@@ -643,7 +641,7 @@ def card(item):
     rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in fields if not is_chip(field[1])]
     if own and item["status"] == "blocked" and item.get("waits"):
         rows.append((waits_label(item), item["waits"]))
-    if own and item["status"] == "dropped":
+    if shown and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
     if item["needs"]:
         rows.append((TYPES.get(item["type"], {}).get("needs", "Needs"), refs_ul(item["needs"])))
@@ -875,48 +873,13 @@ def approval(key, data):
     return f'<section class="block" id="{key}-approval">\n  <h3>Approval</h3>\n{body}\n</section>'
 
 
-def changelog(key, entries, targets):
-    """The phase's changelog, newest first: a card for each entry, its day as a chip
-    under what it says, and what it changed as a list; past the newest few, folded."""
-    if not entries:
-        return ""
-    cards = []
-    for index, entry in enumerate(entries):
-        where = f"{key}.toml [[changelog]] {index + 1}"
-        required(entry, "text", where)
-        if entry.get("date") is None:
-            problem(where, "a changelog entry has a `date`")
-        links = []
-        for target in entry.get("changed", []):
-            if target not in targets:
-                problem(where, f"`changed` names {target}, which is no section or item in this phase")
-                continue
-            links.append(f'<a href="#{target}">{targets[target]}</a>')
-        tags = [day_pill(entry["date"])] if entry.get("date") else []
-        cards.append(card_html("", entry.get("text", ""), tags, [("Changed", list_html(links))] if links else [], says=True))
-    # The newest entries show; the rest fold under one line that says how many.
-    shown, earlier = cards[:SHOWN_CHANGES], cards[SHOWN_CHANGES:]
-    if earlier:
-        shown.append(f'  <details class="earlier">\n  <summary>Earlier changes ({len(earlier)})</summary>\n' + "\n".join(earlier) + "\n  </details>")
-    return f'<footer class="block changelog" id="{key}-changelog">\n  <h3>Changelog</h3>\n' + "\n".join(shown) + "\n</footer>"
-
-
 def render_phase(key, data, data_dir, head=True):
     """A phase's view: its name, for screen readers only, since its tab shows the name
-    and the state, unless it stands alone; then its sections, its approval and its
-    changelog."""
+    and the state, unless it stands alone; then its sections and its approval."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
-    targets = {}
-    names = section_names(data.get("section", []))
     for section in data.get("section", []):
         parts.append(render_section(section, key, data, data_dir))
-        if section.get("id"):
-            targets[section["id"]] = names[section["id"]]
-        for item in section.get("item", []) if section.get("kind") == "items" else []:
-            if item.get("id") in ITEMS:
-                targets[anchor_of(item["id"])] = f'<b>{esc(item["id"])}</b> {short_of(ITEMS[item["id"]])}'
     parts.append(approval(key, data))
-    parts.append(changelog(key, data.get("changelog", []), targets))
     return expand_refs("\n".join(part for part in parts if part), f"{key}.toml")
 
 
@@ -1248,52 +1211,43 @@ def said(snap, state):
 
 
 def changes_since(data_dir, published):
-    """What changed since the data was last published: for each phase, the changes
-    in words and the ids its changelog entry names in `changed`; then project.toml's.
-    A phase that changed without a new changelog entry is warned about."""
+    """What changed since the data was last published, in words, for the user: each
+    phase's changes, then project.toml's. An item that is gone is warned about,
+    since an item is never deleted, but dropped, with why."""
     old, new = raw(published, "the published"), raw(data_dir, "the new")
     (old_items, old_sections), (new_items, new_sections) = snapshot(old), snapshot(new)
-    found = {key: ([], []) for key, _ in PHASES}
+    found = {key: [] for key, _ in PHASES}
 
-    def note(key, text, *targets):
-        lines, known = found[key]
-        lines.append(text)
-        known.extend(target for target in targets if target and target not in known)
-
-    def shown_at(key, item_id, item):
-        """Where a phase shows a state it keeps: the item's card, or its results."""
-        if item["phase"] == key:
-            return [anchor_of(item_id)]
-        data = new.get(key, {})
-        return [s.get("id") for s in data.get("section", []) if s.get("kind") == "results" and item_id in (s.get("ids") or list(data.get("status", {})))]
+    def note(key, text):
+        found[key].append(text)
 
     for item_id in dict.fromkeys(list(new_items) + list(old_items)):
         before, after = old_items.get(item_id), new_items.get(item_id)
         if after is None:
-            section = before["section"] if (before["phase"], before["section"]) in new_sections else None
-            note(before["phase"], f"{item_id} removed", section)
+            note(before["phase"], f"{item_id} removed")
+            warn(f"{before['phase']}.toml", f"{item_id} is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`")
             continue
         if before is None:
-            note(after["phase"], f"{item_id} added", anchor_of(item_id))
+            note(after["phase"], f"{item_id} added")
         elif before["written"] != after["written"]:
-            note(after["phase"], f"{item_id}: {', '.join(edits(before['written'], after['written']))} edited", anchor_of(item_id))
+            note(after["phase"], f"{item_id}: {', '.join(edits(before['written'], after['written']))} edited")
         was = before["state"] if before else {}
         if was == after["state"]:
             continue
         # A state that is gone was kept where it was; one that is new or changed, where it is.
         key = after["kept"] or before["kept"]
         if was.get("status") != after["state"].get("status"):
-            note(key, f"{item_id} {said(after, was)} → {said(after, after['state'])}", *shown_at(key, item_id, after))
+            note(key, f"{item_id} {said(after, was)} → {said(after, after['state'])}")
         else:
-            note(key, f"{item_id}: {', '.join(edits(was, after['state']))} edited", *shown_at(key, item_id, after))
+            note(key, f"{item_id}: {', '.join(edits(was, after['state']))} edited")
 
     for (key, section_id), after in new_sections.items():
         before = old_sections.get((key, section_id))
         name = text_of(section_names(new.get(key, {}).get("section", [])).get(section_id, section_id))
         if before is None:
-            note(key, f"{name} added", section_id)
+            note(key, f"{name} added")
         elif {k: v for k, v in before.items() if k != "item"} != {k: v for k, v in after.items() if k != "item"}:
-            note(key, f"{name} edited", section_id)
+            note(key, f"{name} edited")
     for (key, section_id), before in old_sections.items():
         if (key, section_id) not in new_sections:
             note(key, f"{text_of(section_names(old.get(key, {}).get('section', [])).get(section_id, section_id))} removed")
@@ -1301,11 +1255,8 @@ def changes_since(data_dir, published):
     for key, _ in PHASES:
         before, after = old.get(key, {}), new.get(key, {})
         for field in dict.fromkeys(list(after) + list(before)):
-            if field not in ("section", "status", "changelog") and before.get(field) != after.get(field):
+            if field not in ("section", "status") and before.get(field) != after.get(field):
                 note(key, f"`{field}` edited")
-        fresh = [entry for entry in after.get("changelog", []) if entry not in before.get("changelog", [])]
-        if found[key][0] and not fresh:
-            warn(f"{key}.toml", "it has changed since the published data, and its changelog has no new entry")
 
     project = []
     before, after = old.get("project", {}), new.get("project", {})
@@ -1326,16 +1277,13 @@ def changes_since(data_dir, published):
 
 def print_changes(changes):
     found, project = changes
-    if not project and not any(lines for lines, _ in found.values()):
+    if not project and not any(found.values()):
         print("Since the published data: nothing has changed.")
         return
     print("Since the published data:")
     for key, name in PHASES:
-        lines, targets = found[key]
-        if lines:
-            print(f"  {name}: {'; '.join(lines)}.")
-            if targets:
-                print(f"    changed = {json.dumps(targets)}")
+        if found[key]:
+            print(f"  {name}: {'; '.join(found[key])}.")
     if project:
         print(f"  project.toml: {'; '.join(project)}.")
 

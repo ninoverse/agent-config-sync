@@ -27,10 +27,10 @@ they answer.
   or not written yet, doesn't open. Build and Verify can both be Now: Verify
   starts with the first merge. A phase that is Now shows on its tab how many
   of its items are done.
-- The page shows the current state. Each publish that changes a phase adds an
-  entry to that phase's changelog, at its foot, newest first, naming the
-  sections it changed; rendering against the data as last published lists
-  them. A correction is an entry of its own, saying what was wrong.
+- The page shows the current state, and the Agenda what happened, by day.
+  Each publish, tell the user what changed since the last, as rendering
+  against the data as last published lists it: a correction first, saying
+  what was wrong.
 - The page says when its state was read. Read it again right before each
   publish, each PR from GitHub: a status read earlier is stale by then.
 - Rendering warns about what looks stale, such as a Done phase that still holds
@@ -61,8 +61,8 @@ they answer.
   why, and the Plan ends with its approval: the day, and its amendments.
 - **Build**: the live state. A board of the PRs and settings in waves, built
   from what each needs; each PR's *Result* once it merges; and the questions
-  the work raises. What happened is in each phase's changelog and in the
-  Agenda, so Build keeps no log of its own.
+  the work raises. What happened is in the Agenda, so Build keeps no log of
+  its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
   success criteria, Met or Not met yet. A check's title says how it is
   checked: what it proves is already on the PR it needs and the criterion it
@@ -100,6 +100,7 @@ from the lesson.
   decision to take or a setting to change; Ready, when everything it needs is
   done; Blocked, naming what it waits on; or Dropped, saying why. The page says
   each in its item's words: a decision is Taken, a PR Merged, a risk Closed.
+  An item is never deleted: one that no longer belongs is Dropped.
 - What an item needs is data, not prose: the board's waves come from it, and
   each card lists what needs it and what mentions it.
 - Name an item with its number and its summary, never the number alone: the

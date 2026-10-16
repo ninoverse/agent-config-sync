@@ -123,7 +123,7 @@ def check_example(tmp):
     expect(folded in ex2 and "</summary>\n      <dl>" in ex2, "a card folds its fields behind its number, summary and chips")
     unfolded = [m for view in views for m in re.findall(r'<article class="item" id="[^"]+">\n    (?!<details class="fold">)', view)]
     expect(not unfolded, f"every item's card folds: {unfolded[:2]}")
-    expect('class="fold"' not in results and 'class="fold"' not in between(page, 'id="build-changelog"', "</footer>"), "a result or a changelog entry doesn't fold, since what it says is the point")
+    expect('class="fold"' not in results, "a result doesn't fold, since what it says is the point")
     prs, risks = between(phase["plan"], 'id="prs"', "</section>"), between(phase["plan"], 'id="risks"', "</section>")
     expect('<p class="fold-all"><button type="button" class="open-all">Open all</button></p>' in prs and "open-all" not in risks, "a section with several folded cards can open them all, and one with a single card has no need")
     expect('<dt>Carries out</dt><dd><ul class="list"><li><a class="ref" href="#d1">' in ex2, "a field that holds several things is a list")
@@ -141,8 +141,7 @@ def check_example(tmp):
         analysis = tmp / "unchosen-out" / "phases" / "analysis.html"
         d1 = between(analysis.read_text(), 'id="d1"', "</article>") if analysis.exists() else ""
         expect('<li class="recommended"><span class="key">a</span>' in d1 and 'class="chosen"' not in d1, "until one is chosen, the recommended option is marked")
-    entry = '<span class="n"></span><p class="says"><a class="ref" href="#ex-2">'
-    expect(entry in page and '<span class="pill day">7 Oct</span>' in page and '<dt>Changed</dt><dd><ul class="list"><li><a href="#results">Results</a>' in page, "a changelog entry is a card, its day a chip under what it says, listing what it changed")
+    expect(all("changelog" not in view.lower() and "Earlier changes" not in view for view in views), "the page has no changelog: the Agenda says what happened, and the agent tells the user what changed")
     expect(not re.search(r'<div class="item-head"><span class="n">\d', "".join(views)), "no card has a date where an item's number goes")
     project = between(phase["brief"], 'id="the-project"', "</section>")
     expect('<article class="item">\n    <dl class="terms"><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
@@ -154,14 +153,17 @@ def check_example(tmp):
         research = tmp / "chipped-out" / "phases" / "research.html"
         r1 = between(research.read_text(), 'id="r1"', "</article>") if research.exists() else ""
         expect("<h4>The service's routes</h4><span class=\"item-tags\"><span class=\"pill day\">A gap</span></span></summary>" in r1 and "<dt>Found</dt>" not in r1, f"a field that is one chip is a chip, which a folded card shows: {r1[:300]}")
-    more = '[[section]]\nid = "pieces-more"\nkind = "prose"\nbody = "<p>More on the pieces.</p>"\n\n# Each change after the first publish, newest first.'
-    untitled = copy_with(tmp, "untitled", EXAMPLE, "research.toml", "# Each change after the first publish, newest first.", more)
-    if untitled is not None and replace_in(untitled, "research.toml", "[[changelog]]\ndate = 2026-10-02", '[[changelog]]\ndate = 2026-10-03\ntext = "More on the pieces."\nchanged = ["pieces-more"]\n\n[[changelog]]\ndate = 2026-10-02'):
+    more = '\n\n[[section]]\nid = "pieces-more"\nkind = "prose"\nbody = "<p>More on the pieces.</p>"\n'
+    untitled = copy_with(tmp, "untitled", EXAMPLE, "research.toml", '  ["Raises", "[[D2]]"],\n]\n', '  ["Raises", "[[D2]]"],\n]' + more)
+    if untitled is not None:
         run = render(untitled, tmp / "untitled-out", "--since", str(EXAMPLE))
-        research = tmp / "untitled-out" / "phases" / "research.html"
-        log = between(research.read_text(), 'id="research-changelog"', "</footer>") if research.exists() else ""
-        expect('<li><a href="#pieces-more">What exists</a></li>' in log, f"the changelog names a section without a title by the one it carries on: {log[:400]}")
-        expect("  Research: What exists added.\n" in run.stdout, f"so does --since: {run.stdout}")
+        expect("  Research: What exists added.\n" in run.stdout, f"--since names a section without a title by the one it carries on: {run.stdout}")
+    dropped = copy_with(tmp, "dropped", EXAMPLE, "verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "dropped"\non = 2026-10-07\nwhy = "The platform drains a process on its own."')
+    if dropped is not None:
+        render(dropped, tmp / "dropped-out")
+        brief = tmp / "dropped-out" / "phases" / "brief.html"
+        sc2 = between(brief.read_text(), 'id="sc2"', "</article>") if brief.exists() else ""
+        expect('<span class="pill st-dropped">Dropped · 7 Oct</span>' in sc2 and "<dt>Why</dt><dd>The platform drains a process on its own.</dd>" in sc2, f"a dropped criterion says so in the Brief, with why: {sc2[:400]}")
 
     expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>") and "pill st-" not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
     agreeing = copy_with(tmp, "agreeing", EXAMPLE, "verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "open"')
@@ -205,7 +207,7 @@ def check_example(tmp):
         expect(lines == ["ex-2", "ex-3"], f"each of the owner's items has a line of its own, with what to do: {owner}")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
-    expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the changelogs and the agenda hold what happened")
+    expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the agenda holds what happened")
     marks = re.findall(r'<li class="(m-[\w-]+)(?: count)?">(.*?)</li>', between(calendar_of(page), 'href="#on-2026-10-06">6</a>', "</td>"))
     counted = [("m-phase", "Verify starts"), ("m-s-done", '<b>1</b><span class="word"> met</span>'), ("m-s-done", '<b>1</b><span class="word"> merged</span>'), ("m-s-done", '<b>1</b><span class="word"> set</span>'), ("m-s-done", '<b>1</b><span class="word"> passed</span>')]
     expect(marks == counted, f"a day names its events and phase dates, then counts its items by what happened to them, the number apart for a phone: {marks}")
@@ -227,14 +229,6 @@ def check_example(tmp):
         day = between(text, 'id="on-2026-10-06"', "</ol>")
         merged = re.search(r'<li class="m-s-done"><span class="what">Merged:</span><ul class="list"><li><a class="ref" href="#ex-1">.*?</a></li><li><a class="ref" href="#ex-2">', day)
         expect(merged is not None, f"the agenda lists a day's items under each thing that happened to them: {day[:300]}")
-    entries = "".join(f'[[changelog]]\ndate = 2026-10-0{n}\ntext = "Change {n}."\n\n' for n in (6, 5, 4))
-    long = copy_with(tmp, "long-changelog", EXAMPLE, "build.toml", "[[changelog]]\ndate = 2026-10-06", entries + "[[changelog]]\ndate = 2026-10-06")
-    if long is not None:
-        render(long, tmp / "long-out")
-        index = tmp / "long-out" / "index.html"
-        footer = between(index.read_text(), 'id="build-changelog"', "</footer>") if index.exists() else ""
-        shown = between(footer, "<h3>", '<details class="earlier">')
-        expect(shown.count('<p class="says">') == 3 and "<summary>Earlier changes (2)</summary>" in footer, f"a changelog shows its newest three entries, and folds the rest under how many: {footer[:200]}")
     events = "".join(f'[[event]]\ndate = 2026-10-{day}\ntitle = "Release train {day}"\n\n' for day in (20, 27))
     busy = copy_with(tmp, "busy", EXAMPLE, "project.toml", "[[event]]\ndate = 2026-10-12", events + "[[event]]\ndate = 2026-10-12")
     if busy is not None:
@@ -339,7 +333,7 @@ STALE = [
     ("build.toml", 'production"\nstatus = "done"', 'production"\nstatus = "open"', "EX-3 is `ready`, but needs Q1, which isn't done"),
     ("analysis.toml", 'recommended = "a"\nchosen = "a"', 'recommended = "a"', "D1 is `done`, but none of its options is `chosen`"),
     ("plan.toml", "amended = { on = 2026-10-07", "amended = { on = 2026-10-02", "EX-3 is amended on 2 Oct, before its phase was approved"),
-    ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest changelog entry"),
+    ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest status, of 7 Oct"),
     ("project.toml", "updated = 2026-10-07", "updated = 2026-10-06", "the notes for the next session date from 6 Oct, before the last change"),
 ]
 
@@ -360,7 +354,6 @@ BROKEN = [
     (EXAMPLE, "research.toml", "<code>/api</code>", "<code>/api", "is never closed"),
     (EXAMPLE, "project.toml", 'objective = "health-checks"', 'objective = "Health Checks"', "kebab-case"),
     (EXAMPLE, "deferred.toml", 'id = "work"', 'id = "work', "not valid TOML"),
-    (EXAMPLE, "build.toml", 'changed = ["results", "q1"]', 'changed = ["results", "q9"]', "`changed` names q9"),
     (EXAMPLE, "build.toml", "[status.EX-3]", "[status.EX-9]", "no item has this id"),
     (EXAMPLE, "project.toml", "[phases.reuse]", "[phases.templating]", "[phases.templating] is not a phase"),
     (EXAMPLE, "project.toml", "read_at = 2026-10-07T18:00:00", 'read_at = "7 October"', "`read_at` is when the state was read"),
@@ -416,14 +409,15 @@ def check_since(tmp):
         return
     run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
     expect(run.returncode == 0, f"a changed copy renders: {run.stderr}")
-    expect('  Plan: EX-1: Done when edited; EX-2: Carries out edited; EX-4 added.\n    changed = ["ex-1", "ex-2", "ex-4"]\n' in run.stdout, f"edited fields, a list among them, and a new item, with their ids: {run.stdout}")
-    expect('  Build: EX-2 To merge → Merged.\n    changed = ["results"]\n' in run.stdout, f"a status in its type's words, shown in the results: {run.stdout}")
+    expect("  Plan: EX-1: Done when edited; EX-2: Carries out edited; EX-4 added.\n" in run.stdout, f"edited fields, a list among them, and a new item: {run.stdout}")
+    expect("  Build: EX-2 To merge → Merged.\n" in run.stdout, f"a status in its type's words: {run.stdout}")
     expect("  project.toml: `handoff` edited.\n" in run.stdout and "read_at" not in run.stdout, f"project.toml's changes, read_at aside: {run.stdout}")
-    for key in ("plan", "build"):
-        expect(f"warning: {key}.toml: it has changed since the published data, and its changelog has no new entry" in run.stderr, f"{key}.toml changed without a changelog entry: {run.stderr}")
-    replace_in(data, "build.toml", "[[changelog]]\ndate = 2026-10-07", '[[changelog]]\ndate = 2026-10-09\ntext = "[[EX-2]] merged."\nchanged = ["results"]\n\n[[changelog]]\ndate = 2026-10-07')
-    run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
-    expect("build.toml: it has changed" not in run.stderr and "plan.toml: it has changed" in run.stderr, f"a new entry answers the warning, phase by phase: {run.stderr}")
+
+    r2 = '\n\n[[section.item]]\nid = "R2"\ntitle = "What the platform does with a probe"\nfields = [\n  ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],\n  ["Raises", "[[D2]]"],\n]\n'
+    deleted = copy_with(tmp, "deleted", EXAMPLE, "research.toml", r2, "\n")
+    if deleted is not None:
+        run = render(deleted, tmp / "deleted-out", "--since", str(EXAMPLE))
+        expect("  Research: R2 removed.\n" in run.stdout and "warning: research.toml: R2 is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`" in run.stderr, f"an item that is gone is warned about: {run.stdout} {run.stderr}")
 
 
 def check_stale(tmp):

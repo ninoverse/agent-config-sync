@@ -70,8 +70,3 @@ kind = "prose"
 file = "imported.html"
 prefix = "old"
 wide = true
-
-[[changelog]]
-date = 2026-10-08
-text = "Written."
-changed = ["in-short", "imported", "l2"]

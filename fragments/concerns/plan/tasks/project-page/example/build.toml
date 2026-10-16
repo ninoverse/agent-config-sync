@@ -57,13 +57,3 @@ fields = [
   ["Question", "Staging allows five seconds. Production's database is slower at night: keep five, or allow ten?"],
   ["Answer", "Ten. A false failure takes the process out of service, and a slow answer costs nothing."],
 ]
-
-[[changelog]]
-date = 2026-10-07
-text = "[[EX-2]] is open, and [[EX-3]] is new, from [[Q1]]."
-changed = ["results", "q1"]
-
-[[changelog]]
-date = 2026-10-06
-text = "[[EX-1]] merged, and [[S1]] is set."
-changed = ["results"]
