@@ -82,7 +82,7 @@ def check_example(tmp):
     guides = phase["guides"]
     parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "agenda", "links", "changes", "answering")
     expect(all(f'id="guide-{part}"' in guides and f'href="#guide-{part}"' in guides for part in parts), "the guides hold every part of the guide, each in the contents")
-    words = ('st-done">Taken<', 'st-blocked">Not met yet<', 'st-dropped">Not adopted<', 'st-done">Picked up<', 'st-open">To merge<')
+    words = ('st-done">Taken<', 'st-dropped">Not taken<', 'st-blocked">Not met yet<', 'st-dropped">Not adopted<', 'st-done">Picked up<', 'st-open">To merge<')
     expect(all(word in between(guides, '<table class="statuses"', "</table>") for word in words), "the guide's statuses come from the page's own words")
     expect('<span class="chip s-open">' in guides and '<a class="chip' not in guides, "its sample chips are drawn as the board draws them, but aren't links")
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
@@ -129,8 +129,16 @@ def check_example(tmp):
     expect('<dt>Carries out</dt><dd><ul class="list"><li><a class="ref" href="#d1">' in ex2, "a field that holds several things is a list")
     needed = between(between(phase["plan"], 'id="ex-1"', "</article>"), "Needed by", "</dd>")
     expect('<ul class="list">' in needed and all(f'href="#{i}"' in needed for i in ("ex-2", "s1", "c1")), f"a card lists what needs it: {needed}")
-    mentioned = between(between(phase["analysis"], 'id="d1"', "</article>"), "<dt>Mentioned in</dt>", "</dd>")
-    expect('<ul class="list">' in mentioned and all(f'href="#{i}"' in mentioned for i in ("r1", "ex-1", "ex-2")), f"a card lists what mentions it: {mentioned}")
+    by_setting = copy_with(tmp, "by-setting", EXAMPLE, "plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]"]]')
+    if by_setting is not None and replace_in(by_setting, "plan.toml", 'fields = [["Where", "The service\'s deployment settings."]]', 'fields = [["Where", "The service\'s deployment settings."], ["Carries out", "[[D2]]"]]'):
+        run = render(by_setting, tmp / "by-setting-out")
+        analysis = tmp / "by-setting-out" / "phases" / "analysis.html"
+        d2 = between(analysis.read_text(), 'id="d2"', "</article>") if analysis.exists() else ""
+        expect("D2 is a decision taken" not in run.stderr and '<dt>Carried out by</dt><dd><ul class="list"><li><a class="ref" href="#s1">' in d2, f"a setting carries out a decision as a PR does: {run.stderr} {d2[:300]}")
+    d1 = between(phase["analysis"], 'id="d1"', "</article>")
+    carried, mentioned = between(d1, "<dt>Carried out by</dt>", "</dd>"), between(d1, "<dt>Mentioned in</dt>", "</dd>")
+    expect(all(f'href="#{i}"' in carried for i in ("ex-1", "ex-2")) and 'href="#r1"' not in carried, f"a decision lists the PRs that name it as carrying it out: {carried}")
+    expect('<ul class="list">' in mentioned and 'href="#r1"' in mentioned and 'href="#ex-1"' not in mentioned, f"and what else mentions it: {mentioned}")
     expect('pill st-done">Taken · 2 Oct<' in phase["analysis"], "a decision that is done reads Taken, with its day, as a chip")
     d1 = between(phase["analysis"], 'id="d1"', "</article>")
     expect('<li class="chosen"><span class="key">a</span>' in d1 and '<span class="vh"> (chosen)</span>' in d1, "options are a list, the chosen one marked, in a word for screen readers too")
@@ -326,7 +334,7 @@ def check_full(tmp):
 # and the warning it must print. The page is still written.
 STALE = [
     ("project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"', "Build is done, but EX-2 is still `open`"),
-    ("plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]"]]', "D2 is a decision taken, but no PR names it or needs it"),
+    ("plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]"]]', "D2 is a decision taken, but no PR or setting names it or needs it"),
     ("build.toml", 'on = 2026-10-06\nresult = "Released 1.4.0.', 'on = 2026-10-06\nnote = "Released 1.4.0.', "EX-1 is a merged PR without a `result`"),
     ("build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "done"', "C2 is `blocked`, but everything it needs is done"),
     ("deferred.toml", 'waits = "the metrics stack"', 'waits = "[[EX-1]]"', "T1 waits on EX-1, which is done"),

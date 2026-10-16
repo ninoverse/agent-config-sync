@@ -49,6 +49,8 @@ PHASE_NAME = dict(PHASES)
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
+# The types of item that carry out a decision.
+CARRY_OUT = ("pr", "setting")
 KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner", "together": "Together"}
 # What a status reads as for each type of item, and what the user does while one is open;
 # for some, what its `needs` read as on its card, and on the cards of what it needs.
@@ -56,7 +58,7 @@ TYPES = {
     "piece": {"labels": {}, "ask": "Read"},
     "rule": {"labels": {"dropped": "Retired"}, "ask": "Confirm"},
     "criterion": {"labels": {"open": "To agree", "blocked": "Not met yet", "done": "Met"}, "ask": "Agree", "needs": "Verified by", "needed_by": "Verifies"},
-    "decision": {"labels": {"open": "To decide", "done": "Taken", "dropped": "Withdrawn"}, "ask": "Decide"},
+    "decision": {"labels": {"open": "To decide", "done": "Taken", "dropped": "Not taken"}, "ask": "Decide"},
     "question": {"labels": {"open": "To answer", "done": "Answered", "dropped": "Withdrawn"}, "ask": "Answer"},
     "pr": {"labels": {"open": "To merge", "done": "Merged", "dropped": "Closed"}, "ask": "Merge"},
     "setting": {"labels": {"open": "To set", "done": "Set", "dropped": "Not needed"}, "ask": "Set"},
@@ -441,8 +443,8 @@ def check_states(project, phases):
         if status in UNFINISHED and item["status_from"] and statuses[item["status_from"]]["status"] == "done":
             warn(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`")
         if item["type"] == "decision" and status == "done" and has_prs:
-            if not any(ITEMS[other]["type"] == "pr" for other in item["needed_by"] + item["mentioned_in"]):
-                warn(where, f"{item_id} is a decision taken, but no PR names it or needs it")
+            if not any(ITEMS[other]["type"] in CARRY_OUT for other in item["needed_by"] + item["mentioned_in"]):
+                warn(where, f"{item_id} is a decision taken, but no PR or setting names it or needs it")
         if item["type"] == "pr" and status == "done" and not item.get("result"):
             warn(where, f"{item_id} is a merged PR without a `result`")
         needs = [need for need in item["needs"] if need in ITEMS]
@@ -652,8 +654,13 @@ def card(item):
     for other in item["needed_by"]:
         needed_by.setdefault(TYPES.get(ITEMS[other]["type"], {}).get("needed_by", "Needed by"), []).append(other)
     rows += [(label, refs_ul(ids)) for label, ids in needed_by.items()]
-    if item["mentioned_in"]:
-        rows.append(("Mentioned in", refs_ul(item["mentioned_in"])))
+    # A decision is carried out by the PRs and settings that name it; anything else mentions it.
+    carried = [other for other in item["mentioned_in"] if item["type"] == "decision" and ITEMS[other]["type"] in CARRY_OUT]
+    mentioned = [other for other in item["mentioned_in"] if other not in carried]
+    if carried:
+        rows.append(("Carried out by", refs_ul(carried)))
+    if mentioned:
+        rows.append(("Mentioned in", refs_ul(mentioned)))
     return card_html(esc(item["id"]), short or item.get("title", ""), tags, rows, anchor_of(item["id"]), fold=True)
 
 
