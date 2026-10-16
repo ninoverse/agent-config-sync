@@ -147,7 +147,13 @@ def check_example(tmp):
     project = between(phase["brief"], 'id="the-project"', "</section>")
     expect('<article class="item">\n    <dl><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
 
-    expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
+    expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>") and "pill st-" not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
+    agreeing = copy_with(tmp, "agreeing", EXAMPLE, "verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "open"')
+    if agreeing is not None:
+        render(agreeing, tmp / "agreeing-out")
+        brief = tmp / "agreeing-out" / "phases" / "brief.html"
+        sc2 = between(brief.read_text(), 'id="sc2"', "</article>") if brief.exists() else ""
+        expect('<span class="pill st-open">To agree</span>' in sc2, f"until the owner agrees a criterion, its card in the Brief says To agree: {sc2[:300]}")
     expect('id="g1"' in phase["brief"], "the brief holds the ground rules")
     sc1, c1 = between(phase["brief"], 'id="sc1"', "</article>"), between(phase["verify"], 'id="c1"', "</article>")
     expect('<dt>Verified by</dt><dd><ul class="list"><li><a class="ref" href="#c1">' in sc1 and "Needs" not in sc1, "a success criterion's needs read Verified by")

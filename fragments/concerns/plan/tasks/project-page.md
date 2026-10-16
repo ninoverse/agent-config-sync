@@ -111,7 +111,8 @@ new changelog entry gets a warning.
 - A `[status.<id>]` table sets the `status`, `on`, `waits`, `why` and `result`
   of an item kept in another phase. The Plan's items keep theirs this way in
   `build.toml`, and the Brief's success criteria theirs in `verify.toml`, so the
-  earlier phase shows them as agreed, and the later one where they stand.
+  earlier phase shows them as agreed, or To agree until the user agrees them,
+  and the later one where they stand.
 - A `board` with `auto = true` builds its waves from `needs`, over the item
   `types` it names, and its rows from each item's `repo`, or `rows_default`;
   `waves` subtitles each wave. Without `auto`, it takes `columns` and `row`s.

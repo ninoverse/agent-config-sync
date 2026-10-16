@@ -605,7 +605,10 @@ def card(item):
         tags.append(f'<span class="pill k-{item["kind"]}">{KINDS[item["kind"]]}</span>')
     # A status set from another phase shows there: the card keeps the record as written.
     own = item.get("status_from") == item["phase"] and item.get("status") in ITEM_STATUS
-    if own:
+    # A criterion is agreed in the Brief, though Verify keeps its status: until the
+    # owner agrees it, its card in the Brief says so.
+    agreeing = item["type"] == "criterion" and item.get("status") == "open"
+    if own or agreeing:
         tags.append(status_pill(item))
     if item["amended"]:
         when = f' {day(item["amended"]["on"])}' if item["amended"]["on"] else ""
