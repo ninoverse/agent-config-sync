@@ -202,8 +202,9 @@ def check_example(tmp):
         marks = re.findall(r'<li class="m-s-done count"><b>(\d+)</b><span class="word"> (.*?)</span></li>', sixth)
         expect(marks == [("1", "met"), ("2", "merged"), ("1", "set"), ("1", "passed")], f"two items that merged the same day are counted together: {marks}")
         day = between(text, 'id="on-2026-10-06"', "</ul>")
-        merged = re.search(r'<li class="m-s-done"><span class="what">Merged:</span> <a class="ref" href="#ex-1">.*?</a>, <a class="ref" href="#ex-2">', day)
-        expect(merged is not None, f"the agenda names a day's items on a line for each thing that happened to them: {day[:300]}")
+        day = between(text, 'id="on-2026-10-06"', "</ol>")
+        merged = re.search(r'<li class="m-s-done"><span class="what">Merged:</span><ul class="list"><li><a class="ref" href="#ex-1">.*?</a></li><li><a class="ref" href="#ex-2">', day)
+        expect(merged is not None, f"the agenda lists a day's items under each thing that happened to them: {day[:300]}")
     entries = "".join(f'[[changelog]]\ndate = 2026-10-0{n}\ntext = "Change {n}."\n\n' for n in (6, 5, 4))
     long = copy_with(tmp, "long-changelog", EXAMPLE, "build.toml", "[[changelog]]\ndate = 2026-10-06", entries + "[[changelog]]\ndate = 2026-10-06")
     if long is not None:
@@ -326,6 +327,7 @@ BROKEN = [
     (EXAMPLE, "analysis.toml", 'id = "D2"', 'id = "D1"', "this id is used twice"),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"<a href=\\"#d9\\">D9</a>"', 'a link to "#d9"'),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"[[D9]]"', "[[D9]] names no item"),
+    (EXAMPLE, "research.toml", '"[[D1]]"', '"<a href=\\"#d1\\">[[D1]]</a>"', "a link inside a link"),
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "pieces"', "`type` is one of"),
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
     (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"\n', "", "a blocked item says what it waits on"),

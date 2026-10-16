@@ -366,6 +366,8 @@
   table.cal .m-s-dropped { background: var(--na-soft); color: var(--na); text-decoration: line-through; }
   table.cal :is(.m-amended, .m-phase) { background: var(--ready-soft); color: var(--ready); }
   ol.agenda .what { font-weight: 600; }
+  /* The items under each thing that happened keep a list's dots. */
+  ol.agenda ul.list { display: block; list-style: disc; padding-left: 18px; margin-top: 2px; }
   ol.agenda { list-style: none; padding: 0; margin: 14px 0 0; max-width: 88ch; }
   ol.agenda > li { margin: 0; display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 4px 14px; padding-block: 8px; border-bottom: 1px solid var(--rule); }
   ol.agenda > li.today { border-bottom: 2px solid var(--accent-fill); }

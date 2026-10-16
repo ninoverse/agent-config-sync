@@ -984,8 +984,8 @@ def month_grid(year, month, by_day, before, after, shown):
 
 
 def agenda_day(entries):
-    """A day in the agenda: its events and phase dates, then a line for each thing
-    that happened to its items, naming them, such as Merged: AC-1, AC-2."""
+    """A day in the agenda: its events and phase dates, then each thing that
+    happened to its items, such as Merged, over a list of the items."""
     lines, groups = [], {}
     for cls, text, ref in entries:
         if ref is None:
@@ -994,7 +994,7 @@ def agenda_day(entries):
         item = ITEMS[ref]
         what = f"Amended into the {PHASE_NAME[item['phase']]}" if cls == "amended" else label_of(item)
         groups.setdefault((cls, what), []).append(f"[[{ref}]]")
-    lines += [f'<li class="m-{cls}"><span class="what">{what}:</span> {", ".join(refs)}</li>' for (cls, what), refs in groups.items()]
+    lines += [f'<li class="m-{cls}"><span class="what">{what}:</span>{list_html(refs)}</li>' for (cls, what), refs in groups.items()]
     return "".join(lines)
 
 
@@ -1323,7 +1323,7 @@ def print_changes(changes):
 
 
 class Check(HTMLParser):
-    """Tag nesting, and the ids and in-page links an HTML fragment holds."""
+    """Tag nesting, links inside links, and the ids and in-page links an HTML fragment holds."""
 
     def __init__(self, where):
         super().__init__(convert_charrefs=True)
@@ -1336,6 +1336,8 @@ class Check(HTMLParser):
         href = attrs.get("href") or ""
         if href.startswith("#") and len(href) > 1:
             self.links.append(href[1:])
+        if tag == "a" and any(opened == "a" for opened, _ in self.stack):
+            problem(self.where, f"line {self.getpos()[0]}: a link inside a link, which a browser splits in two; a [[ref]] is a link already")
         if tag not in VOID:
             self.stack.append((tag, self.getpos()[0]))
 
