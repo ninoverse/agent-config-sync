@@ -56,7 +56,9 @@ It writes nothing, and names the file and the item, when:
   a `<phase>.toml`: its tab doesn't open, so nothing in it would show;
 - an item's status is set both on the item and in a `[status]` table;
 - an item is in a phase that doesn't hold its type, or the Analysis has a
-  section other than `items` and `prose`;
+  section other than `items`;
+- a section shows nothing but its title, such as a card section with no
+  cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;
 - the HTML in a field doesn't nest.
 

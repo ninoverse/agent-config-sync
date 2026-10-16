@@ -153,6 +153,19 @@ def check_example(tmp):
     expect(not re.search(r'<div class="item-head"><span class="n">\d', "".join(views)), "no card has a date where an item's number goes")
     project = between(phase["brief"], 'id="the-project"', "</section>")
     expect('<article class="item">\n    <dl class="terms"><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
+    expect('id="analysis-contents"' not in phase["analysis"], "an Analysis with one section needs no contents")
+    two = copy_with(tmp, "two-batches", EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"\ntitle = "Decisions"', '[[section]]\nid = "decisions"\ntitle = "Batch A"')
+    if two is not None and replace_in(two, "analysis.toml", '[[section.item]]\nid = "D2"', '[[section]]\nid = "batch-b"\ntitle = "Batch B"\nkind = "items"\ntype = "decision"\n\n[[section.item]]\nid = "D2"'):
+        run = render(two, tmp / "two-batches-out")
+        analysis = tmp / "two-batches-out" / "phases" / "analysis.html"
+        contents = between(analysis.read_text(), 'id="analysis-contents"', "</nav>") if analysis.exists() else ""
+        expect('<li><a href="#decisions">Batch A</a></li><li><a href="#batch-b">Batch B</a></li>' in contents, f"the Analysis opens with a list of its sections, built from them: {run.stderr} {contents}")
+    waiting = copy_with(tmp, "nothing-yet", EXAMPLE, "build.toml", 'title = "Results"\nkind = "results"\n', 'title = "Results"\nkind = "results"\nids = ["EX-2"]\n')
+    if waiting is not None:
+        run = render(waiting, tmp / "nothing-yet-out")
+        index = tmp / "nothing-yet-out" / "index.html"
+        results = between(index.read_text(), 'id="results"', "</section>") if index.exists() else ""
+        expect(run.returncode == 0 and '<p class="note">Nothing yet.</p>' in results, f"results with nothing to show yet say so: {run.stderr} {results}")
     expect("article.item dl.terms { grid-template-columns: minmax(var(--label), max-content)" in page, "a definitions card's terms take the width they need, a chip among them")
     expect("td .pill { white-space: normal" in page and "no-repeat local" in page, "a chip in a table wraps with its column, and a table that scrolls is shaded at the edge with more past it")
     chipped = copy_with(tmp, "chipped", EXAMPLE, "research.toml", '  ["Today", "<code>example-service</code> serves', '  ["Found", "<span class=\\"pill day\\">A gap</span>"],\n  ["Today", "<code>example-service</code> serves')
@@ -349,8 +362,11 @@ STALE = [
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
+    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "the Analysis holds only items sections"),
+    (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "more-prs"\ntitle = "More PRs"\nkind = "items"\ntype = "pr"\n\n[[section]]\nid = "settings"', "plan.toml section more-prs: it shows nothing but its title"),
+    (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "note"\ntitle = "A note"\nkind = "prose"\nbody = "<p></p>"\n\n[[section]]\nid = "pieces"', "research.toml section note: it shows nothing but its title"),
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "decision"', "a card of type `decision` belongs in Analysis, not in Research"),
-    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "compared"\ntitle = "Compared"\nkind = "table"\nhead = ["Option"]\nrows = [["a"]]\n\n[[section]]\nid = "decisions"', "the Analysis holds only items and prose sections"),
+    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "compared"\ntitle = "Compared"\nkind = "table"\nhead = ["Option"]\nrows = [["a"]]\n\n[[section]]\nid = "decisions"', "the Analysis holds only items sections"),
     (EXAMPLE, "analysis.toml", 'id = "D2"', 'id = "D1"', "this id is used twice"),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"<a href=\\"#d9\\">D9</a>"', 'a link to "#d9"'),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"[[D9]]"', "[[D9]] names no item"),

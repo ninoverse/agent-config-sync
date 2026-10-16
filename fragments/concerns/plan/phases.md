@@ -47,13 +47,14 @@ they answer.
   which branches need asking. A ground rule holds until the user changes it.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises.
-- **Analysis**: the decisions, and a few lines of prose. Each lists its
-  options, with the reasons for the one recommended. Until the user answers,
-  the page marks that one; after, only the one chosen, with the date. Its card
-  lists the PRs and settings that carry it out. One list is the default; only
-  when the decisions are many do they come in batches, one section each,
-  answered together. The evidence behind them, such as a comparison or a
-  measurement, goes in the Research, and the decisions link to it.
+- **Analysis**: the decisions, and nothing else. Each lists its options, with
+  the reasons for the one recommended. Until the user answers, the page marks
+  that one; after, only the one chosen, with the date. Its card lists the PRs
+  and settings that carry it out. One list is the default; only when the
+  decisions are many do they come in batches, one section each, answered
+  together, which the page lists at the top. The evidence behind them, such
+  as a comparison or a measurement, goes in the Research, and the decisions
+  link to it.
 - **Plan**: the PRs as approved, one at a time in each repository, each with its
   branch, what it needs first, what its merge releases, as its kind, and *Done
   when*: what proves it works. The settings only the user can change. The risk

@@ -94,8 +94,10 @@ PHASE_TYPES = {
     "deferred": ("deferred", "question"),
 }
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
-# with a few lines of prose, and its evidence is in the Research.
-PHASE_KINDS = {"analysis": ("items", "prose")}
+# and its evidence is in the Research.
+PHASE_KINDS = {"analysis": ("items",)}
+# The phases that open with a list of their sections, built from them.
+CONTENTS = ("analysis",)
 KIND_MEANING = {
     "major": "Merging it releases a major version: what used the last one may need changing.",
     "minor": "Merging it releases a minor version: something new, and nothing that worked breaks.",
@@ -800,14 +802,14 @@ def render_section(section, key, data, data_dir):
         problem(where, f"`kind` is one of {', '.join(SECTION_KINDS)}")
         return ""
     if kind not in PHASE_KINDS.get(key, SECTION_KINDS):
-        problem(where, f"the {PHASE_NAME[key]} holds only {' and '.join(PHASE_KINDS[key])} sections: evidence, such as a table, goes in the Research, and the cards link to it")
+        problem(where, f"the {PHASE_NAME[key]} holds only {' and '.join(PHASE_KINDS[key])} sections: anything else, such as evidence in a table, goes in the Research, and the cards link to it")
         return ""
     if kind != "prose":
         required(section, "title", where)
     if not isinstance(section.get("min_width", 0), int):
         problem(where, "`min_width` is a number of pixels")
         return ""
-    parts = []
+    parts, empty = [], False
     if kind == "prose":
         body = section.get("body")
         if section.get("file"):
@@ -819,6 +821,7 @@ def render_section(section, key, data, data_dir):
         if body is None:
             problem(where, "a prose section has a `body` or a `file`")
             return ""
+        empty = not text_of(body).strip()
         if section.get("prefix"):
             body = prefixed(body, section["prefix"])
         parts.append(body if section.get("wide") else f'  <div class="prose">{body}</div>')
@@ -837,9 +840,11 @@ def render_section(section, key, data, data_dir):
                 problem(at, f"`use` is what the project does with it: {', '.join(USES)}")
                 continue
             rows.append([f'<code>{esc(repo.get("name", ""))}</code> <span class="pill u-{use}">{USES[use]}</span>', repo.get("part", "")])
+        empty = not rows
         parts.append(table_html(["Repository", "Its part"], rows, section.get("min_width"), "repos"))
     elif kind == "items":
         cards = [card(ITEMS[item["id"]]) for item in section.get("item", []) if item.get("id") in ITEMS]
+        empty = not cards
         # One button opens, or closes, every folded card in the section.
         if SCRIPTED and sum('<details class="fold">' in c for c in cards) > 1:
             parts.append('  <p class="fold-all"><button type="button" class="open-all">Open all</button></p>')
@@ -849,6 +854,7 @@ def render_section(section, key, data, data_dir):
         if board is None:
             return ""
         columns, rows = board
+        empty = not any(cell for _, row in rows for cell in row)
         head = [section.get("rows_title", "")] + [f"{esc(title)}<span>{esc(sub)}</span>" for title, sub in columns]
         cells = []
         for name, row in rows:
@@ -866,10 +872,14 @@ def render_section(section, key, data, data_dir):
                 problem(where, f"`ids` names {item_id}, which no item has")
             elif item_id not in shown or ITEMS[item_id].get("result"):
                 parts.append(result_card(ITEMS[item_id], on_board=item_id in shown))
+        # Early on, nothing has a result yet, which the section says rather than vanishing.
+        if not parts:
+            parts.append('  <p class="note">Nothing yet.</p>')
     elif kind == "figures":
         # With `auto`, the figures the data can count come first, then those written out.
         auto = COUNTED if section.get("auto") else []
         shown = auto + [(fig.get("value", ""), fig.get("label", "")) for fig in section.get("figure", [])]
+        empty = not shown
         figures = "".join(f'<li><span class="v">{esc(value)}</span><span class="k">{label}</span></li>' for value, label in shown)
         parts.append(f'  <ul class="figures">{figures}</ul>')
         note = section.get("note", "")
@@ -881,7 +891,10 @@ def render_section(section, key, data, data_dir):
     elif kind == "defs":
         # Its terms' column grows to fit the widest, which may be a chip.
         terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in section.get("def", []))
+        empty = not terms
         parts.append(f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>')
+    if empty:
+        problem(where, "it shows nothing but its title: give it content, or remove it")
     title = f'  <h3>{section["title"]}</h3>\n' if section.get("title") else ""
     return f'<section class="block" id="{section_id}">\n{title}' + "\n".join(parts) + "\n</section>"
 
@@ -903,10 +916,16 @@ def approval(key, data):
 
 def render_phase(key, data, data_dir, head=True):
     """A phase's view: its name, for screen readers only, since its tab shows the name
-    and the state, unless it stands alone; then its sections and its approval."""
+    and the state, unless it stands alone; then, for some phases, a list of its
+    sections; then its sections and its approval."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
-    for section in data.get("section", []):
-        parts.append(render_section(section, key, data, data_dir))
+    rendered = [(section, render_section(section, key, data, data_dir)) for section in data.get("section", [])]
+    shown = [section for section, html in rendered if html]
+    if key in CONTENTS and len(shown) > 1:
+        links = "".join(f'<li><a href="#{section["id"]}">{section.get("title") or section["id"]}</a></li>' for section in shown)
+        # A contents line, as the guides open with.
+        parts.append(f'<nav class="contents" id="{key}-contents" aria-label="In this view"><ol>{links}</ol></nav>')
+    parts += [html for _, html in rendered]
     parts.append(approval(key, data))
     return expand_refs("\n".join(part for part in parts if part), f"{key}.toml")
 

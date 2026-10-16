@@ -5,8 +5,9 @@
 # user is "open": it reads To decide, and shows under The owner; once
 # answered, "done" reads Taken, and `on` is the day it was taken. Its card
 # lists the PRs and settings that name it as Carried out by, so "lands in"
-# needs no field of its own. The Analysis holds decisions and a few lines of
-# prose: the evidence behind them goes in the Research.
+# needs no field of its own. The Analysis holds decision cards and nothing
+# else: the evidence behind them goes in the Research. With several sections,
+# such as batches, it opens with a list of them.
 [[section]]
 id = "decisions"
 title = "Decisions"
