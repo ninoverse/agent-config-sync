@@ -225,13 +225,26 @@
   /* An automated run, wherever a date is listed. */
   .automated { display: inline-block; padding: 0 6px; border-radius: var(--corner-full); font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; line-height: 1.5; vertical-align: 1px; color: var(--ready); background: var(--ready-soft); }
 
-  /* Tables: only these may be wider than a phone, each scrolling in its own box. */
-  .scroll { overflow-x: auto; margin-top: 18px; border: 1px solid var(--rule); border-radius: var(--corner-lg); background: var(--surface); }
+  /* Tables: only these may be wider than a phone, each scrolling in its own box. A
+     shade on an edge says more of the table lies past it, where a scrollbar may not
+     show: the covers move with the table and hide the shade at either end. */
+  .scroll {
+    overflow-x: auto; margin-top: 18px; border: 1px solid var(--rule); border-radius: var(--corner-lg);
+    --shade: color-mix(in srgb, var(--ink) 22%, transparent);
+    background:
+      linear-gradient(to right, var(--surface) 40%, transparent) left / 36px 100% no-repeat local,
+      linear-gradient(to left, var(--surface) 40%, transparent) right / 36px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, var(--shade), transparent) left / 14px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, var(--shade), transparent) right / 14px 100% no-repeat scroll,
+      var(--surface);
+  }
   table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
   th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
   thead th { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); background: var(--surface-high); }
   tbody tr:last-child td { border-bottom: none; }
   td code { font-size: 0.82em; }
+  /* A chip in a cell wraps with its column rather than widening the table. */
+  td .pill { white-space: normal; align-items: baseline; }
   a.ref { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
   a.ref:hover { border-bottom-color: var(--accent-fill); }
   .ref b { font-family: var(--font-mono); font-size: 0.82rem; }
@@ -276,6 +289,9 @@
   .item-head .says { margin: 0; }
   article.item > dl:first-child { margin-top: 0; }
   article.item dl { grid-template-columns: var(--label) minmax(0, 1fr); }
+  /* A definitions card has no number to line up with, so its terms take what they need. */
+  article.item dl.terms { grid-template-columns: minmax(var(--label), max-content) minmax(0, 1fr); }
+  dt .pill { text-transform: none; }
   article.item dd code { background: var(--bg); }
   /* A card's second line: chips for what a word or two says. */
   .item-tags { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 12px 0 0 calc(var(--label) + 16px); }
@@ -420,7 +436,7 @@
     .item-tags { margin-left: 0; }
     details.fold > summary { grid-template-columns: auto minmax(0, 1fr) auto; }
     details.fold > summary .item-tags { grid-column: 1 / -1; }
-    article.item dl { grid-template-columns: 1fr; }
+    article.item dl, article.item dl.terms { grid-template-columns: 1fr; }
     nav.phases :is(a, .off) { padding: 5px 8px 6px 7px; column-gap: 5px; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

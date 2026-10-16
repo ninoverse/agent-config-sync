@@ -283,6 +283,22 @@ def is_field(value):
     return isinstance(text, str) or (isinstance(text, list) and all(isinstance(part, str) for part in text))
 
 
+def is_chip(text):
+    """A field's text that is one pill and nothing else, which a card shows as a chip."""
+    return isinstance(text, str) and re.fullmatch(r'<span class="pill[^"]*">[^<]*</span>', text.strip()) is not None
+
+
+def section_names(sections):
+    """Each section's name, by id: its title; or, for one without a title, which carries
+    on the section before it, that section's title."""
+    names, last = {}, None
+    for section in sections:
+        last = section.get("title") or last
+        if section.get("id"):
+            names[section["id"]] = last or section["id"]
+    return names
+
+
 def texts_of(text):
     return text if isinstance(text, list) else [text]
 
@@ -600,9 +616,12 @@ def card(item):
     then, folded behind those until the reader opens them, its fields, and the items
     that need it or mention it."""
     short = item.get("short")
+    fields = [field for field in item.get("fields", []) if is_field(field)]
     tags = []
     if item.get("kind") in KINDS:
         tags.append(f'<span class="pill k-{item["kind"]}">{KINDS[item["kind"]]}</span>')
+    # A field that is one pill and nothing else is a chip, so a folded card shows it.
+    tags += [field[1].strip() for field in fields if is_chip(field[1])]
     # A status set from another phase shows there: the card keeps the record as written.
     own = item.get("status_from") == item["phase"] and item.get("status") in ITEM_STATUS
     # A criterion is agreed in the Brief, though Verify keeps its status: until the
@@ -621,7 +640,7 @@ def card(item):
     options = item.get("options")
     if isinstance(options, list) and options and all(is_pair(option) for option in options):
         rows.append(("Options", options_html(item)))
-    rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in item.get("fields", []) if is_field(field)]
+    rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in fields if not is_chip(field[1])]
     if own and item["status"] == "blocked" and item.get("waits"):
         rows.append((waits_label(item), item["waits"]))
     if own and item["status"] == "dropped":
@@ -834,7 +853,9 @@ def render_section(section, key, data, data_dir):
         if note:
             parts.append(f'  <p class="note">{note}</p>')
     elif kind == "defs":
-        parts.append(card_html(None, None, rows=[(entry.get("term", ""), entry.get("text", "")) for entry in section.get("def", [])]))
+        # Its terms' column grows to fit the widest, which may be a chip.
+        terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in section.get("def", []))
+        parts.append(f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>')
     title = f'  <h3>{section["title"]}</h3>\n' if section.get("title") else ""
     return f'<section class="block" id="{section_id}">\n{title}' + "\n".join(parts) + "\n</section>"
 
@@ -886,10 +907,11 @@ def render_phase(key, data, data_dir, head=True):
     changelog."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
     targets = {}
+    names = section_names(data.get("section", []))
     for section in data.get("section", []):
         parts.append(render_section(section, key, data, data_dir))
         if section.get("id"):
-            targets[section["id"]] = section.get("title") or section["id"]
+            targets[section["id"]] = names[section["id"]]
         for item in section.get("item", []) if section.get("kind") == "items" else []:
             if item.get("id") in ITEMS:
                 targets[anchor_of(item["id"])] = f'<b>{esc(item["id"])}</b> {short_of(ITEMS[item["id"]])}'
@@ -1267,14 +1289,14 @@ def changes_since(data_dir, published):
 
     for (key, section_id), after in new_sections.items():
         before = old_sections.get((key, section_id))
-        name = text_of(after.get("title") or section_id)
+        name = text_of(section_names(new.get(key, {}).get("section", [])).get(section_id, section_id))
         if before is None:
             note(key, f"{name} added", section_id)
         elif {k: v for k, v in before.items() if k != "item"} != {k: v for k, v in after.items() if k != "item"}:
             note(key, f"{name} edited", section_id)
     for (key, section_id), before in old_sections.items():
         if (key, section_id) not in new_sections:
-            note(key, f"{text_of(before.get('title') or section_id)} removed")
+            note(key, f"{text_of(section_names(old.get(key, {}).get('section', [])).get(section_id, section_id))} removed")
 
     for key, _ in PHASES:
         before, after = old.get(key, {}), new.get(key, {})

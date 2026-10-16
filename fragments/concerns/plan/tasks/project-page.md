@@ -79,6 +79,8 @@ new changelog entry gets a warning.
   `borrowed`; and `css`, stylesheets of the project's own, beside it.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
   `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`.
+  A section that carries on the one before it can go without a `title`, and
+  the changelog then names it by that section's.
   Then `[[changelog]]` entries, newest first, each with a `date`, its `text`,
   and `changed`, the sections and items it changed. A phase the user approves,
   such as the Plan, has `approved`, the day they did.
@@ -90,7 +92,9 @@ new changelog entry gets a warning.
   set its own.
 - An item is a card: an `id`, a `title`, and its `fields` as `[label, text]`
   pairs, where a text that holds several things, such as the decisions a PR
-  carries out, is a list of them, shown as a list. Optionally, it has:
+  carries out, is a list of them, shown as a list. A text that is one
+  `<span class="pill ...">` and nothing else, such as what a comparison found,
+  shows as a chip instead, so a folded card shows it. Optionally, it has:
   - `short`, the name it goes by wherever it is linked;
   - `kind`: `major`, `minor`, `patch`, `owner` or `together`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and

@@ -145,7 +145,23 @@ def check_example(tmp):
     expect(entry in page and '<span class="pill day">7 Oct</span>' in page and '<dt>Changed</dt><dd><ul class="list"><li><a href="#results">Results</a>' in page, "a changelog entry is a card, its day a chip under what it says, listing what it changed")
     expect(not re.search(r'<div class="item-head"><span class="n">\d', "".join(views)), "no card has a date where an item's number goes")
     project = between(phase["brief"], 'id="the-project"', "</section>")
-    expect('<article class="item">\n    <dl><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
+    expect('<article class="item">\n    <dl class="terms"><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
+    expect("article.item dl.terms { grid-template-columns: minmax(var(--label), max-content)" in page, "a definitions card's terms take the width they need, a chip among them")
+    expect("td .pill { white-space: normal" in page and "no-repeat local" in page, "a chip in a table wraps with its column, and a table that scrolls is shaded at the edge with more past it")
+    chipped = copy_with(tmp, "chipped", EXAMPLE, "research.toml", '  ["Today", "<code>example-service</code> serves', '  ["Found", "<span class=\\"pill day\\">A gap</span>"],\n  ["Today", "<code>example-service</code> serves')
+    if chipped is not None:
+        render(chipped, tmp / "chipped-out")
+        research = tmp / "chipped-out" / "phases" / "research.html"
+        r1 = between(research.read_text(), 'id="r1"', "</article>") if research.exists() else ""
+        expect("<h4>The service's routes</h4><span class=\"item-tags\"><span class=\"pill day\">A gap</span></span></summary>" in r1 and "<dt>Found</dt>" not in r1, f"a field that is one chip is a chip, which a folded card shows: {r1[:300]}")
+    more = '[[section]]\nid = "pieces-more"\nkind = "prose"\nbody = "<p>More on the pieces.</p>"\n\n# Each change after the first publish, newest first.'
+    untitled = copy_with(tmp, "untitled", EXAMPLE, "research.toml", "# Each change after the first publish, newest first.", more)
+    if untitled is not None and replace_in(untitled, "research.toml", "[[changelog]]\ndate = 2026-10-02", '[[changelog]]\ndate = 2026-10-03\ntext = "More on the pieces."\nchanged = ["pieces-more"]\n\n[[changelog]]\ndate = 2026-10-02'):
+        run = render(untitled, tmp / "untitled-out", "--since", str(EXAMPLE))
+        research = tmp / "untitled-out" / "phases" / "research.html"
+        log = between(research.read_text(), 'id="research-changelog"', "</footer>") if research.exists() else ""
+        expect('<li><a href="#pieces-more">What exists</a></li>' in log, f"the changelog names a section without a title by the one it carries on: {log[:400]}")
+        expect("  Research: What exists added.\n" in run.stdout, f"so does --since: {run.stdout}")
 
     expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>") and "pill st-" not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
     agreeing = copy_with(tmp, "agreeing", EXAMPLE, "verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "open"')
@@ -271,7 +287,7 @@ def check_full(tmp):
     expect('id="cost"' in page and "<th>Days</th>" in page, "a table renders")
     expect('id="old-status"' in page and 'href="#old-status"' in page, "an imported page's ids and links move under its prefix")
     expect('aria-labelledby="old-status-title"' in page and 'for="old-pick"' in page, "so do the attributes that name ids")
-    expect('class="figures"' in page and "<dl><dt>Problem</dt><dd>Nobody could see" in page, "figures render, and definitions as a card")
+    expect('class="figures"' in page and '<dl class="terms"><dt>Problem</dt><dd>Nobody could see' in page, "figures render, and definitions as a card")
     expect(".imported-marker" in page, "a project's own stylesheet is appended")
     expect(all(f'st-{s}">{label}<' in page for s, label in (("open", "To review"), ("done", "Adopted · 8 Oct"), ("dropped", "Not adopted"))), "a lesson reads To review, Adopted or Not adopted")
     analysis = (out / "phases" / "analysis.html").read_text()
