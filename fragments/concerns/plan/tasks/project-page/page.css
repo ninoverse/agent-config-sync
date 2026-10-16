@@ -347,20 +347,25 @@
   .ball .more { margin: 10px 0 0; font-size: 0.88rem; }
   .handoff ul { max-width: 88ch; }
   table.cal { table-layout: fixed; border: 1px solid var(--rule); background: var(--surface); }
-  table.cal th { padding: 5px 4px; text-align: center; font-size: 0.66rem; }
+  table.cal th { padding: 5px 4px; text-align: center; font-size: 0.72rem; }
   table.cal td { height: 3.3rem; padding: 4px; border: 1px solid var(--rule); vertical-align: top; }
   table.cal td.out { background: var(--bg); }
-  table.cal .dn { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  table.cal .dn { display: block; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
   table.cal a.dn { color: var(--accent); font-weight: 700; text-decoration: none; }
   table.cal a.dn:hover { text-decoration: underline; }
   table.cal td.today { outline: 2px solid var(--accent-fill); outline-offset: -2px; }
   table.cal td.today .dn { color: var(--accent); font-weight: 700; }
   table.cal ul { list-style: none; padding: 0; margin: 3px 0 0; display: flex; flex-wrap: wrap; gap: 2px; }
-  table.cal li { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.64rem; font-family: var(--font-mono); padding: 0 5px; border-radius: var(--corner-full); background: var(--surface-high); color: var(--ink); }
-  .m-event { background: var(--accent-soft) !important; color: var(--accent) !important; }
-  .m-s-done { background: var(--done-soft) !important; color: var(--done) !important; }
-  .m-s-open { background: var(--open-soft) !important; color: var(--open) !important; }
-  .m-amended, .m-phase { background: var(--ready-soft) !important; color: var(--ready) !important; }
+  table.cal li { margin: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; font-family: var(--font-mono); padding: 0 5px; border-radius: var(--corner-full); background: var(--surface-high); color: var(--ink); }
+  /* A day's marks take the board's colours; an event, which is no item's status, is outlined. */
+  table.cal .m-event { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  table.cal .m-s-done { background: var(--done-soft); color: var(--done); }
+  table.cal .m-s-open { background: var(--open-soft); color: var(--open); }
+  table.cal .m-s-ready { background: var(--ready-soft); color: var(--ready); }
+  table.cal .m-s-blocked { background: var(--blocked-soft); color: var(--blocked); }
+  table.cal .m-s-dropped { background: var(--na-soft); color: var(--na); text-decoration: line-through; }
+  table.cal :is(.m-amended, .m-phase) { background: var(--ready-soft); color: var(--ready); }
+  ol.agenda .what { font-weight: 600; }
   ol.agenda { list-style: none; padding: 0; margin: 14px 0 0; max-width: 88ch; }
   ol.agenda > li { margin: 0; display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 4px 14px; padding-block: 8px; border-bottom: 1px solid var(--rule); }
   ol.agenda > li.today { border-bottom: 2px solid var(--accent-fill); }
@@ -401,7 +406,7 @@
     table.cal td { height: 2.6rem; }
     table.cal li { width: 7px; height: 7px; padding: 0; font-size: 0; border-radius: 50%; align-self: center; }
     /* A count's box shows its number; its word is for screen readers. */
-    table.cal li.count { width: auto; height: auto; min-width: 14px; padding: 0 3px; font-size: 0.6rem; line-height: 1.35; text-align: center; border-radius: var(--corner-xs); }
+    table.cal li.count { width: auto; height: auto; min-width: 15px; padding: 0 3px; font-size: 0.68rem; line-height: 1.35; text-align: center; border-radius: var(--corner-xs); }
     table.cal li.count .word { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .glance { padding: 10px 14px; }
     dialog.sheet { padding: 0 16px; }

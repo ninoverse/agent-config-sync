@@ -899,28 +899,35 @@ def render_phase(key, data, data_dir, head=True):
 
 
 def dated(project, phases):
-    """Everything with a date: (date, class, html, label, word), in no order yet. The
-    word is what happened to an item, which a busy day counts; an event or a phase's
-    date has none, and shows on its own."""
+    """Everything with a date: (date, class, html, label, word, item id), in no order
+    yet. The word is what happened to an item, which the calendar counts and the
+    agenda groups by; an event or a phase's date has neither, and shows on its own."""
     found = []
     for event in project.get("event", []):
         if event.get("date"):
             # A run that starts on its own, such as a scheduled workflow, is marked Automated wherever it is listed.
             mark = ' <span class="automated">Automated</span>' if event.get("automated") is True else ""
-            found.append((event["date"], "event", event.get("title", "") + mark, event.get("short") or text_of(event.get("title", "")), None))
+            found.append((event["date"], "event", event.get("title", "") + mark, event.get("short") or text_of(event.get("title", "")), None, None))
     for item_id, item in ITEMS.items():
         if item.get("on") and item.get("status") in ITEM_STATUS:
-            found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id, label_of(item).lower()))
+            found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id, label_of(item).lower(), item_id))
         if item["amended"] and item["amended"]["on"]:
-            found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended", "amended"))
+            found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended", "amended", item_id))
+    # A phase's dates, each said once: one that starts and ends the same day is one
+    # mark, and an end on the day of its approval is the approval.
     for key, state in project["status"].items():
-        if state["start"]:
-            found.append((state["start"], "phase", f"{PHASE_NAME[key]} starts", PHASE_NAME[key], None))
-        if state["end"]:
-            found.append((state["end"], "phase", f"{PHASE_NAME[key]} ends", f"{PHASE_NAME[key]} ends", None))
+        name, start, end = PHASE_NAME[key], state["start"], state["end"]
+        approved = phases.get(key, {}).get("approved")
+        if start and start == end:
+            found.append((start, "phase", f"{name}, one day", f"{name}, one day", None, None))
+            continue
+        if start:
+            found.append((start, "phase", f"{name} starts", f"{name} starts", None, None))
+        if end and end != approved:
+            found.append((end, "phase", f"{name} ends", f"{name} ends", None, None))
     for key, data in phases.items():
         if data.get("approved"):
-            found.append((data["approved"], "phase", f"{PHASE_NAME[key]} approved", f"{PHASE_NAME[key]} approved", None))
+            found.append((data["approved"], "phase", f"{PHASE_NAME[key]} approved", f"{PHASE_NAME[key]} approved", None, None))
     return found
 
 
@@ -976,6 +983,21 @@ def month_grid(year, month, by_day, before, after, shown):
     )
 
 
+def agenda_day(entries):
+    """A day in the agenda: its events and phase dates, then a line for each thing
+    that happened to its items, naming them, such as Merged: AC-1, AC-2."""
+    lines, groups = [], {}
+    for cls, text, ref in entries:
+        if ref is None:
+            lines.append(f'<li class="m-{cls}">{text}</li>')
+            continue
+        item = ITEMS[ref]
+        what = f"Amended into the {PHASE_NAME[item['phase']]}" if cls == "amended" else label_of(item)
+        groups.setdefault((cls, what), []).append(f"[[{ref}]]")
+    lines += [f'<li class="m-{cls}"><span class="what">{what}:</span> {", ".join(refs)}</li>' for (cls, what), refs in groups.items()]
+    return "".join(lines)
+
+
 def calendar_view(project, phases):
     """The header's calendar, every month the project spans with today's shown; who
     holds the ball, which the header shows under it: the user, the agent, or a date
@@ -983,7 +1005,7 @@ def calendar_view(project, phases):
     and what happened."""
     found = dated(project, phases)
     by_day = {}
-    for date, cls, text, label, word in found:
+    for date, cls, text, label, word, ref in found:
         by_day.setdefault(date, []).append((cls, text, label, word))
     dates = [e[0] for e in found] + [TODAY]
     first, last = min(dates), max(dates)
@@ -1004,10 +1026,14 @@ def calendar_view(project, phases):
         body = "".join(rows) if rows else f'<li class="none">{empty}</li>'
         return f'<div class="col"><h3>{title}</h3><ul>{body}</ul>{more}</div>'
 
-    owner_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in owner]
+    # The owner's items, a line for each thing to do, such as Agree: SC1, SC2.
+    asks = {}
+    for i in owner:
+        asks.setdefault(ask_of(ITEMS[i]), []).append(f"[[{i}]]")
+    owner_rows = [f'<li><span class="pill ask">{esc(ask)}</span> {", ".join(refs)}</li>' for ask, refs in asks.items()]
     agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
     # The next three dates, each a link to its day in the agenda, which has them all.
-    date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word in ahead[:3]]
+    date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word, ref in ahead[:3]]
     more = f'<p class="more"><a href="#coming-up">{len(ahead) - 3} more in the agenda</a></p>' if len(ahead) > 3 else ""
     ball = (
         '<section class="hold" id="ball" aria-labelledby="ball-title"><h2 id="ball-title">Who holds the ball</h2><div class="ball">'
@@ -1022,9 +1048,9 @@ def calendar_view(project, phases):
         updated = f' <span class="on">{day(handoff["updated"])}</span>' if handoff.get("updated") else ""
         notes = f'<section class="block handoff" id="next-session"><h3>Notes for the next session{updated}</h3>{list_html(handoff["notes"])}</section>'
     coming, happened = {}, {}
-    for date, cls, text, label, word in found:
+    for date, cls, text, label, word, ref in found:
         upcoming = date > TODAY or (date == TODAY and cls == "event")
-        (coming if upcoming else happened).setdefault(date, []).append((cls, text))
+        (coming if upcoming else happened).setdefault(date, []).append((cls, text, ref))
     anchors = set()
 
     def days(groups, order):
@@ -1035,7 +1061,7 @@ def calendar_view(project, phases):
             anchor = f"on-{date.isoformat()}"
             attr = "" if anchor in anchors else f' id="{anchor}"'
             anchors.add(anchor)
-            entries = "".join(f'<li class="m-{cls}">{text}</li>' for cls, text in groups[date])
+            entries = agenda_day(groups[date])
             rows.append(f'<li class="{when}"{attr}><time>{weekday(date)}</time><ul>{entries}</ul></li>')
         return f'<ol class="agenda">{"".join(rows)}</ol>'
 
@@ -1446,7 +1472,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
 <div class="wrap">
 <header class="top">
   <div class="bar">
-    <p class="eyebrow">{esc(project.get("repo", ""))} · project page</p>
+    <p class="eyebrow">Project page</p>
     <nav class="views" aria-label="Views">{views}</nav>
   </div>
   <h1>{esc(title)}</h1>
@@ -1511,7 +1537,7 @@ def retrospective_page(project, phases, data_dir):
 </style>
 <div class="wrap">
 <header class="top">
-  <p class="eyebrow">{esc(project.get("repo", ""))} · retrospective</p>
+  <p class="eyebrow">Retrospective</p>
   <h1>{esc(title)}</h1>
   <p class="lede">{project.get("summary", "")}</p>
   <p class="readat">Written from the project's data, read on {read_at.day} {read_at:%B %Y}.</p>

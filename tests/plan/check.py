@@ -174,12 +174,24 @@ def check_example(tmp):
     expect("<th>Waits on the owner</th>" in phase["guides"] and "<th>The owner's part</th>" in phase["guides"], "the guide's statuses table names the owner, not you")
     expect('<span class="pill k-owner">Owner</span>' in phase["plan"], "an item only the owner can do reads Owner")
     expect('class="more"' not in ball, "with three dates or fewer ahead, nothing points to more")
+    asked = copy_with(tmp, "asked", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"')
+    if asked is not None:
+        render(asked, tmp / "asked-out")
+        index = tmp / "asked-out" / "index.html"
+        owner = between(between(index.read_text(), 'id="ball"', "</section>"), "<h3>The owner</h3>", "</ul>") if index.exists() else ""
+        line = re.search(r'<li><span class="pill ask">Merge</span> <a class="ref" href="#ex-2">.*?</a>, <a class="ref" href="#ex-3">', owner)
+        expect(line is not None and owner.count("<li>") == 1, f"the owner's items share a line for each thing to do: {owner}")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
     expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the changelogs and the agenda hold what happened")
     marks = re.findall(r'<li class="(m-[\w-]+)(?: count)?">(.*?)</li>', between(calendar_of(page), 'href="#on-2026-10-06">6</a>', "</td>"))
-    counted = [("m-phase", "Verify"), ("m-s-done", '<b>1</b><span class="word"> met</span>'), ("m-s-done", '<b>1</b><span class="word"> merged</span>'), ("m-s-done", '<b>1</b><span class="word"> set</span>'), ("m-s-done", '<b>1</b><span class="word"> passed</span>')]
+    counted = [("m-phase", "Verify starts"), ("m-s-done", '<b>1</b><span class="word"> met</span>'), ("m-s-done", '<b>1</b><span class="word"> merged</span>'), ("m-s-done", '<b>1</b><span class="word"> set</span>'), ("m-s-done", '<b>1</b><span class="word"> passed</span>')]
     expect(marks == counted, f"a day names its events and phase dates, then counts its items by what happened to them, the number apart for a phone: {marks}")
+    first, third = (between(calendar_of(page), f'href="#on-2026-10-0{n}">{n}</a>', "</td>") for n in (1, 3))
+    expect(">Brief, one day<" in first and ">Research starts<" in first and "Brief ends" not in first, f"a phase that starts and ends the same day is one mark, and a start says so: {first}")
+    expect(">Plan approved<" in third and "Plan ends" not in third, f"an end on the day of the approval is the approval: {third}")
+    expect('<p class="eyebrow">Project page</p>' in page, "the line above the title doesn't repeat the repository, which starts the title")
+    expect("table.cal .m-s-blocked {" in page and "table.cal .m-event { background: transparent" in page, "in the calendar, a blocked mark has its own colour, and an event is outlined")
     merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-06\nresult = "Released 1.5.0."'
     crowded = copy_with(tmp, "crowded", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
     if crowded is not None:
@@ -190,7 +202,8 @@ def check_example(tmp):
         marks = re.findall(r'<li class="m-s-done count"><b>(\d+)</b><span class="word"> (.*?)</span></li>', sixth)
         expect(marks == [("1", "met"), ("2", "merged"), ("1", "set"), ("1", "passed")], f"two items that merged the same day are counted together: {marks}")
         day = between(text, 'id="on-2026-10-06"', "</ul>")
-        expect('href="#ex-1"' in day and 'href="#ex-2"' in day, "and the agenda still lists each item that day")
+        merged = re.search(r'<li class="m-s-done"><span class="what">Merged:</span> <a class="ref" href="#ex-1">.*?</a>, <a class="ref" href="#ex-2">', day)
+        expect(merged is not None, f"the agenda names a day's items on a line for each thing that happened to them: {day[:300]}")
     entries = "".join(f'[[changelog]]\ndate = 2026-10-0{n}\ntext = "Change {n}."\n\n' for n in (6, 5, 4))
     long = copy_with(tmp, "long-changelog", EXAMPLE, "build.toml", "[[changelog]]\ndate = 2026-10-06", entries + "[[changelog]]\ndate = 2026-10-06")
     if long is not None:
