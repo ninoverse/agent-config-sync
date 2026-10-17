@@ -58,8 +58,8 @@ It writes nothing, and names the file and the item, when:
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
 - an item is in a phase that doesn't hold its type, the Analysis or the Plan
-  has a section other than `items`, or Build one other than a `board`,
-  `results` or `items`;
+  has a section other than `items`, Build one other than a `board`, `results`
+  or `items`, or Verify one other than `items` or `results`;
 - a section shows nothing but its title, such as a card section with no
   cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;

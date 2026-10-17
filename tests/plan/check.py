@@ -385,6 +385,7 @@ BROKEN = [
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "queues"\nkind = "prose"\nbody = "<p>One at a time.</p>"\n\n[[section]]\nid = "settings"', "Plan holds only items sections"),
     (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "Analysis holds only items sections"),
     (EXAMPLE, "build.toml", '[[section]]\nid = "questions"', '[[section]]\nid = "log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n\n[[section]]\nid = "questions"', "Build holds only board, results and items sections: what happened is in the Agenda"),
+    (EXAMPLE, "verify.toml", '[[section]]\nid = "checks"', '[[section]]\nid = "on-the-way"\nkind = "prose"\nbody = "<p>What this run couldn\'t settle.</p>"\n\n[[section]]\nid = "checks"', "Verify holds only items and results sections"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "more-prs"\ntitle = "More PRs"\nkind = "items"\ntype = "pr"\n\n[[section]]\nid = "settings"', "plan.toml section more-prs: it shows nothing but its title"),
     (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "note"\ntitle = "A note"\nkind = "prose"\nbody = "<p></p>"\n\n[[section]]\nid = "pieces"', "research.toml section note: it shows nothing but its title"),
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "decision"', "a card of type `decision` belongs in Analysis, not in Research"),
