@@ -76,6 +76,7 @@
     }
     mark(section.dataset.phase);
     await load(section);
+    start(section);
     // A view opens where the reader is; a link to an id inside one goes to it,
     // opening the card it names, or the folds around it.
     if (anchor && !views.has(anchor)) {
@@ -86,6 +87,23 @@
       (target || section).scrollIntoView();
     }
   }
+
+  // A board opens at its first column with work left, beside its rows' names, the
+  // first time its view is on screen and so has a width.
+  function start(section) {
+    for (const box of section.querySelectorAll('.scroll[data-start]')) {
+      if (!box.offsetWidth) continue;
+      const cells = box.querySelector('tr').cells;
+      box.scrollLeft = cells[box.dataset.start].offsetLeft - cells[0].offsetWidth;
+      delete box.dataset.start;
+    }
+  }
+  // A scroll doesn't bubble either: a box scrolled from its start shades the edge of
+  // what stays in view.
+  document.addEventListener('scroll', (event) => {
+    const box = event.target;
+    if (box.classList?.contains('scroll')) box.classList.toggle('scrolled', box.scrollLeft > 0);
+  }, true);
 
   // Open all says what a click does: open the section's folded cards while any is
   // closed, and close them once all are open.

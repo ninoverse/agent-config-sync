@@ -123,7 +123,7 @@ def check_example(tmp):
     expect(folded in ex2 and "</summary>\n      <dl>" in ex2, "a card folds its fields behind its number, summary and chips")
     unfolded = [m for view in views for m in re.findall(r'<article class="item" id="[^"]+">\n    (?!<details class="fold">)', view)]
     expect(not unfolded, f"every item's card folds: {unfolded[:2]}")
-    expect('class="fold"' not in results, "a result doesn't fold, since what it says is the point")
+    expect('<details class="fold">' in results and "open-all" in results, "results fold, as cards do, and can be opened all at once")
     prs, risks = between(phase["plan"], 'id="prs"', "</section>"), between(phase["plan"], 'id="risks"', "</section>")
     expect('<p class="fold-all"><button type="button" class="open-all">Open all</button></p>' in prs and "open-all" not in risks, "a section with several folded cards can open them all, and one with a single card has no need")
     expect('<dt>Carries out</dt><dd><ul class="list"><li><a class="ref" href="#d1">' in ex2, "a field that holds several things is a list")
@@ -188,6 +188,12 @@ def check_example(tmp):
         sc2 = between(brief.read_text(), 'id="sc2"', "</article>") if brief.exists() else ""
         expect('<span class="pill st-dropped">Dropped · 7 Oct</span>' in sc2 and "<dt>Why</dt><dd>The platform drains a process on its own.</dd>" in sc2, f"a dropped criterion says so in the Brief, with why: {sc2[:400]}")
 
+    expect('<div class="scroll" data-start' not in page, "a board whose first column has work left opens at its start")
+    shipped = copy_with(tmp, "shipped", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "done"\non = 2026-10-07\nresult = "Released 1.4.1."')
+    if shipped is not None:
+        render(shipped, tmp / "shipped-out")
+        board = (tmp / "shipped-out" / "index.html").read_text()
+        expect('<div class="scroll" data-start="2">' in board, "once its first column is done, a board opens at the next, which has work left")
     came_true = '[status.RK1]\nstatus = "happened"\non = 2026-10-07\nresult = "It did, under load: [[Q1]] took it over."'
     happened = copy_with(tmp, "happened", EXAMPLE, "build.toml", '[status.RK1]\nstatus = "blocked"', came_true)
     if happened is not None:
@@ -376,12 +382,13 @@ STALE = [
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
-    (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "queues"\nkind = "prose"\nbody = "<p>One at a time.</p>"\n\n[[section]]\nid = "settings"', "the Plan holds only items sections"),
-    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "the Analysis holds only items sections"),
+    (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "queues"\nkind = "prose"\nbody = "<p>One at a time.</p>"\n\n[[section]]\nid = "settings"', "Plan holds only items sections"),
+    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "Analysis holds only items sections"),
+    (EXAMPLE, "build.toml", '[[section]]\nid = "questions"', '[[section]]\nid = "log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n\n[[section]]\nid = "questions"', "Build holds only board, results and items sections: what happened is in the Agenda"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "more-prs"\ntitle = "More PRs"\nkind = "items"\ntype = "pr"\n\n[[section]]\nid = "settings"', "plan.toml section more-prs: it shows nothing but its title"),
     (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "note"\ntitle = "A note"\nkind = "prose"\nbody = "<p></p>"\n\n[[section]]\nid = "pieces"', "research.toml section note: it shows nothing but its title"),
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "decision"', "a card of type `decision` belongs in Analysis, not in Research"),
-    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "compared"\ntitle = "Compared"\nkind = "table"\nhead = ["Option"]\nrows = [["a"]]\n\n[[section]]\nid = "decisions"', "the Analysis holds only items sections"),
+    (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "compared"\ntitle = "Compared"\nkind = "table"\nhead = ["Option"]\nrows = [["a"]]\n\n[[section]]\nid = "decisions"', "Analysis holds only items sections"),
     (EXAMPLE, "analysis.toml", 'id = "D2"', 'id = "D1"', "this id is used twice"),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"<a href=\\"#d9\\">D9</a>"', 'a link to "#d9"'),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"[[D9]]"', "[[D9]] names no item"),

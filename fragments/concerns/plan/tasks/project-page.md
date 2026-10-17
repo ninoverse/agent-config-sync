@@ -57,8 +57,9 @@ It writes nothing, and names the file and the item, when:
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
-- an item is in a phase that doesn't hold its type, or the Analysis or the
-  Plan has a section other than `items`;
+- an item is in a phase that doesn't hold its type, the Analysis or the Plan
+  has a section other than `items`, or Build one other than a `board`,
+  `results` or `items`;
 - a section shows nothing but its title, such as a card section with no
   cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;
@@ -124,6 +125,7 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
 - A `board` with `auto = true` builds its waves from `needs`, over the item
   `types` it names, and its rows from each item's `repo`, or `rows_default`;
   `waves` subtitles each wave. Without `auto`, it takes `columns` and `row`s.
+  Either way, it opens at its first column with an unfinished item.
   A `results` section in the same phase leaves out what the board shows until
   it has a `result`, and then shows the result alone.
 - A `figures` section with `auto = true` starts with what the data counts: PRs

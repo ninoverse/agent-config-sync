@@ -65,8 +65,8 @@ they answer.
   approval: the day, and its amendments by day and why.
 - **Build**: the live state. A board of the PRs and settings in waves, built
   from what each needs; each PR's *Result* once it merges; and the questions
-  the work raises. What happened is in the Agenda, so Build keeps no log of
-  its own.
+  the work raises, and nothing else. What happened is in the Agenda, so Build
+  keeps no log of its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
   success criteria, Met or Not met yet. A check's title says how it is
   checked: what it proves is already on the PR it needs and the criterion it

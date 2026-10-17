@@ -255,6 +255,12 @@
   table.board thead th span { display: block; font-family: var(--font-body); font-weight: 600; font-size: 0.78rem; letter-spacing: 0; text-transform: none; color: var(--ink); }
   table.board td { padding: 10px 7px; }
   table.board td:first-child { font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; padding-left: 12px; }
+  /* The rows' names stay in view as the board scrolls, shaded at their edge once a
+     column has passed under them. */
+  table.board { border-collapse: separate; border-spacing: 0; }
+  table.board :is(th, td):first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+  table.board thead th:first-child { background: var(--surface-high); }
+  .scroll.scrolled table.board :is(th, td):first-child { box-shadow: 6px 0 8px -6px var(--shade); }
   .chips { display: grid; gap: 6px; }
   .chip {
     display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1px 7px; align-items: baseline; min-width: 0;

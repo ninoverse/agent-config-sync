@@ -96,8 +96,14 @@ PHASE_TYPES = {
     "deferred": ("deferred", "question"),
 }
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
-# and the Plan its PRs, settings and risks; evidence is in the Research.
-PHASE_KINDS = {"analysis": ("items",), "plan": ("items",)}
+# the Plan its PRs, settings and risks, and Build its board, results and questions;
+# and where what they leave out goes.
+PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "build": ("board", "results", "items")}
+ELSEWHERE = {
+    "analysis": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
+    "plan": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
+    "build": "what happened is in the Agenda, and what came of an item is its Result",
+}
 # The phases that open with a list of their sections, built from them.
 CONTENTS = ("analysis", "plan")
 KIND_MEANING = {
@@ -698,8 +704,8 @@ def card(item):
 def result_card(item, on_board=False):
     """Where an item stands, in the phase that keeps its status: its number, and its
     summary linked to its own card; its status as a chip; then what it waits on, why
-    it was dropped, or what came of it. For an item on the board, which says the rest,
-    only what came of it."""
+    it was dropped, or what came of it, folded as an item's card is. For an item on the
+    board, which says the rest, only what came of it."""
     name = short_of(item)
     if LINKABLE is None or item["id"] in LINKABLE:
         name = f'<a class="ref" href="#{anchor_of(item["id"])}">{name}</a>'
@@ -712,7 +718,7 @@ def result_card(item, on_board=False):
             rows.append(("Why", item.get("why", "")))
     if item.get("result"):
         rows.append(("Result", item["result"]))
-    return card_html(esc(item["id"]), name, tags, rows)
+    return card_html(esc(item["id"]), name, tags, rows, fold=True)
 
 
 def chip(item):
@@ -727,13 +733,16 @@ def chip(item):
     return f'<a class="{" ".join(classes)}" href="#{anchor_of(item["id"])}"><b>{esc(item["id"])}</b><span>{short_of(item)}</span>{tail}</a>'
 
 
-def table_html(head, rows, min_width=None, cls=None):
+def table_html(head, rows, min_width=None, cls=None, start=None):
+    """A table in a box that scrolls; `start` is the column the box opens at, its first
+    column kept beside it."""
     attrs = f' class="{cls}"' if cls else ""
     if min_width:
         attrs += f' style="min-width: {min_width}px"'
     thead = "".join(f"<th>{cell}</th>" for cell in head)
     tbody = "\n".join("      <tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>" for row in rows)
-    return f'  <div class="scroll">\n    <table{attrs}>\n      <thead><tr>{thead}</tr></thead>\n      <tbody>\n{tbody}\n      </tbody>\n    </table>\n  </div>'
+    box = f' data-start="{start}"' if start else ""
+    return f'  <div class="scroll"{box}>\n    <table{attrs}>\n      <thead><tr>{thead}</tr></thead>\n      <tbody>\n{tbody}\n      </tbody>\n    </table>\n  </div>'
 
 
 def prefixed(text, prefix):
@@ -813,7 +822,9 @@ def render_section(section, key, data, data_dir):
         problem(where, f"`kind` is one of {', '.join(SECTION_KINDS)}")
         return ""
     if kind not in PHASE_KINDS.get(key, SECTION_KINDS):
-        problem(where, f"the {PHASE_NAME[key]} holds only {' and '.join(PHASE_KINDS[key])} sections: anything else, such as evidence in a table, goes in the Research, and the cards link to it")
+        kinds = PHASE_KINDS[key]
+        named = kinds[0] if len(kinds) == 1 else f"{', '.join(kinds[:-1])} and {kinds[-1]}"
+        problem(where, f"{PHASE_NAME[key]} holds only {named} sections: {ELSEWHERE[key]}")
         return ""
     if kind != "prose":
         required(section, "title", where)
@@ -874,7 +885,10 @@ def render_section(section, key, data, data_dir):
                 chips = "".join(chip(ITEMS[item_id]) for item_id in cell)
                 rendered.append(f'<div class="chips">{chips}</div>' if chips else "")
             cells.append(rendered)
-        parts.append(table_html(head, cells, section.get("min_width", 160 * len(columns) + 140), "board"))
+        # The board opens at its first column with work left, the finished ones behind it.
+        left = [index for index in range(len(columns)) if any(ITEMS[i].get("status") not in ("done", "happened", "dropped") for _, row in rows for i in row[index])]
+        start = left[0] + 1 if left and left[0] > 0 else None
+        parts.append(table_html(head, cells, section.get("min_width", 160 * len(columns) + 140), "board", start))
     elif kind == "results":
         # An item the board shows is here only once it has a result, since the board says the rest.
         shown = on_boards(data)
@@ -886,6 +900,8 @@ def render_section(section, key, data, data_dir):
         # Early on, nothing has a result yet, which the section says rather than vanishing.
         if not parts:
             parts.append('  <p class="note">Nothing yet.</p>')
+        elif SCRIPTED and sum('<details class="fold">' in c for c in parts) > 1:
+            parts.insert(0, '  <p class="fold-all"><button type="button" class="open-all">Open all</button></p>')
     elif kind == "figures":
         # With `auto`, the figures the data can count come first, then those written out.
         auto = COUNTED if section.get("auto") else []
