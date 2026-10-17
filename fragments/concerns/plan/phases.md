@@ -59,7 +59,8 @@ they answer.
   PRs as approved, one at a time in each repository, each with its
   branch, what it needs first, what its merge releases, as its kind, and *Done
   when*: what proves it works. The settings only the user can change. The risk
-  register: each risk, and the step that closes it. The Plan stays as
+  register: each risk, written before what it describes can happen, and the
+  step that closes it. The Plan stays as
   approved: an item added after the approval is an amendment, dated and saying
   why, and the Plan ends with its approval: the day, and its amendments.
 - **Build**: the live state. A board of the PRs and settings in waves, built
@@ -108,6 +109,9 @@ from the lesson.
   done; Blocked, naming what it waits on; or Dropped, saying why. The page says
   each in its item's words: a decision is Taken, a PR Merged, a risk Closed.
   An item is never deleted: one that no longer belongs is Dropped.
+- A risk that comes true is Happened, naming the question or the blocker that
+  took it over: it is no longer a risk. What has already happened is never
+  written as a risk.
 - What an item needs is data, not prose: the board's waves come from it, and
   each card lists what needs it and what mentions it.
 - Name an item with its number and its summary, never the number alone: the

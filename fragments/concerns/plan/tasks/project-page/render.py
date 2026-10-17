@@ -47,8 +47,10 @@ PHASES = [
 ]
 PHASE_NAME = dict(PHASES)
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
-ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "dropped": "Dropped"}
+ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
+# The types of item that can come true: a risk that does is no longer a risk.
+HAPPENS = ("risk",)
 # The types of item that carry out a decision.
 CARRY_OUT = ("pr", "setting")
 KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner", "together": "Together"}
@@ -319,7 +321,7 @@ def texts_of(text):
     return text if isinstance(text, list) else [text]
 
 
-def check_status(entry, where):
+def check_status(entry, item_type, where):
     status = entry.get("status")
     if status is None:
         return
@@ -329,6 +331,10 @@ def check_status(entry, where):
         problem(where, "a blocked item says what it waits on, in `waits` or `needs`")
     elif status == "dropped" and not entry.get("why"):
         problem(where, "a dropped item says why, in `why`")
+    elif status == "happened" and item_type not in HAPPENS:
+        problem(where, "only a risk happens: any other item that is finished is `done`")
+    elif status == "happened" and not entry.get("result"):
+        problem(where, "a risk that happened names, in `result`, the question or the blocker that took it over")
 
 
 def collect_items(phases):
@@ -349,11 +355,11 @@ def collect_items(phases):
                     continue
                 anchors.add(anchor_of(item_id))
                 required(item, "title", where)
-                check_status(item, where)
                 item_type = item.get("type", section.get("type"))
                 if item_type is not None and item_type not in TYPES:
                     problem(where, f"`type` is one of {', '.join(TYPES)}")
                     item_type = None
+                check_status(item, item_type, where)
                 if item_type is not None and item_type not in PHASE_TYPES[key]:
                     holders = " or ".join(PHASE_NAME[phase] for phase, types in PHASE_TYPES.items() if item_type in types)
                     problem(where, f"a card of type `{item_type}` belongs in {holders}, not in {PHASE_NAME[key]}")
@@ -406,13 +412,18 @@ def collect_items(phases):
             if item["status_from"]:
                 problem(where, f"{item_id}'s status is set twice, here and in {item['status_from']}.toml")
                 continue
-            check_status(dict(entry, needs=item["needs"]), where)
+            check_status(dict(entry, needs=item["needs"]), item["type"], where)
             for field in ("status", "waits", "why", "result"):
                 if field in entry:
                     item[field] = entry[field]
             if "on" in entry:
                 item["on"] = as_date(entry["on"], where, "on")
             item["status_from"] = key
+    # A risk is written before what it describes: one added after it happened was a question or a blocker.
+    for item_id, item in ITEMS.items():
+        written = item["amended"] and item["amended"]["on"]
+        if item.get("status") == "happened" and written and item["on"] and item["on"] < written:
+            problem(item["where"], f"{item_id} happened on {day(item['on'])}, before it was written on {day(written)}: what has already happened is a question or a blocker, not a risk")
 
 
 def link_items():
@@ -1148,13 +1159,13 @@ def opening_phase(statuses, shown):
 
 def statuses_table():
     """Each type of item in the words its statuses take, and what the user does while one waits."""
-    order = ("open", "ready", "blocked", "done", "dropped")
+    order = ("open", "ready", "blocked", "done", "happened", "dropped")
     rows = []
     for key, entry in TYPES.items():
         name, example = TYPE_NAMES[key]
-        words = [f'<span class="st st-{status}">{entry["labels"].get(status, ITEM_STATUS[status])}</span>' for status in order]
+        words = [f'<span class="st st-{status}">{entry["labels"].get(status, ITEM_STATUS[status])}</span>' if status != "happened" or key in HAPPENS else "—" for status in order]
         rows.append([f'{name} <span class="letters">{example}</span>'] + words + [entry["ask"]])
-    return table_html(["Type", "Waits on the owner", "Ready", "Blocked", "Done", "Dropped", "The owner's part"], rows, 820, "statuses")
+    return table_html(["Type", "Waits on the owner", "Ready", "Blocked", "Done", "Happened", "Dropped", "The owner's part"], rows, 900, "statuses")
 
 
 def kinds_list():
@@ -1415,13 +1426,14 @@ def stylesheet(project, data_dir):
 
 
 def progress():
-    """For each phase, how many of the statuses it keeps are done, of those not Dropped."""
+    """For each phase, how many of the statuses it keeps are done, of those not Dropped;
+    a risk that happened is done with, since a question or a blocker took it over."""
     counts = {}
     for item in ITEMS.values():
         key, status = item.get("status_from"), item.get("status")
         if key and status in ITEM_STATUS and status != "dropped":
             done, total = counts.get(key, (0, 0))
-            counts[key] = (done + (status == "done"), total + 1)
+            counts[key] = (done + (status in ("done", "happened")), total + 1)
     return counts
 
 

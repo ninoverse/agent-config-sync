@@ -188,6 +188,18 @@ def check_example(tmp):
         sc2 = between(brief.read_text(), 'id="sc2"', "</article>") if brief.exists() else ""
         expect('<span class="pill st-dropped">Dropped · 7 Oct</span>' in sc2 and "<dt>Why</dt><dd>The platform drains a process on its own.</dd>" in sc2, f"a dropped criterion says so in the Brief, with why: {sc2[:400]}")
 
+    came_true = '[status.RK1]\nstatus = "happened"\non = 2026-10-07\nresult = "It did, under load: [[Q1]] took it over."'
+    happened = copy_with(tmp, "happened", EXAMPLE, "build.toml", '[status.RK1]\nstatus = "blocked"', came_true)
+    if happened is not None:
+        run = render(happened, tmp / "happened-out")
+        build = tmp / "happened-out" / "index.html"
+        rk1 = between(build.read_text(), '<span class="n">RK1</span>', "</article>") if build.exists() else ""
+        expect(run.returncode == 0 and '<span class="pill st-happened">Happened · 7 Oct</span>' in rk1 and "took it over" in rk1, f"a risk that came true is Happened, naming what took it over: {run.stderr} {rk1[:400]}")
+        if replace_in(happened, "plan.toml", 'short = "Slow database"\n', 'short = "Slow database"\namended = { on = 2026-10-08, why = "seen in production" }\n'):
+            run = render(happened, tmp / "happened-late-out")
+            expect(run.returncode == 1 and "RK1 happened on 7 Oct, before it was written on 8 Oct" in run.stderr, f"a risk is written before it happens: {run.stderr}")
+    expect('st-happened">Happened<' in between(phase["guides"], 'id="guide-statuses"', "</section>"), "the guide words a risk's sixth state")
+
     expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>") and "pill st-" not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
     agreeing = copy_with(tmp, "agreeing", EXAMPLE, "verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "open"')
     if agreeing is not None:
@@ -377,6 +389,8 @@ BROKEN = [
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "pieces"', "`type` is one of"),
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
     (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"\n', "", "a blocked item says what it waits on"),
+    (FULL, "plan.toml", 'status = "dropped"\nwhy = "The first one covers it."', 'status = "happened"\nresult = "Two were needed."', "only a risk happens"),
+    (FULL, "plan.toml", 'status = "done"\non = 2026-10-06\nresult = "They are hashed before export."', 'status = "happened"\non = 2026-10-06', "a risk that happened names, in `result`"),
     (EXAMPLE, "project.toml", 'why = "Two routes', 'what = "Two routes', "a phase that is not needed says why"),
     (EXAMPLE, "project.toml", '[phases.research]\nstatus = "done"', '[phases.research]\nstatus = "not-needed"\nwhy = "Nothing to find."', "research.toml: Research is not needed, so it holds nothing"),
     (EXAMPLE, "brief.toml", 'use = "read"', 'use = "write"', "`use` is what the project does with it: change, read, new"),

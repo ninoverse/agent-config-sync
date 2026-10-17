@@ -220,6 +220,7 @@
   .st-open { color: var(--open); background: var(--open-soft); }
   .st-ready { color: var(--ready); background: var(--ready-soft); }
   .st-blocked { color: var(--blocked); background: var(--blocked-soft); }
+  .st-happened { color: var(--blocked); background: var(--blocked-soft); }
   .st-dropped { color: var(--na); background: var(--na-soft); text-decoration: line-through; }
   .waits { color: var(--ink-muted); font-size: 0.88rem; }
   /* An automated run, wherever a date is listed. */
@@ -272,6 +273,7 @@
   .chip.s-open { --c: var(--open); border-color: var(--open); background: var(--open-soft); }
   .chip.s-ready { --c: var(--ready); border-color: var(--ready); background: var(--ready-soft); }
   .chip.s-blocked { --c: var(--blocked); border-style: dashed; border-left-style: solid; }
+  .chip.s-happened { --c: var(--blocked); opacity: 0.6; }
   .chip.s-dropped { --c: var(--na); }
 
   /* Items: a card each, drawn as hmi's card is, with its fields as a definition
@@ -369,6 +371,7 @@
   table.cal .m-s-open { background: var(--open-soft); color: var(--open); }
   table.cal .m-s-ready { background: var(--ready-soft); color: var(--ready); }
   table.cal .m-s-blocked { background: var(--blocked-soft); color: var(--blocked); }
+  table.cal .m-s-happened { background: var(--blocked-soft); color: var(--blocked); }
   table.cal .m-s-dropped { background: var(--na-soft); color: var(--na); text-decoration: line-through; }
   table.cal :is(.m-amended, .m-phase) { background: var(--ready-soft); color: var(--ready); }
   ol.agenda .what { font-weight: 600; }

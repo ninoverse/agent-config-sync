@@ -54,6 +54,8 @@ It writes nothing, and names the file and the item, when:
 - a status is unknown, a Blocked item doesn't say what it waits on, a Dropped
   item doesn't say why, or a phase that is Not needed doesn't say why, or has
   a `<phase>.toml`: its tab doesn't open, so nothing in it would show;
+- an item that isn't a risk is `happened`, or a risk that is doesn't name what
+  took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
 - an item is in a phase that doesn't hold its type, or the Analysis or the
   Plan has a section other than `items`;
@@ -89,9 +91,9 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
 - An `items` section has a `type`, which sets the words its statuses take:
   `piece`, `rule`, `criterion` (Met, Not met yet), `decision` (To decide,
   Taken), `question` (To answer, Answered), `pr` (To merge, Merged), `setting`
-  (To set, Set), `risk` (Open, Closed, Accepted), `check` (Waiting, Passed),
-  `lesson` (To review, Adopted) or `deferred` (Waiting, Picked up). An item can
-  set its own.
+  (To set, Set), `risk` (Open, Closed, Accepted, Happened), `check` (Waiting,
+  Passed), `lesson` (To review, Adopted) or `deferred` (Waiting, Picked up). An
+  item can set its own.
 - An item is a card: an `id`, a `title`, and its `fields` as `[label, text]`
   pairs, where a text that holds several things, such as the decisions a PR
   carries out, is a list of them, shown as a list. A text that is one
