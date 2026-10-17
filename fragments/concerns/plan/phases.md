@@ -60,9 +60,9 @@ they answer.
   branch, what it needs first, what its merge releases, as its kind, and *Done
   when*: what proves it works. The settings only the user can change. The risk
   register: each risk, written before what it describes can happen, and the
-  step that closes it. The Plan stays as
-  approved: an item added after the approval is an amendment, dated and saying
-  why, and the Plan ends with its approval: the day, and its amendments.
+  step that closes it. The Plan stays as approved: an item added after the
+  approval is an amendment, dated and saying why, and the Plan ends with its
+  approval: the day, and its amendments by day and why.
 - **Build**: the live state. A board of the PRs and settings in waves, built
   from what each needs; each PR's *Result* once it merges; and the questions
   the work raises. What happened is in the Agenda, so Build keeps no log of

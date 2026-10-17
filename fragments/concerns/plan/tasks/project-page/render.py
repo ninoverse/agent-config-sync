@@ -910,16 +910,29 @@ def render_section(section, key, data, data_dir):
     return f'<section class="block" id="{section_id}">\n{title}' + "\n".join(parts) + "\n</section>"
 
 
+def amendments_html(ids):
+    """The items amended into a phase, grouped by the day and the reason they came in,
+    oldest first: each group its day as a chip, its reason, then its items."""
+    groups = {}
+    for item_id in ids:
+        amended = ITEMS[item_id]["amended"]
+        groups.setdefault((amended["on"], amended["why"]), []).append(item_id)
+    # A stable sort keeps the phase's order among the groups of one day; an undated one goes last.
+    order = sorted(groups, key=lambda group: group[0] or datetime.date.max)
+    rows = "".join(f'<li>{day_pill(on) + " " if on else ""}{why}:{refs_ul(groups[(on, why)])}</li>' for on, why in order)
+    return f'<ul class="amendments">{rows}</ul>'
+
+
 def approval(key, data):
     """A phase's approval, after its sections: a card saying so, the day as a chip,
-    and the items amended into the phase since, whose own cards say when and why."""
+    and the items amended into the phase since, by day and reason."""
     amended = [item["id"] for item in ITEMS.values() if item["phase"] == key and item["amended"]]
     if not data.get("approved") and not amended:
         return ""
     says = "Approved." if data.get("approved") else "Not approved yet."
     tags = [day_pill(data["approved"])] if data.get("approved") else []
     if amended:
-        body = card_html("", says, tags, [("Amended since", refs_ul(amended))], says=True)
+        body = card_html("", says, tags, [("Amended since", amendments_html(amended))], says=True)
     else:
         body = card_html("", f"{says} Nothing has been amended since.", tags, says=True)
     return f'<section class="block" id="{key}-approval">\n  <h3>Approval</h3>\n{body}\n</section>'
