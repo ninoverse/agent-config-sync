@@ -154,6 +154,8 @@ def check_example(tmp):
     project = between(phase["brief"], 'id="the-project"', "</section>")
     expect('<article class="item">\n    <dl class="terms"><dt>Problem</dt>' in project, "the Brief's definitions are a card of their own")
     expect('id="analysis-contents"' not in phase["analysis"], "an Analysis with one section needs no contents")
+    plan_contents = between(phase["plan"], 'id="plan-contents"', "</nav>")
+    expect('<li><a href="#prs">' in plan_contents and plan_contents.endswith('<li><a href="#plan-approval">Approval</a></li></ol>'), f"the Plan opens with its sections, then its approval: {plan_contents}")
     two = copy_with(tmp, "two-batches", EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"\ntitle = "Decisions"', '[[section]]\nid = "decisions"\ntitle = "Batch A"')
     if two is not None and replace_in(two, "analysis.toml", '[[section.item]]\nid = "D2"', '[[section]]\nid = "batch-b"\ntitle = "Batch B"\nkind = "items"\ntype = "decision"\n\n[[section.item]]\nid = "D2"'):
         run = render(two, tmp / "two-batches-out")
@@ -362,6 +364,7 @@ STALE = [
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
+    (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "queues"\nkind = "prose"\nbody = "<p>One at a time.</p>"\n\n[[section]]\nid = "settings"', "the Plan holds only items sections"),
     (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "the Analysis holds only items sections"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "more-prs"\ntitle = "More PRs"\nkind = "items"\ntype = "pr"\n\n[[section]]\nid = "settings"', "plan.toml section more-prs: it shows nothing but its title"),
     (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "note"\ntitle = "A note"\nkind = "prose"\nbody = "<p></p>"\n\n[[section]]\nid = "pieces"', "research.toml section note: it shows nothing but its title"),

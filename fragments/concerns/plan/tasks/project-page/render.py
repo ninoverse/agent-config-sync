@@ -94,10 +94,10 @@ PHASE_TYPES = {
     "deferred": ("deferred", "question"),
 }
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
-# and its evidence is in the Research.
-PHASE_KINDS = {"analysis": ("items",)}
+# and the Plan its PRs, settings and risks; evidence is in the Research.
+PHASE_KINDS = {"analysis": ("items",), "plan": ("items",)}
 # The phases that open with a list of their sections, built from them.
-CONTENTS = ("analysis",)
+CONTENTS = ("analysis", "plan")
 KIND_MEANING = {
     "major": "Merging it releases a major version: what used the last one may need changing.",
     "minor": "Merging it releases a minor version: something new, and nothing that worked breaks.",
@@ -923,6 +923,8 @@ def render_phase(key, data, data_dir, head=True):
     shown = [section for section, html in rendered if html]
     if key in CONTENTS and len(shown) > 1:
         links = "".join(f'<li><a href="#{section["id"]}">{section.get("title") or section["id"]}</a></li>' for section in shown)
+        if data.get("approved"):
+            links += f'<li><a href="#{key}-approval">Approval</a></li>'
         # A contents line, as the guides open with.
         parts.append(f'<nav class="contents" id="{key}-contents" aria-label="In this view"><ol>{links}</ol></nav>')
     parts += [html for _, html in rendered]

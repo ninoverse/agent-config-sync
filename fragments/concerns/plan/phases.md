@@ -55,7 +55,8 @@ they answer.
   together, which the page lists at the top. The evidence behind them, such
   as a comparison or a measurement, goes in the Research, and the decisions
   link to it.
-- **Plan**: the PRs as approved, one at a time in each repository, each with its
+- **Plan**: its cards and nothing else, which the page lists at the top. The
+  PRs as approved, one at a time in each repository, each with its
   branch, what it needs first, what its merge releases, as its kind, and *Done
   when*: what proves it works. The settings only the user can change. The risk
   register: each risk, and the step that closes it. The Plan stays as
