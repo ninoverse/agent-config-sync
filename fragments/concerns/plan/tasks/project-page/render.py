@@ -949,8 +949,8 @@ def render_section(section, key, data, data_dir):
     elif kind == "defs":
         entries = section.get("def", [])
         empty = not entries
-        if section.get("split") is True:
-            # Each term a card of its own, titled by it, for things that stand apart, such as Reuse's pieces.
+        if key == "reuse":
+            # Reuse's pieces stand apart: each term a card of its own, titled by it.
             parts += [card_html("", entry.get("term", ""), rows=[("", entry.get("text", ""))]) for entry in entries]
         else:
             # Its terms' column grows to fit the widest, which may be a chip.

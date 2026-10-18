@@ -196,10 +196,10 @@ def check_example(tmp):
         expect('<div class="scroll" data-start="2">' in board, "once its first column is done, a board opens at the next, which has work left")
     reused = copy_with(tmp, "reused", EXAMPLE, "project.toml", '[phases.reuse]\nstatus = "not-needed"\nwhy = "Two routes are too little for another project to take. The service template\'s README links this project instead."', '[phases.reuse]\nstatus = "done"')
     if reused is not None:
-        (reused / "reuse.toml").write_text('[[section]]\nid = "takeaways"\ntitle = "What another project can take"\nkind = "defs"\nsplit = true\n\n[[section.def]]\nterm = "The probes"\ntext = "[[EX-1]] and [[EX-2]], copied as they are."\n\n[[section.def]]\nterm = "The timeout"\ntext = "[[EX-3]], for a slow database."\n')
+        (reused / "reuse.toml").write_text('[[section]]\nid = "takeaways"\ntitle = "What another project can take"\nkind = "defs"\n\n[[section.def]]\nterm = "The probes"\ntext = "[[EX-1]] and [[EX-2]], copied as they are."\n\n[[section.def]]\nterm = "The timeout"\ntext = "[[EX-3]], for a slow database."\n')
         run = render(reused, tmp / "reused-out")
         reuse = (tmp / "reused-out" / "phases" / "reuse.html").read_text() if run.returncode == 0 else ""
-        expect(reuse.count('<article class="item">') == 2 and "<h4>The probes</h4>" in reuse and "<h4>The timeout</h4>" in reuse, f"Reuse holds its pieces as definitions, split, a card each: {run.stderr}")
+        expect(reuse.count('<article class="item">') == 2 and "<h4>The probes</h4>" in reuse and "<h4>The timeout</h4>" in reuse, f"Reuse holds its pieces as definitions, a card each: {run.stderr}")
         (reused / "reuse.toml").write_text('[[section]]\nid = "log"\ntitle = "The log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n')
         run = render(reused, tmp / "reused-log-out")
         expect(run.returncode == 1 and "Reuse holds only defs sections" in run.stderr, f"and nothing else: {run.stderr}")
