@@ -679,6 +679,14 @@ def waits_label(item):
     return TYPES.get(item.get("type"), {}).get("waits", "waits on").capitalize()
 
 
+def waits_tag(item):
+    """What a blocked item waits on, as words beside its chip, as a board chip says it:
+    a folded card shows it, and its references are text, since a summary is a toggle."""
+    note = item.get("waits") or refs_list(item["needs"], plain=True)
+    prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
+    return f'<span class="waits">{prefix} {refs_as_text(note)}</span>' if note else ""
+
+
 def card(item):
     """An item's card: its number and summary; then chips, for what a word or two says;
     then, folded behind those until the reader opens them, its fields, and the items
@@ -697,6 +705,8 @@ def card(item):
     shown = own or (item["type"] == "criterion" and item.get("status") in ("open", "dropped"))
     if shown:
         tags.append(status_pill(item))
+        if item["status"] == "blocked":
+            tags.append(waits_tag(item))
     if item["amended"]:
         when = f' {day(item["amended"]["on"])}' if item["amended"]["on"] else ""
         tags.append(f'<span class="pill amended">Amended{when}</span>')
@@ -709,8 +719,6 @@ def card(item):
     if isinstance(options, list) and options and all(is_pair(option) for option in options):
         rows.append(("Options", options_html(item)))
     rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in fields if not is_chip(field[1])]
-    if own and item["status"] == "blocked" and item.get("waits"):
-        rows.append((waits_label(item), item["waits"]))
     if shown and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
     if item["needs"]:
@@ -744,7 +752,10 @@ def result_card(item, on_board=False):
     if not on_board and status in ITEM_STATUS:
         tags.append(status_pill(item))
         if status == "blocked":
-            rows.append((waits_label(item), item.get("waits") or refs_ul(item["needs"])))
+            tags.append(waits_tag(item))
+            # The items it waits on stay links, under the fold.
+            if not item.get("waits") and item["needs"]:
+                rows.append((waits_label(item), refs_ul(item["needs"])))
         elif status == "dropped":
             rows.append(("Why", item.get("why", "")))
     if item.get("result"):

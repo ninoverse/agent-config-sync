@@ -223,6 +223,10 @@ def check_example(tmp):
         sc2 = between(brief.read_text(), 'id="sc2"', "</article>") if brief.exists() else ""
         expect('<span class="pill st-open">To agree</span>' in sc2, f"until the owner agrees a criterion, its card in the Brief says To agree: {sc2[:300]}")
     expect('id="g1"' in phase["brief"], "the brief holds the ground rules")
+    t1 = between(phase["deferred"], 'id="t1"', "</article>")
+    expect('Waiting</span><span class="waits">waits on the metrics stack</span></span></summary>' in t1 and "<dt>Waits on</dt>" not in t1, f"a blocked card says what it waits on beside its chip, folded, and not again under it: {t1[:400]}")
+    sc2 = between(phase["verify"], '<span class="n">SC2</span>', "</article>")
+    expect('<span class="waits">waits on C2 Cut the database in staging</span>' in sc2 and '<dt>Waits on</dt><dd><ul class="list"><li><a class="ref" href="#c2">' in sc2, f"and when it waits on items, they stay links under the fold: {sc2[:500]}")
     sc1, c1 = between(phase["brief"], 'id="sc1"', "</article>"), between(phase["verify"], 'id="c1"', "</article>")
     expect('<dt>Verified by</dt><dd><ul class="list"><li><a class="ref" href="#c1">' in sc1 and "Needs" not in sc1, "a success criterion's needs read Verified by")
     expect('<dt>Verifies</dt><dd><ul class="list"><li><a class="ref" href="#sc1">' in c1 and "Needed by" not in c1 and "<dt>Needs</dt>" in c1, "and a check names the criteria it verifies, apart from what it needs")
