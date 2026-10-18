@@ -116,6 +116,14 @@ def check_example(tmp):
     approved = '<span class="n"></span><p class="says">Approved.</p></div>\n    <div class="item-tags"><span class="pill day">3 Oct</span></div>\n    <dl><dt>Amended since</dt><dd><ul class="amendments"><li><span class="pill day">7 Oct</span> the answer to <a class="ref" href="#q1"><b>Q1</b> The probe\'s timeout in production</a>:<ul class="list"><li><a class="ref" href="#ex-3"><b>EX-3</b> Ten seconds in production</a></li></ul></li></ul></dd></dl>'
     expect(approved in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so, with when and why, and the plan's approval lists it under that day and why")
     expect(phase["plan"].index('id="plan-approval"') > phase["plan"].index('id="risks"'), "the approval comes after the plan's sections")
+    expect('<a href="#plan" data-phase="plan" class="t-amended"><span class="n">4</span><span class="name">Plan</span><span class="state">Amended</span></a>' in page, "a done phase that has taken amendments reads Amended on its tab")
+    amending = copy_with(tmp, "amending", EXAMPLE, "analysis.toml", 'id = "D2"\ntitle = "What readiness waits for"\n', 'id = "D2"\ntitle = "What readiness waits for"\namended = { on = 2026-10-02, why = "the cache, found on the way" }\n')
+    if amending is not None:
+        run = render(amending, tmp / "amending-out")
+        analysis = (tmp / "amending-out" / "phases" / "analysis.html").read_text() if run.returncode == 0 else ""
+        closing = between(analysis, '<section class="block" id="analysis-amendments">', "</section>")
+        expect('<h3>Amendments</h3>' in closing and '<p class="says">Done.</p>' in closing and '<span class="pill day">2 Oct</span> the cache, found on the way:' in closing and 'href="#d2"' in closing, f"a phase without an approval takes amendments after its end, and lists them there: {run.stderr} {closing[:600]}")
+        expect('<span class="name">Analysis</span><span class="state">Amended</span>' in (tmp / "amending-out" / "index.html").read_text(), "and its tab reads Amended")
     link = '<a class="pill link" href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a>'
     expect(link in phase["plan"], "a PR's url is a chip linking to it, named as GitHub names it")
     ex2 = between(phase["plan"], 'id="ex-2"', "</article>")
@@ -433,6 +441,7 @@ STALE = [
     ("build.toml", 'production"\nstatus = "done"', 'production"\nstatus = "open"', "EX-3 is `ready`, but needs Q1, which isn't done"),
     ("analysis.toml", 'recommended = "a"\nchosen = "a"', 'recommended = "a"', "D1 is `done`, but none of its options is `chosen`"),
     ("plan.toml", "amended = { on = 2026-10-07", "amended = { on = 2026-10-02", "EX-3 is amended on 2 Oct, before its phase was approved"),
+    ("analysis.toml", 'id = "D2"\ntitle = "What readiness waits for"\n', 'id = "D2"\ntitle = "What readiness waits for"\namended = { on = 2026-10-01, why = "the cache" }\n', "D2 is amended on 1 Oct, before its phase ended on 2 Oct"),
     ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest status, of 7 Oct"),
     ("project.toml", "updated = 2026-10-07", "updated = 2026-10-06", "the notes for the next session date from 6 Oct, before the last change"),
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "[[Q1]]\'s answer" }', "plan.toml item EX-3: [[Q1]]'s reads as \"Q1 The probe's timeout in production's\": put the link after its noun"),

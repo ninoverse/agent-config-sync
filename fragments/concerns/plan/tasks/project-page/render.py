@@ -158,6 +158,7 @@ FONTS = (
 
 problems, warnings = [], []
 ITEMS = {}  # every item of every phase, by id, in phase order
+STATES = {}  # each phase's state and dates, as project.toml gives them
 TODAY = None  # the day the state was read
 LINKABLE = None  # the ids a reference links to, on a page that holds only some; None for all
 COUNTED = []  # the headline figures counted from the data, for a `figures` section with `auto`
@@ -289,6 +290,7 @@ def read_project(data_dir):
             "reopened": reopened,
         }
     check_order(project["status"])
+    STATES.update(project["status"])
     for index, entry in enumerate(project.get("glossary", [])):
         where = f"project.toml [[glossary]] {index + 1}"
         required(entry, "term", where)
@@ -556,7 +558,7 @@ def check_states(project, phases):
             # Live work reopens its phase; anywhere else, a done phase holding it looks stale.
             if item["status_from"] in LIVE:
                 problem(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`: new work reopens it, with `reopened`")
-            else:
+            elif not item["amended"]:
                 warn(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`")
         if item["type"] == "decision" and status == "done" and has_prs:
             if not any(ITEMS[other]["type"] in CARRY_OUT for other in item["needed_by"] + item["mentioned_in"]):
@@ -580,9 +582,12 @@ def check_states(project, phases):
         if "chosen" in item and status in UNFINISHED:
             warn(where, f"{item_id} has a `chosen` option, but is still `{status}`")
         if item["amended"] and item["amended"]["on"]:
-            approved = phases.get(item["phase"], {}).get("approved")
+            # An amendment comes after its phase's approval, or after its end in a phase without one.
+            approved, end = phases.get(item["phase"], {}).get("approved"), statuses[item["phase"]]["end"]
             if approved and item["amended"]["on"] < approved:
                 warn(where, f"{item_id} is amended on {day(item['amended']['on'])}, before its phase was approved")
+            elif not approved and end and item["amended"]["on"] < end:
+                warn(where, f"{item_id} is amended on {day(item['amended']['on'])}, before its phase ended on {day(end)}")
     # The last change the data records: the newest day an item reached its status, or was amended.
     changed = [item["on"] for item in ITEMS.values() if item.get("on")] + [item["amended"]["on"] for item in ITEMS.values() if item["amended"] and item["amended"]["on"]]
     if changed and max(changed) > TODAY:
@@ -1089,36 +1094,45 @@ def amendments_html(ids):
     return f'<ul class="amendments">{rows}</ul>'
 
 
-def approval(key, data):
-    """A phase's approval, after its sections: a card saying so, the day as a chip,
-    and the items amended into the phase since, by day and reason."""
+def closing(key, data):
+    """What ends a phase, after its sections: its approval, or, for a done phase without
+    one that has taken amendments, its end; then the items amended into it since, by day
+    and reason. Its title and anchor, for the phase's contents, and its section."""
     amended = [item["id"] for item in ITEMS.values() if item["phase"] == key and item["amended"]]
-    if not data.get("approved") and not amended:
-        return ""
-    says = "Approved." if data.get("approved") else "Not approved yet."
-    tags = [day_pill(data["approved"])] if data.get("approved") else []
+    state = STATES.get(key, {})
+    if data.get("approved"):
+        title, says, tags = "Approval", "Approved.", [day_pill(data["approved"])]
+    elif amended and state.get("status") == "done":
+        title, says, tags = "Amendments", "Done.", [day_pill(state["end"])] if state.get("end") else []
+    elif amended:
+        title, says, tags = "Approval", "Not approved yet.", []
+    else:
+        return None
+    anchor = f"{key}-{title.lower()}"
     if amended:
         body = card_html("", says, tags, [("Amended since", amendments_html(amended))], says=True)
     else:
         body = card_html("", f"{says} Nothing has been amended since.", tags, says=True)
-    return f'<section class="block" id="{key}-approval">\n  <h3>Approval</h3>\n{body}\n</section>'
+    return title, anchor, f'<section class="block" id="{anchor}">\n  <h3>{title}</h3>\n{body}\n</section>'
 
 
 def render_phase(key, data, data_dir, head=True):
     """A phase's view: its name, for screen readers only, since its tab shows the name
     and the state, unless it stands alone; then, for some phases, a list of its
-    sections; then its sections and its approval."""
+    sections; then its sections, and what closes it: its approval, or its amendments."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
     rendered = [(section, render_section(section, key, data, data_dir)) for section in data.get("section", [])]
     shown = [section for section, html in rendered if html]
+    ending = closing(key, data)
     if key in CONTENTS and len(shown) > 1:
         links = "".join(f'<li><a href="#{section["id"]}">{section.get("title") or section["id"]}</a></li>' for section in shown)
-        if data.get("approved"):
-            links += f'<li><a href="#{key}-approval">Approval</a></li>'
+        if ending:
+            links += f'<li><a href="#{ending[1]}">{ending[0]}</a></li>'
         # A contents line, as the guides open with.
         parts.append(f'<nav class="contents" id="{key}-contents" aria-label="In this view"><ol>{links}</ol></nav>')
     parts += [html for _, html in rendered]
-    parts.append(approval(key, data))
+    if ending:
+        parts.append(ending[2])
     return expand_refs("\n".join(part for part in parts if part), f"{key}.toml")
 
 
@@ -1671,7 +1685,10 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
             group.append(f'<li><span class="off t-{status}">{inner}<span class="state">{state}</span></span></li>')
             continue
         current = ' aria-current="true"' if key == opening else ""
-        # Deferred says how many items wait; a phase in progress, how far it is.
+        # Deferred says how many items wait; a phase in progress, how far it is; a done
+        # phase that has taken amendments reads Amended.
+        if status == "done" and any(item["phase"] == key and item["amended"] for item in ITEMS.values()):
+            status, state = "amended", "Amended"
         if key == "deferred":
             state = f"{waiting} waiting" if waiting else "Nothing waiting"
         elif status == "now" and key in counts:

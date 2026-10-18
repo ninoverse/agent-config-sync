@@ -22,8 +22,9 @@ they answer.
   who holds the ball. Two views aren't phases, and open over the page from its
   top right: the Agenda, and the Guides, which say how to use the page, chips
   and sections included, and hold the glossary.
-- A phase is Done, Now, To come or Not needed. Not needed says why in one
-  sentence, in the data; Reuse is the phase most often not needed. A tab opens
+- A phase is Done, Now, To come or Not needed, and a Done phase that has
+  taken amendments reads Amended. Not needed says why in one sentence, in the
+  data; Reuse is the phase most often not needed. A tab opens
   only once its phase has something to show, so the tab of a phase not needed,
   or not written yet, doesn't open. Build and Verify can both be Now: Verify
   starts with the first merge. A phase that is Now shows on its tab how many
@@ -34,7 +35,9 @@ they answer.
   runs beside others ends only after them, never early: Verify after Build,
   Reuse after both, and the Retrospective after every other. Build and Verify
   reopen when new work comes in, and keep the day each ended and the day it
-  reopened.
+  reopened. The phases before them never reopen: an item added to one after
+  it is Done, or approved, is an amendment, dated and saying why, which the
+  phase lists at its end.
 - The page shows the current state, and the Agenda what happened, by day.
   Each publish, tell the user what changed since the last, as rendering
   against the data as last published lists it: a correction first, saying

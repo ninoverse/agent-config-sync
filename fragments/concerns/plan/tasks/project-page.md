@@ -130,7 +130,8 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
     one each by its key: a decision's choices, shown as a list that marks the
     recommended one until one is chosen, and then only the chosen one;
   - `amended`, as `{ on = <date>, why = "..." }`, when it was added after its
-    phase's approval, which lists it under that day and `why`;
+    phase's approval, or after its end in a phase without one, which lists it
+    at its end under that day and `why`, and whose tab then reads Amended;
   - `repo`, the board row it goes in;
   - `ask`, when what the user does while it is Open isn't what its type says.
 - A `repos` section lists the repositories, each a `[[section.repo]]` with its
