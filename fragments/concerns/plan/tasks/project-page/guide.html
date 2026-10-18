@@ -12,23 +12,23 @@
     <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
     <dd>Three blocks, one under another, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide, and under them how many items wait on them but not yet, deferred until they say, with a link to Deferred. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
-    <dt>Phases</dt>
+    <dt>Phases, What it leaves</dt>
     <dd>
-      <p>A tab per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
+      <p>A tab per phase, in two groups: <strong>Phases</strong>, the six numbered in the order they run, and <strong>What it leaves</strong>, the three that don't run in that order: Reuse, the Retrospective and Deferred. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
       <ul>
         <li><strong>Done</strong>: the phase is over, and its view is the record of it.</li>
         <li><strong>Now</strong>: in progress. Its tab also counts the items it tracks that are done, such as 3/6; dropped items aren't counted. Two phases can be Now at once: Verify starts with the first merge, while Build goes on.</li>
         <li><strong>To come</strong>: not started yet.</li>
         <li><strong>Not needed</strong>: skipped.</li>
       </ul>
-      <p>A tab with a dashed border doesn't open: its phase is Not needed, or nothing is written in it yet.</p>
+      <p>Deferred's tab says instead how many items wait, such as 15 waiting. A tab with a dashed border doesn't open: its phase is Not needed, or nothing is written in it yet.</p>
     </dd>
   </dl>
 </section>
 
 <section class="block" id="guide-phases">
   <h3>The phases</h3>
-  <p class="intro">Each phase has a view of its own, which its tab opens once something is written in it. The tab shows the phase's state, and the calendar the days it started and ended.</p>
+  <p class="intro">Each phase has a view of its own, which its tab opens once something is written in it. The tab shows the phase's state, and the calendar the days it started and ended. The first six run in their order; the last three are what the project leaves.</p>
   <dl class="defs">
     <dt>1 Brief</dt>
     <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), each with the checks that verify it, the repositories involved, each with what the project does with it, and the ground rules (G1, G2…): how the owner wants the project run. A ground rule holds until the owner changes it.</dd>
@@ -42,11 +42,11 @@
     <dd>Where everything stands: the board, the results, and the questions the work raises (Q1…).</dd>
     <dt>6 Verify</dt>
     <dd>The checks (C1…), each titled by how it is checked, that prove each PR does what its <em>Done when</em> says, where it runs, and the Brief's success criteria, Met or Not met yet. Build ends with the last merge; Verify ends with the last check.</dd>
-    <dt>7 Reuse</dt>
+    <dt>Reuse</dt>
     <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead, each with how to take it and the items that built it. Often Not needed.</dd>
-    <dt>8 Retrospective</dt>
+    <dt>Retrospective</dt>
     <dd>The project told for a portfolio, in your voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
-    <dt>9 Deferred</dt>
+    <dt>Deferred</dt>
     <dd>What was deferred (T1…), and what other phases have deferred or are to move to another project, each with what it waits on and where it goes. Deferring an item lets the Retrospective go ahead without it.</dd>
   </dl>
 </section>

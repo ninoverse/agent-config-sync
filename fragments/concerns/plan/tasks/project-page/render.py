@@ -46,6 +46,9 @@ PHASES = [
     ("deferred", "Deferred"),
 ]
 PHASE_NAME = dict(PHASES)
+# What the project leaves, after the six phases and unnumbered, since they don't run in
+# their order: what another project can take, the story of this one, and what waits.
+LEAVES = ("reuse", "retrospective", "deferred")
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -1593,21 +1596,25 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     counts = progress()
     # The views that aren't phases: the agenda, and the guides to using the page.
     views = "".join(f'<a href="#{key}" data-phase="{key}">{ICONS[key]}<span>{name}</span></a>' for key, name in (("agenda", "Agenda"), ("guides", "Guides")))
-    tabs = []
+    tabs, leaves = [], []
+    waiting = sum(1 for item in ITEMS.values() if item.get("status") in PARKED)
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
         state = PHASE_STATUS[status]
-        inner = f'<span class="n">{number}</span><span class="name">{name}</span>'
+        group = leaves if key in LEAVES else tabs
+        inner = f'<span class="name">{name}</span>' if key in LEAVES else f'<span class="n">{number}</span><span class="name">{name}</span>'
         # A phase with nothing to show, not needed or not written yet, has a tab that doesn't open.
         if key not in sections:
-            tabs.append(f'<li><span class="off t-{status}">{inner}<span class="state">{state}</span></span></li>')
+            group.append(f'<li><span class="off t-{status}">{inner}<span class="state">{state}</span></span></li>')
             continue
         current = ' aria-current="true"' if key == opening else ""
-        # A phase in progress says how far it is.
-        if status == "now" and key in counts:
+        # Deferred says how many items wait; a phase in progress, how far it is.
+        if key == "deferred":
+            state = f"{waiting} waiting" if waiting else "Nothing waiting"
+        elif status == "now" and key in counts:
             done, total = counts[key]
             state += f' <span class="count" title="{done} of {total} done, dropped items aside">{done}/{total}</span>'
-        tabs.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
+        group.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
     shells, files = [], {}
     for key, text in sections.items():
         hidden = "" if key == opening else " hidden"
@@ -1644,7 +1651,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     <p class="glance">{read} as of {read_at.day} {read_at:%b %Y}, {read_at:%H:%M} UTC.</p>
   </div>
   {ball_html}
-  <div class="hold"><h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title"><ol>{"".join(tabs)}</ol></nav></div>
+  <div class="hold groups"><div class="group"><h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title"><ol>{"".join(tabs)}</ol></nav></div><div class="group"><h2 id="leaves-title">What it leaves</h2><nav class="phases leaves" aria-labelledby="leaves-title"><ol>{"".join(leaves)}</ol></nav></div></div>
 </header>
 <main id="phases" data-open="{opening}">
 {chr(10).join(shells)}

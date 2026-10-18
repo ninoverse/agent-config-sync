@@ -69,14 +69,17 @@ def check_example(tmp):
     expect("<title>example-service-health-checks</title>" in page, "the title is <repo>-<objective>")
     views = between(page, '<nav class="views"', "</nav>")
     expect('href="#agenda" data-phase="agenda"' in views and 'href="#guides" data-phase="guides"' in views, "the agenda and the guides open from the top right")
-    indicator = between(page, '<nav class="phases"', "</nav>")
-    tabs = re.findall(r'data-phase="(\w+)"', indicator)
-    expect(indicator.count("<li>") == 9 and tabs == ["brief", "research", "analysis", "plan", "build", "verify", "deferred"], f"the indicator holds the nine phases, and only those, each a link but those with nothing to show: {tabs}")
-    expect('<h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title">' in page, "the tabs have a title, Phases")
-    unwritten = '<li><span class="off t-to-come"><span class="n">8</span><span class="name">Retrospective</span><span class="state">To come</span></span></li>'
-    expect(unwritten in indicator and 'id="retrospective"' not in page, "a phase with nothing written has a tab that doesn't open, and no view")
-    reuse = '<li><span class="off t-not-needed"><span class="n">7</span><span class="name">Reuse</span><span class="state">Not needed</span></span></li>'
-    expect(reuse in indicator and 'id="reuse"' not in page and "Two routes are too little" not in page and '"reuse"' not in manifest(page), "a phase not needed has a tab that doesn't open, and no view; its reason stays in the data")
+    indicator = between(page, '<nav class="phases" aria-labelledby="phases-title">', "</nav>")
+    leaves = between(page, '<nav class="phases leaves" aria-labelledby="leaves-title">', "</nav>")
+    tabs, left = re.findall(r'data-phase="(\w+)"', indicator), re.findall(r'data-phase="(\w+)"', leaves)
+    expect(indicator.count("<li>") == 6 and tabs == ["brief", "research", "analysis", "plan", "build", "verify"], f"the indicator holds the six phases, each a link: {tabs}")
+    expect(leaves.count("<li>") == 3 and left == ["deferred"] and '<span class="n">' not in leaves, f"then, unnumbered, the three that are what the project leaves, each a link but those with nothing to show: {left}")
+    expect('<h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title">' in page and '<h2 id="leaves-title">What it leaves</h2>' in page, "the two groups have a title each, Phases and What it leaves")
+    unwritten = '<li><span class="off t-to-come"><span class="name">Retrospective</span><span class="state">To come</span></span></li>'
+    expect(unwritten in leaves and 'id="retrospective"' not in page, "a phase with nothing written has a tab that doesn't open, and no view")
+    reuse = '<li><span class="off t-not-needed"><span class="name">Reuse</span><span class="state">Not needed</span></span></li>'
+    expect(reuse in leaves and 'id="reuse"' not in page and "Two routes are too little" not in page and '"reuse"' not in manifest(page), "a phase not needed has a tab that doesn't open, and no view; its reason stays in the data")
+    expect('<span class="name">Deferred</span><span class="state">1 waiting</span>' in leaves, f"Deferred's tab says how many items wait: {leaves}")
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
     expect('<footer class="site"' not in page, "the page has no footer: the guides answer what it would")
     guides = phase["guides"]
@@ -88,7 +91,7 @@ def check_example(tmp):
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
     expect('data-open="build"' in page, "the page opens on the phase in progress")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
-    expect(counts == {"build": "3/6", "verify": "2/4", "deferred": "0/1"}, f"each phase in progress counts its items done, and only those: {counts}")
+    expect(counts == {"build": "3/6", "verify": "2/4"}, f"each phase in progress counts its items done, and only those: {counts}")
     views = [page] + list(phase.values())
     expect('<section class="phase" id="build" data-phase="build">\n<h2 class="vh">Build</h2>\n<section class="block" id="board">' in page, "a phase's view starts with its first section, its name only for screen readers")
     shown = [between(page, '<main id="phases"', "</main>")] + [text for key, text in phase.items() if key != "guides"]

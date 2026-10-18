@@ -14,19 +14,20 @@ they answer.
 - One page per project, named `<main repository>-<objective>`, such as
   `hmi-components-agentcfg-adoption`. The name is settled when the project
   starts, and kept.
-- Nine phases, always in this order, each a view the indicator at the top of
-  the page switches to: Brief, Research, Analysis, Plan, Build, Verify, Reuse,
-  Retrospective, Deferred. The page opens on the phase in progress. Above the
-  indicator, on every view, are the calendar and who holds the ball. Two views
-  aren't phases, and open over the page from its top right: the Agenda, and the
-  Guides, which say how to use the page, chips and sections included, and hold
-  the glossary.
+- Nine phases, each a view the indicator at the top of the page switches to,
+  in two groups. The first six run in this order, numbered: Brief, Research,
+  Analysis, Plan, Build, Verify. The other three, unnumbered, are what the
+  project leaves: Reuse, the Retrospective and Deferred. The page opens on the
+  phase in progress. Above the indicator, on every view, are the calendar and
+  who holds the ball. Two views aren't phases, and open over the page from its
+  top right: the Agenda, and the Guides, which say how to use the page, chips
+  and sections included, and hold the glossary.
 - A phase is Done, Now, To come or Not needed. Not needed says why in one
   sentence, in the data; Reuse is the phase most often not needed. A tab opens
   only once its phase has something to show, so the tab of a phase not needed,
   or not written yet, doesn't open. Build and Verify can both be Now: Verify
   starts with the first merge. A phase that is Now shows on its tab how many
-  of its items are done.
+  of its items are done, and Deferred's tab how many items wait.
 - The page shows the current state, and the Agenda what happened, by day.
   Each publish, tell the user what changed since the last, as rendering
   against the data as last published lists it: a correction first, saying

@@ -118,11 +118,15 @@
   .lede { font-size: 1.12rem; margin-top: 16px; }
   .readat { font-size: 0.9rem; color: var(--ink-muted); }
 
-  /* The phase indicator: nine phases in their order, each a link to its view
-     but a phase that is not needed, which has none; its name over its state so
-     the nine fit one row on a laptop. */
+  /* The phase indicator, in two groups side by side: the six phases in their
+     order, numbered, then what the project leaves. Each tab is a link to its
+     view but a phase that is not needed, which has none; its name over its
+     state so the nine fit one row on a laptop. */
+  .hold.groups { display: flex; flex-wrap: wrap; column-gap: 26px; row-gap: 14px; align-items: flex-start; }
   nav.phases ol { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
   nav.phases li { margin: 0; }
+  nav.phases.leaves :is(a, .off) { grid-template-columns: auto; }
+  nav.phases.leaves .state { grid-column: 1; }
   nav.phases :is(a, .off) {
     display: grid; grid-template-columns: auto auto; column-gap: 7px; align-items: baseline;
     padding: 6px 11px 7px 9px;
