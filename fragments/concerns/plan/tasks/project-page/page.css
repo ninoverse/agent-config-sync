@@ -221,7 +221,7 @@
   .st-blocked { color: var(--blocked); background: var(--blocked-soft); }
   .st-happened { color: var(--blocked); background: var(--blocked-soft); }
   .st-deferred { color: var(--na); background: var(--na-soft); }
-  .st-to-move { color: var(--accent); background: var(--accent-soft); }
+  .st-to-move { color: var(--na); background: var(--na-soft); }
   .st-moved { color: var(--done); background: var(--done-soft); }
   .st-dropped { color: var(--na); background: var(--na-soft); text-decoration: line-through; }
   .waits { color: var(--ink-muted); font-size: 0.88rem; }
@@ -284,7 +284,7 @@
   .chip.s-blocked { --c: var(--blocked); border-style: dashed; border-left-style: solid; }
   .chip.s-happened { --c: var(--blocked); opacity: 0.6; }
   .chip.s-deferred { --c: var(--na); border-style: dashed; border-left-style: solid; }
-  .chip.s-to-move { --c: var(--accent); border-style: dashed; border-left-style: solid; }
+  .chip.s-to-move { --c: var(--na); border-style: dashed; border-left-style: solid; }
   .chip.s-moved { --c: var(--done); opacity: 0.6; }
   .chip.s-dropped { --c: var(--na); }
 
@@ -389,7 +389,7 @@
   table.cal .m-s-blocked { background: var(--blocked-soft); color: var(--blocked); }
   table.cal .m-s-happened { background: var(--blocked-soft); color: var(--blocked); }
   table.cal .m-s-deferred { background: var(--na-soft); color: var(--na); }
-  table.cal .m-s-to-move { background: var(--accent-soft); color: var(--accent); }
+  table.cal .m-s-to-move { background: var(--na-soft); color: var(--na); }
   table.cal .m-s-moved { background: var(--done-soft); color: var(--done); }
   table.cal .m-s-dropped { background: var(--na-soft); color: var(--na); text-decoration: line-through; }
   table.cal :is(.m-amended, .m-phase) { background: var(--ready-soft); color: var(--ready); }
