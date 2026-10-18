@@ -130,6 +130,9 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   Either way, it opens at its first column with an unfinished item.
   A `results` section in the same phase leaves out what the board shows until
   it has a `result`, and then shows the result alone.
+- A `defs` section is one card of `[[section.def]]`s, each a `term` and its
+  `text`, such as the Brief's project; with `split = true`, each term is a card
+  of its own, titled by it, such as each of Reuse's pieces.
 - A `figures` section with `auto = true` starts with what the data counts: PRs
   merged, releases, decisions taken, settings changed by hand, lessons adopted,
   and the days from the first date to the last. Its `figure`s follow.

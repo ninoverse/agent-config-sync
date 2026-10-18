@@ -440,6 +440,8 @@
     details.fold > summary { grid-template-columns: auto minmax(0, 1fr) auto; }
     details.fold > summary .item-tags { grid-column: 1 / -1; }
     article.item dl, article.item dl.terms { grid-template-columns: 1fr; }
+    /* A field with no label, such as a split definition's text, keeps no row for one. */
+    article.item dt:empty { display: none; }
     nav.phases :is(a, .off) { padding: 5px 8px 6px 7px; column-gap: 5px; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

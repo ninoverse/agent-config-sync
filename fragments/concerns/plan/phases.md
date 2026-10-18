@@ -74,7 +74,8 @@ they answer.
   check.
 - **Reuse**: what another project can take from this one, such as a template, a
   shared rule, a shared workflow, or a page to link instead, and nothing else:
-  each piece, what it is, how to take it, and the items that built it.
+  each piece a card, saying what it is, how to take it, and the items that
+  built it.
 - **Retrospective**: written for the user's portfolio, in their voice: the
   problem, the approach and the outcome; how it was built; headline figures and
   the day they were checked; what only using it revealed; what the record

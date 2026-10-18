@@ -947,10 +947,15 @@ def render_section(section, key, data, data_dir):
         if note:
             parts.append(f'  <p class="note">{note}</p>')
     elif kind == "defs":
-        # Its terms' column grows to fit the widest, which may be a chip.
-        terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in section.get("def", []))
-        empty = not terms
-        parts.append(f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>')
+        entries = section.get("def", [])
+        empty = not entries
+        if section.get("split") is True:
+            # Each term a card of its own, titled by it, for things that stand apart, such as Reuse's pieces.
+            parts += [card_html("", entry.get("term", ""), rows=[("", entry.get("text", ""))]) for entry in entries]
+        else:
+            # Its terms' column grows to fit the widest, which may be a chip.
+            terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in entries)
+            parts.append(f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>')
     if empty:
         problem(where, "it shows nothing but its title: give it content, or remove it")
     title = f'  <h3>{section["title"]}</h3>\n' if section.get("title") else ""
