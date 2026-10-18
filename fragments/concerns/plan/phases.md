@@ -20,8 +20,8 @@ they answer.
   project leaves: Reuse, the Retrospective and Deferred. The page opens on the
   phase in progress. Above the indicator, on every view, are the calendar and
   who holds the ball. Two views aren't phases, and open over the page from its
-  top right: the Agenda, and the Guides, which say how to use the page, chips
-  and sections included, and hold the glossary.
+  top right: the Agenda, and the Guides, which say how to use the page, its
+  phases and chips included, and hold the glossary.
 - A phase is Done, Now, To come or Not needed, and a Done phase that has
   taken amendments reads Amended. Not needed says why in one sentence, in the
   data; Reuse is the phase most often not needed. A tab opens

@@ -1,96 +1,57 @@
 <section class="block" id="guide-header">
   <h3>The header</h3>
-  <p class="intro">The top of every view: what the project is, its calendar, where it stands, and the way to everything else.</p>
   <dl class="defs">
-    <dt>Agenda, Guides</dt>
-    <dd>Top right, the two views that aren't phases: the Agenda, described below, and these guides, with the glossary. Each opens over the whole page; its close button, or Escape, brings you back to the phase you were reading.</dd>
     <dt>Title</dt>
-    <dd>The main repository and the project's objective, joined by a dash, such as <code>example-service-health-checks</code>. The line under it says what the project is for.</dd>
+    <dd>The main repository and the project's objective, joined by a dash, such as <code>example-service-health-checks</code>, and under it what the project is for.</dd>
     <dt>Calendar</dt>
-    <dd>The month the statuses were read in, that day outlined; the arrows step through the other months the project spans. Each day lists what happened or is coming: its events, outlined; the days phases start, end or reopen, a phase done within a day as one, and an approval in place of the end it marks; then its items, counted by what happened to them in the board's colours, such as <em>18 merged</em> or <em>2 amended</em>. On a phone, each is a box, and a count's box shows its number. A day with something on it opens the Agenda at that day.</dd>
+    <dd>The month the statuses were read in, that day outlined; the arrows step through the project's other months. Each day lists its events, outlined, the days phases start, end or reopen, and its items, counted by what happened to them in the board's colours, such as <em>18 merged</em>. A day with something on it opens the Agenda there.</dd>
     <dt>PR statuses as of</dt>
-    <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
+    <dd>When the PRs were last read from GitHub: anything later isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
-    <dd>Three blocks, one under another, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide, and under them how many items wait on them but not yet, deferred until they say, with a link to Deferred. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
-    <dt>Phases, What it leaves</dt>
-    <dd>
-      <p>A tab per phase, in two groups: <strong>Phases</strong>, the six numbered in the order they run, and <strong>What it leaves</strong>, the three that don't run in that order: Reuse, the Retrospective and Deferred. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
-      <ul>
-        <li><strong>Done</strong>: the phase is over, and its view is the record of it.</li>
-        <li><strong>Amended</strong>: done, and items came in after, each marked Amended with its day and why, and listed together at the phase's end.</li>
-        <li><strong>Now</strong>: in progress. Its tab also counts the items it tracks that are done, such as 3/6; dropped and set-aside items aren't counted. Two phases can be Now at once: Verify starts with the first merge, while Build goes on.</li>
-        <li><strong>To come</strong>: not started yet.</li>
-        <li><strong>Not needed</strong>: skipped.</li>
-      </ul>
-      <p>A phase starts once those before it are done; one that starts early says why, on its day in the Agenda. Verify, Reuse and the Retrospective end only after Build, and Build and Verify reopen when new work comes in. Deferred's tab says instead how many items wait, such as 15 waiting. A tab with a dashed border doesn't open: its phase is Not needed, or nothing is written in it yet.</p>
-    </dd>
+    <dd><strong>The owner</strong>: what waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide, and how many items wait for them to say. <strong>The agent</strong>: the items that are Ready. <strong>A date</strong>: the next three, each a link to its day in the Agenda; <span class="automated">Automated</span> marks a run that starts on its own.</dd>
+    <dt>Agenda, Guides</dt>
+    <dd>Top right, each over the page; its close button, or Escape, brings you back.</dd>
   </dl>
 </section>
 
 <section class="block" id="guide-phases">
   <h3>The phases</h3>
-  <p class="intro">Each phase has a view of its own, which its tab opens once something is written in it. The tab shows the phase's state, and the calendar the days it started and ended. The first six run in their order; the last three are what the project leaves.</p>
+  <p>A tab per phase, in two groups: <strong>Phases</strong>, the six numbered in the order they run, and <strong>What it leaves</strong>: Reuse, the Retrospective and Deferred. A phase starts once those before it are done; one that starts early says why, in the Agenda. Verify, Reuse and the Retrospective end only after Build, and Build and Verify reopen when new work comes in. Under each name is the phase's state:</p>
+  <ul>
+    <li><strong>Done</strong>, or <strong>Amended</strong> once items came in after it ended or was approved: each is marked Amended, with its day and why, and the phase lists them at its end.</li>
+    <li><strong>Now</strong>, with how many of its items are done, such as 3/6, not counting dropped or set-aside ones. Deferred says instead how many items wait.</li>
+    <li><strong>To come</strong>, or <strong>Not needed</strong>. A tab with a dashed border doesn't open: its phase is Not needed, or nothing is written in it yet.</li>
+  </ul>
+  <p>A phase other than the one in progress loads the first time it opens; if it can't, it says so, with a button to try again.</p>
   <dl class="defs">
     <dt>1 Brief</dt>
-    <dd>The problem, the objective, what is in scope and what is out, the success criteria (SC1, SC2…), each with the checks that verify it, the repositories involved, each with what the project does with it, and the ground rules (G1, G2…): how the owner wants the project run. A ground rule holds until the owner changes it.</dd>
+    <dd>The problem, the objective and the scope; the success criteria (SC1…); the ground rules (G1…), how the owner wants the project run; and the repositories, each with what the project does with it:<!--uses--></dd>
     <dt>2 Research</dt>
-    <dd>What exists today, one numbered piece at a time (R1, R2…), and what each piece raises: usually a decision for the Analysis.</dd>
+    <dd>What exists, one piece at a time (R1…), and what each raises.</dd>
     <dt>3 Analysis</dt>
-    <dd>The decisions (D1, D2…), each with its options, a recommendation and its reasons, and the owner's answer with its date. When the decisions are many, they come in batches, each a section; the evidence behind them is in the Research.</dd>
+    <dd>The decisions (D1…), each with its options, the one recommended and why, and the owner's answer. The evidence behind them is in the Research.</dd>
     <dt>4 Plan</dt>
-    <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. It ends with its approval: the day the owner approved it, and the items added since, grouped by the day they came in and why.</dd>
+    <dd>The PRs, the settings only the owner can change (S1…) and the risks (RK1…), as the owner approved them. It ends with its approval, and the items added since.</dd>
     <dt>5 Build</dt>
-    <dd>Where everything stands: the board, the results, and the questions the work raises (Q1…).</dd>
+    <dd>The board, what each item's merge or change brought once it lands, and the questions the work raises (Q1…).</dd>
     <dt>6 Verify</dt>
-    <dd>The checks (C1…), each titled by how it is checked, that prove each PR does what its <em>Done when</em> says, where it runs, and the Brief's success criteria, Met or Not met yet. Build ends with the last merge; Verify ends with the last check.</dd>
+    <dd>The checks (C1…) that prove each PR does what its <em>Done when</em> says, and the success criteria, Met or Not met yet.</dd>
     <dt>Reuse</dt>
-    <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead, each with how to take it and the items that built it. Often Not needed.</dd>
+    <dd>What another project can take from this one, a card each. Often Not needed.</dd>
     <dt>Retrospective</dt>
-    <dd>The project told for a portfolio, in the owner's voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
+    <dd>The project told for a portfolio, in the owner's voice, with the lessons (L1…) it taught.</dd>
     <dt>Deferred</dt>
-    <dd>What was deferred (T1…), and what other phases have deferred or are to move to another project, each with what it waits on and where it goes. Deferring an item lets the Retrospective go ahead without it.</dd>
-  </dl>
-</section>
-
-<section class="block" id="guide-sections">
-  <h3>Sections</h3>
-  <p class="intro">A phase is a stack of sections, each with a title. They come in a few kinds.</p>
-  <dl class="defs">
-    <dt>Cards</dt>
-    <dd>One card per item: a decision, a PR, a setting, a check. The next part of this guide takes one apart.</dd>
-    <dt>Tables</dt>
-    <dd>Facts in rows. On a narrow screen, a wide table scrolls sideways in its own box, while the page stays put, and a shade on an edge says more of the table lies past it.</dd>
-    <dt>Repositories</dt>
-    <dd>The Brief's table of the repositories the project involves, each with a chip for what the project does with it:<!--uses--></dd>
-    <dt>Board</dt>
-    <dd>The order of the work, in waves. It has a part of this guide to itself.</dd>
-    <dt>Results</dt>
-    <dd>A card per item whose status the phase keeps: the status, the day it got there, and what the item waits on, or what came of it, such as the version a merge released. An item the board shows is here only once it has a result, and then with the result alone, since the board says the rest, or once it has moved, with the link to its new page. Each card folds, as an item's does.</dd>
-    <dt>Figures</dt>
-    <dd>Headline numbers. The note under them says which were counted from the project's data, and on what day.</dd>
-    <dt>Definitions</dt>
-    <dd>A card of terms, each with what it means here, such as the Brief's Problem and Objective. In Reuse, each term is a card of its own, titled by it: a piece another project can take.</dd>
-    <dt>Contents</dt>
-    <dd>At the top of the Analysis and the Plan, when they have several sections: each section, a link to its cards, and what closes the phase.</dd>
-    <dt>Imported pages</dt>
-    <dd>A page written before this one, kept whole inside a phase, such as an earlier version of the Analysis.</dd>
-    <dt>Approval, Amendments</dt>
-    <dd>At the end of a phase the owner approves, such as the Plan: the day they did, and the items added since, by day and why. A phase done without an approval that took items later ends with its Amendments instead: the day it ended, then those items.</dd>
+    <dd>What is set aside (T1…), here or in another phase, each with what it waits on, or where it goes.</dd>
   </dl>
 </section>
 
 <section class="block" id="guide-cards">
   <h3>Cards</h3>
-  <p class="intro">Every item is a card, in three layers: what it is, a line of chips, then the longer facts. On the page, a card shows the first two, and a click opens the rest; a link to a card opens it, and Open all, above a section's cards, opens them all. These three samples are open, to show the parts a card can have, described after them; most cards have fewer.</p>
+  <p>Every item is a card: its number and summary, a line of chips, then its fields, which a click opens. A link to a card opens it, and Open all, above a section, opens them all. Two samples, open:</p>
   <article class="item sample">
     <div class="item-head"><span class="n">EX-2</span><h4>Readiness probe</h4></div>
     <div class="item-tags"><span class="pill k-minor">Minor</span><span class="pill st-open">To merge · 7 Oct</span><span class="pill amended">Amended 7 Oct</span><span class="pill link">example/example-service#14</span></div>
     <dl><dt>Title</dt><dd><code>feat: add the readiness probe</code></dd><dt>Branch</dt><dd><code>feat/readiness-probe</code></dd><dt>Carries out</dt><dd><ul class="list"><li><span class="ref"><b>D1</b> Where the probes live</span></li><li><span class="ref"><b>D2</b> What readiness waits for</span></li></ul></dd><dt>Done when</dt><dd>In staging, a process that loses its database gets no traffic.</dd><dt>Needs</dt><dd><ul class="list"><li><span class="ref"><b>EX-1</b> Liveness probe</span></li></ul></dd><dt>Why amended</dt><dd>the answer to <span class="ref"><b>Q1</b> The probe's timeout</span></dd><dt>Needed by</dt><dd><ul class="list"><li><span class="ref"><b>C2</b> No traffic without a database</span></li></ul></dd></dl>
-  </article>
-  <article class="item sample">
-    <div class="item-head"><span class="n">D1</span><h4>Where the probes live</h4></div>
-    <div class="item-tags"><span class="pill st-done">Taken · 2 Oct</span></div>
-    <dl><dt>Options</dt><dd><ol class="options"><li class="chosen"><span class="key">a</span><span><code>/healthz</code> and <code>/readyz</code> beside <code>/api</code>.<span class="vh"> (chosen)</span></span></li><li><span class="key">b</span><span>A second port that serves only the probes.</span></li></ol></dd><dt>Reasons</dt><dd>One port keeps the platform's settings to two lines.</dd><dt>Mentioned in</dt><dd><ul class="list"><li><span class="ref"><b>EX-1</b> Liveness probe</span></li><li><span class="ref"><b>EX-2</b> Readiness probe</span></li></ul></dd></dl>
   </article>
   <article class="item sample">
     <div class="item-head"><span class="n">D3</span><h4>How long a probe may take</h4></div>
@@ -98,86 +59,55 @@
     <dl><dt>Options</dt><dd><ol class="options"><li><span class="key">a</span><span>Five seconds everywhere.</span></li><li class="recommended"><span class="key">b</span><span>Five seconds in staging, ten in production.<span class="vh"> (recommended)</span></span></li></ol></dd><dt>Reasons</dt><dd>A slow night in production shouldn't take a process out of service.</dd></dl>
   </article>
   <dl class="defs">
-    <dt>First line</dt>
-    <dd>The item's number and its summary: the name it goes by wherever it's linked. The number never changes and is never reused, and its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T deferred work. A PR carries its repository's prefix, such as AC-1.</dd>
+    <dt>Number and summary</dt>
+    <dd>The name the item goes by, and a link to its card from anywhere on the page. The letters say what it is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T deferred work; a PR takes its repository's prefix, such as AC-1. A number is never reused.</dd>
     <dt>Chips</dt>
-    <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved, or ended; and the link to where the item lives, such as its PR on GitHub. A project can add chips of its own, such as what a comparison found. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, <em>To agree</em> until the owner agrees them, or <em>Dropped</em>, and Verify says whether they're met.</dd>
-    <dt>Title</dt>
-    <dd>The full title, when the summary is shorter. A PR's is the title it merges with.</dd>
+    <dd>The kind; the status, in the item's own words, with its day; <em>Amended</em>, with the day it came in; and the link to where it lives, such as its PR. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build where they stand.</dd>
     <dt>Options</dt>
-    <dd>A decision's options, as a list. Until the owner chooses, the recommended one is grey; once they have, only the one chosen is marked, in green. The reasons for the recommendation follow.</dd>
-    <dt>Fields</dt>
-    <dd>The longer facts, each a label and its text, such as Branch, Changes, or <em>Done when</em>: what proves a PR works. A field that holds several things, such as the decisions a PR carries out, is a list.</dd>
-    <dt>Waits on, Why</dt>
-    <dd>What a blocked item waits on, or, for a risk, the step it closes with; and why a dropped one was dropped.</dd>
-    <dt>Needs</dt>
-    <dd>What has to be done first. The board's waves come from it. On a success criterion, it reads <em>Verified by</em>: the checks that prove the criterion is met; on a risk, <em>Closes with</em>: the step that closes it.</dd>
-    <dt>Why amended</dt>
-    <dd>Why the item was added after its phase was approved, or ended.</dd>
-    <dt>Needed by, Carried out by, Mentioned in</dt>
-    <dd>The items that need this one, and the items that mention it, each a list. A decision's card lists the PRs and settings that name it as <em>Carried out by</em>, and anything else as <em>Mentioned in</em>. On a check, the criteria that need it read <em>Verifies</em>; on a step, the risks it closes read <em>Closes</em>.</dd>
+    <dd>A decision's choices: the recommended one is marked until the owner chooses, then only the one chosen.</dd>
+    <dt>Needs, Needed by, Carried out by, Mentioned in</dt>
+    <dd>The items around it, each a link, so a decision leads to the PRs that carry it out, and on to the checks that prove them. A criterion is <em>Verified by</em> its checks, and a risk <em>Closes with</em> its step.</dd>
   </dl>
 </section>
 
 <section class="block" id="guide-statuses">
   <h3>Statuses</h3>
-  <p class="intro">Every item is in one of five states, a risk can end in a sixth, and any item can be set aside in three more; the page words each one the way the item's type says it: a decision is Taken, a PR Merged, a risk Closed.</p>
+  <p>Each status takes its item's words: a decision is Taken, a PR Merged, a risk Closed.</p>
   <ul>
-    <li><strong>Waits on the owner</strong>: the owner acts next, such as merging a PR, taking a decision or changing a setting. The header lists these under The owner, each with what to do.</li>
+    <li><strong>Waits on the owner</strong>: the owner acts next, as the header lists.</li>
     <li><strong>Ready</strong>: everything it needs is done, and the agent can start it.</li>
-    <li><strong>Blocked</strong>: it waits on something, which the page names beside its chip, even on a folded card: <em>waits on</em> an item or an event, or, for a risk, <em>closes with</em> the step that closes it.</li>
-    <li><strong>Done</strong>: finished, with the day.</li>
-    <li><strong>Happened</strong>: a risk only, when what it describes came true, with the day and the question or the blocker that took it over.</li>
+    <li><strong>Blocked</strong>: it waits on something, named beside its chip.</li>
+    <li><strong>Done</strong>, with the day. A risk that came true is <strong>Happened</strong> instead, naming what took it over.</li>
     <li><strong>Dropped</strong>: struck through, with why. An item is never deleted: one that no longer belongs is Dropped.</li>
-    <li><strong>Deferred</strong>: any item, parked until a trigger outside the project, which the page names beside its chip, or until the owner says, which <span class="pill ask">Your go</span> beside it marks, or <span class="pill ask">Your call</span> on a question or a decision. Deferred lists it, and it no longer holds its phase open.</li>
-    <li><strong>To be moved</strong>: any item another project will take, named beside its chip. Deferred lists it too.</li>
-    <li><strong>Moved</strong>: any item another project has taken, with a chip to its card on that project's page, where a chip links back. It is done with here.</li>
+    <li><strong>Deferred</strong>: set aside until a trigger it names, or until the owner says, which <span class="pill ask">Your go</span> marks, or <span class="pill ask">Your call</span> on a question or a decision. <strong>To be moved</strong>: another project will take it. <strong>Moved</strong>: one has, and a chip links its card there. Deferred lists the first two, and none of the three holds its phase open.</li>
   </ul>
-  <p>Each row below is a type of item, in the words its statuses take, and what the owner does while one waits on them:</p>
+  <p>Each type in its words, and the owner's part while one waits on them:</p>
   <!--statuses-->
 </section>
 
 <section class="block" id="guide-kinds">
   <h3>Kinds</h3>
-  <p class="intro">The first chip on a card, and the word at the end of a chip on the board, give an item's kind. A PR's kind is what its merge releases, so no field repeats it; Owner marks what only the owner can do, such as a setting.</p>
+  <p>The first chip on a card, and the last word on a board chip. A PR's kind is what its merge releases; Owner marks what only the owner can do, such as a setting.</p>
   <!--kinds-->
 </section>
 
 <section class="block" id="guide-board">
   <h3>The board</h3>
-  <p class="intro">The order of the work, in Build.</p>
-  <ul>
-    <li><strong>Columns are waves.</strong> The items in one wave can be under way at the same time; a wave starts once what its items need is done. Its subtitle says what it waits for.</li>
-    <li><strong>Rows are repositories.</strong> Each has at most one PR open at a time. A setting sits in the row of the repository it configures.</li>
-    <li><strong>Each chip is an item</strong>: its number and short name, then its status in words, the day it got there, and its kind.</li>
-    <li><strong>It opens at the work left.</strong> A board wider than the screen opens at its first column with an unfinished item, the finished ones scrolled past to its left, and the rows' names stay in view as it scrolls.</li>
-  </ul>
-  <p>A chip's stripe and tint follow its status, so a glance at the board says where the work stands:</p>
+  <p>The order of the work, in Build. Columns are waves: a wave starts once what its items need is done, and its subtitle says what it waits for. Rows are repositories, each with one PR open at a time. A board wider than the screen opens at its first column with work left.</p>
   <!--chips-->
-  <p>A done chip fades; a blocked one has a dashed border and says what it waits on; a deferred one is grey, dashed too, and says what it waits on, or <em>Your go</em>; and a dropped one is struck through, with why. Click a chip to open its card.</p>
+  <p>A done chip fades; a blocked one is dashed, and says what it waits on; a deferred one is grey and dashed, with what it waits on, or <em>Your go</em>; and a dropped one is struck through. A chip opens its card.</p>
 </section>
 
 <section class="block" id="guide-agenda">
   <h3>The Agenda</h3>
-  <p class="intro">The Agenda button, top right, opens over the page everything with a date, the ones still ahead first.</p>
   <dl class="defs">
     <dt>Coming up</dt>
     <dd>Every date still ahead, soonest first.</dd>
     <dt>Notes for the next session</dt>
-    <dd>What is in flight, where, and what comes next, as the last session left them. A new session reads them before anything else.</dd>
+    <dd>What is in flight and what comes next, as the last session left them.</dd>
     <dt>What happened</dt>
-    <dd>Every date before, newest first, back to the project's first: the same entries as the calendar, each count a list of its items under what happened to them, such as <em>Merged</em> over the PRs that merged that day. A line marks the day the statuses were read.</dd>
+    <dd>Every day before, newest first, with the calendar's entries, each count a list of its items, such as <em>Merged</em> over the PRs that merged that day. A line marks the day the statuses were read.</dd>
   </dl>
-</section>
-
-<section class="block" id="guide-links">
-  <h3>Links and moving around</h3>
-  <ul>
-    <li>A number with its name, such as <span class="ref"><b>D1</b> Where the probes live</span>, is a link to that item's card. It opens the card even when another phase holds it.</li>
-    <li>The tabs switch phases, and a phase opens where you are, without scrolling. The buttons top right open the Agenda and the Guides over the page, and their close button, or Escape, closes them. A day in the calendar opens the Agenda at that day.</li>
-    <li>A phase other than the one in progress loads the first time you open it. If it can't, the page says so, with a button to try again.</li>
-    <li>On a card, Needs, Needed by, Carried out by and Mentioned in link to the items around it, so you can follow a decision to the PRs that carry it out, and on to the checks that prove them.</li>
-  </ul>
 </section>
 
 <section class="block" id="guide-answering">

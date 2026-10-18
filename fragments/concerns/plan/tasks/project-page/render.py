@@ -1367,14 +1367,15 @@ def opening_phase(statuses, shown):
 
 
 def statuses_table():
-    """Each type of item in the words its statuses take, and what the user does while one waits."""
-    order = ("open", "ready", "blocked", "done", "happened", "dropped")
+    """Each type of item in the words its statuses take, and what the user does while one waits.
+    Ready reads the same for every type, and only a risk happens, so neither has a column."""
+    order = ("open", "blocked", "done", "dropped")
     rows = []
     for key, entry in TYPES.items():
         name, example = TYPE_NAMES[key]
-        words = [f'<span class="st st-{status}">{entry["labels"].get(status, ITEM_STATUS[status])}</span>' if status != "happened" or key in HAPPENS else "—" for status in order]
+        words = [f'<span class="st st-{status}">{entry["labels"].get(status, ITEM_STATUS[status])}</span>' for status in order]
         rows.append([f'{name} <span class="letters">{example}</span>'] + words + [entry["ask"]])
-    return table_html(["Type", "Waits on the owner", "Ready", "Blocked", "Done", "Happened", "Dropped", "The owner's part"], rows, 900, "statuses")
+    return table_html(["Type", "Waits on the owner", "Blocked", "Done", "Dropped", "The owner's part"], rows, 700, "statuses")
 
 
 def kinds_list():

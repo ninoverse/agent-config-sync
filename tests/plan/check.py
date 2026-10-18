@@ -83,7 +83,7 @@ def check_example(tmp):
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
     expect('<footer class="site"' not in page, "the page has no footer: the guides answer what it would")
     guides = phase["guides"]
-    parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "agenda", "links", "answering")
+    parts = ("header", "phases", "cards", "statuses", "kinds", "board", "agenda", "answering")
     expect(all(f'id="guide-{part}"' in guides and f'href="#guide-{part}"' in guides for part in parts), "the guides hold every part of the guide, each in the contents")
     words = ('st-done">Taken<', 'st-dropped">Not taken<', 'st-blocked">Not met yet<', 'st-dropped">Not adopted<', 'st-done">Picked up<', 'st-open">To merge<')
     expect(all(word in between(guides, '<table class="statuses"', "</table>") for word in words), "the guide's statuses come from the page's own words")
@@ -256,7 +256,8 @@ def check_example(tmp):
         if replace_in(happened, "plan.toml", 'short = "Slow database"\n', 'short = "Slow database"\namended = { on = 2026-10-08, why = "seen in production" }\n'):
             run = render(happened, tmp / "happened-late-out")
             expect(run.returncode == 1 and "RK1 happened on 7 Oct, before it was written on 8 Oct" in run.stderr, f"a risk is written before it happens: {run.stderr}")
-    expect('st-happened">Happened<' in between(phase["guides"], 'id="guide-statuses"', "</section>"), "the guide words a risk's sixth state")
+    statuses = between(phase["guides"], 'id="guide-statuses"', "</section>")
+    expect("<strong>Happened</strong>" in statuses and "<th>Ready</th>" not in statuses and "<th>Happened</th>" not in statuses, "the guide words a risk's sixth state, and its table leaves out what every type says alike")
 
     expect('class="st ' not in between(phase["brief"], 'id="sc1"', "</article>") and "pill st-" not in between(phase["brief"], 'id="sc1"', "</article>"), "the brief shows its criteria as agreed, without Verify's statuses")
     agreeing = copy_with(tmp, "agreeing", EXAMPLE, "verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "open"')
