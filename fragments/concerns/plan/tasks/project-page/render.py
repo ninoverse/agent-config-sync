@@ -96,14 +96,16 @@ PHASE_TYPES = {
     "deferred": ("deferred", "question"),
 }
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
-# the Plan its PRs, settings and risks, Build its board, results and questions, and
-# Verify its checks and where the success criteria stand; and where what they leave out goes.
-PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "build": ("board", "results", "items"), "verify": ("items", "results")}
+# the Plan its PRs, settings and risks, Build its board, results and questions,
+# Verify its checks and where the success criteria stand, and Reuse its pieces, each
+# with how to take it; and where what they leave out goes.
+PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "build": ("board", "results", "items"), "verify": ("items", "results"), "reuse": ("defs",)}
 ELSEWHERE = {
     "analysis": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
     "plan": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
     "build": "what happened is in the Agenda, and what came of an item is its Result",
     "verify": "what happened is in the Agenda, and what a check showed is in its card",
+    "reuse": "what happened is in the Agenda, and how a piece was built is in the items its entry links",
 }
 # The phases that open with a list of their sections, built from them.
 CONTENTS = ("analysis", "plan")

@@ -194,6 +194,15 @@ def check_example(tmp):
         render(shipped, tmp / "shipped-out")
         board = (tmp / "shipped-out" / "index.html").read_text()
         expect('<div class="scroll" data-start="2">' in board, "once its first column is done, a board opens at the next, which has work left")
+    reused = copy_with(tmp, "reused", EXAMPLE, "project.toml", '[phases.reuse]\nstatus = "not-needed"\nwhy = "Two routes are too little for another project to take. The service template\'s README links this project instead."', '[phases.reuse]\nstatus = "done"')
+    if reused is not None:
+        (reused / "reuse.toml").write_text('[[section]]\nid = "takeaways"\ntitle = "What another project can take"\nkind = "defs"\n\n[[section.def]]\nterm = "The probes"\ntext = "[[EX-1]] and [[EX-2]], copied as they are."\n')
+        run = render(reused, tmp / "reused-out")
+        reuse = tmp / "reused-out" / "phases" / "reuse.html"
+        expect(run.returncode == 0 and reuse.exists() and "<dt>The probes</dt>" in reuse.read_text(), f"Reuse holds its pieces as definitions: {run.stderr}")
+        (reused / "reuse.toml").write_text('[[section]]\nid = "log"\ntitle = "The log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n')
+        run = render(reused, tmp / "reused-log-out")
+        expect(run.returncode == 1 and "Reuse holds only defs sections" in run.stderr, f"and nothing else: {run.stderr}")
     came_true = '[status.RK1]\nstatus = "happened"\non = 2026-10-07\nresult = "It did, under load: [[Q1]] took it over."'
     happened = copy_with(tmp, "happened", EXAMPLE, "build.toml", '[status.RK1]\nstatus = "blocked"', came_true)
     if happened is not None:
