@@ -115,7 +115,9 @@ from the lesson.
 - What an item needs is data, not prose: the board's waves come from it, and
   each card lists what needs it and what mentions it.
 - Name an item with its number and its summary, never the number alone: the
-  reader shouldn't have to look D12 up.
+  reader shouldn't have to look D12 up. Since the summary follows the number,
+  put the name after its noun, as in "the merge of HMI-8", never in a
+  possessive.
 - Under the calendar, the page says who holds the ball: the owner, the user
   who decides, merges and changes settings, for every Open item; the agent, for
   every Ready one; or a date coming up, with an automated run marked as such.

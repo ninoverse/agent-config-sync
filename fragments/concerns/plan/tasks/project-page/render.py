@@ -128,6 +128,8 @@ KEBAB = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 ITEM_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
 # [[D1]] in any text: a link to the item, with its id and its short title.
 REF = re.compile(r"\[\[([^\]]*)\]\]")
+# [[HMI-8]]'s: a possessive on a link, which the page reads as its short title's.
+POSSESSIVE = re.compile(r"\[\[([^\]]*)\]\]['\u2019]s\b")
 # Only an anchor made of these reaches location.hash from an artifact's link.
 ANCHOR = re.compile(r"[A-Za-z0-9._~-]+")
 # A pull request or an issue on GitHub, which a link names as GitHub does: owner/repo#12.
@@ -512,6 +514,32 @@ def check_states(project, phases):
     handoff = project.get("handoff")
     if handoff and handoff.get("updated") and changed and handoff["updated"] < max(changed):
         warn("project.toml [handoff]", f"the notes for the next session date from {day(handoff['updated'])}, before the last change")
+
+
+def check_wording(project, phases):
+    """Warnings for a possessive on a link: [[HMI-8]]'s merge reads as "HMI-8 Bump and
+    release callers's merge", since a link carries its short title."""
+
+    def walk(value, where):
+        if isinstance(value, str):
+            for ref in POSSESSIVE.findall(value):
+                if ref in ITEMS:
+                    warn(where, f"[[{ref}]]'s reads as \"{ref} {short_of(ITEMS[ref])}'s\": put the link after its noun, as in \"the merge of [[{ref}]]\"")
+        elif isinstance(value, dict):
+            for inner in value.values():
+                walk(inner, where)
+        elif isinstance(value, list):
+            for inner in value:
+                walk(inner, where)
+
+    for key, data in phases.items():
+        for section in data.get("section", []):
+            for item in section.get("item", []):
+                walk(item, f"{key}.toml item {item.get('id', '(no id)')}")
+            walk({name: value for name, value in section.items() if name != "item"}, f"{key}.toml section {section.get('id', '(no id)')}")
+        for item_id, entry in data.get("status", {}).items():
+            walk(entry, f"{key}.toml [status.{item_id}]")
+    walk(project, "project.toml")
 
 
 # ------------------------------------------------------------------ rendering
@@ -1650,6 +1678,7 @@ def main(argv):
     link_items()
     if not problems:
         check_states(project, phases)
+        check_wording(project, phases)
     changes = changes_since(data_dir, Path(since)) if since is not None else None
     COUNTED.extend(counted(project, phases))
     warned = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""

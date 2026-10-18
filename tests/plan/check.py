@@ -377,6 +377,7 @@ STALE = [
     ("plan.toml", "amended = { on = 2026-10-07", "amended = { on = 2026-10-02", "EX-3 is amended on 2 Oct, before its phase was approved"),
     ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest status, of 7 Oct"),
     ("project.toml", "updated = 2026-10-07", "updated = 2026-10-06", "the notes for the next session date from 6 Oct, before the last change"),
+    ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "[[Q1]]\'s answer" }', "plan.toml item EX-3: [[Q1]]'s reads as \"Q1 The probe's timeout in production's\": put the link after its noun"),
 ]
 
 # Each broken copy: the project it copies, the file, the text replaced, its

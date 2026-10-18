@@ -66,8 +66,9 @@ It writes nothing, and names the file and the item, when:
 - the HTML in a field doesn't nest.
 
 It still writes the page when a state looks stale, as *Project phases* says,
-and prints a warning naming it. Fix the data and render again, or tell the user
-why the warning stands.
+or a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short
+title's, and prints a warning naming it. Fix the data and render again, or tell
+the user why the warning stands.
 
 `--since <directory>`, given the data as it was last published, also prints
 what has changed in each phase since, statuses in their type's words. An item
@@ -132,8 +133,9 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   merged, releases, decisions taken, settings changed by hand, lessons adopted,
   and the days from the first date to the last. Its `figure`s follow.
 - Text is HTML, as the page shows it, and `[[D1]]` anywhere in it links to D1
-  with its short title: name items that way, never by a bare number. Dates are
-  TOML dates, such as `2026-10-07`.
+  with its short title: name items that way, never by a bare number, and put
+  the link after its noun, as in "the merge of `[[HMI-8]]`". Dates are TOML
+  dates, such as `2026-10-07`.
 - The calendar and the Agenda are built from every date the data holds: events,
   the days items reached their status, amendments, and the phases' dates.
   Nothing in them is written by hand.
