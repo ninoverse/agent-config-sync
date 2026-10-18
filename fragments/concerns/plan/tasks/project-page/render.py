@@ -1395,6 +1395,7 @@ def sample_chips():
         dict(id="EX-3", short="Ten seconds in production", status="ready", kind="patch"),
         dict(id="EX-4", short="The probes in the README", status="blocked", waits="the freeze to end", kind="patch"),
         dict(id="EX-5", short="A second exporter", status="dropped", why="EX-2 covers it", kind="minor"),
+        dict(id="EX-6", short="Probes on the workers", status="deferred", waits="owner", kind="minor"),
     ]
     chips = [chip(dict(sample, type="pr", needs=[])) for sample in samples]
     chips = [re.sub(r'^<a class="([^"]*)" href="#[^"]*">(.*)</a>$', r'<span class="\1">\2</span>', html, flags=re.S) for html in chips]
@@ -1693,7 +1694,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
             state = f"{waiting} waiting" if waiting else "Nothing waiting"
         elif status == "now" and key in counts:
             done, total = counts[key]
-            state += f' <span class="count" title="{done} of {total} done, dropped items aside">{done}/{total}</span>'
+            state += f' <span class="count" title="{done} of {total} done, not counting dropped or set-aside items">{done}/{total}</span>'
         group.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
     shells, files = [], {}
     for key, text in sections.items():

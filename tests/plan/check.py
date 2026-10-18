@@ -83,11 +83,12 @@ def check_example(tmp):
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
     expect('<footer class="site"' not in page, "the page has no footer: the guides answer what it would")
     guides = phase["guides"]
-    parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "agenda", "links", "changes", "answering")
+    parts = ("header", "phases", "sections", "cards", "statuses", "kinds", "board", "agenda", "links", "answering")
     expect(all(f'id="guide-{part}"' in guides and f'href="#guide-{part}"' in guides for part in parts), "the guides hold every part of the guide, each in the contents")
     words = ('st-done">Taken<', 'st-dropped">Not taken<', 'st-blocked">Not met yet<', 'st-dropped">Not adopted<', 'st-done">Picked up<', 'st-open">To merge<')
     expect(all(word in between(guides, '<table class="statuses"', "</table>") for word in words), "the guide's statuses come from the page's own words")
     expect('<span class="chip s-open">' in guides and '<a class="chip' not in guides, "its sample chips are drawn as the board draws them, but aren't links")
+    expect('<span class="chip s-deferred">' in guides and '<span class="mine">Your go</span>' in guides, "one of them is set aside, until the owner says")
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
     expect('data-open="build"' in page, "the page opens on the phase in progress")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
@@ -220,7 +221,7 @@ def check_example(tmp):
         work = between((tmp / "parked-out" / "phases" / "deferred.html").read_text(), 'id="work"', "</section>") if run.returncode == 0 else ""
         expect('<span class="n">EX-2</span>' in work and 'st-deferred">Deferred · 7 Oct</span><span class="waits">waits on the next release train</span>' in work, f"Deferred lists what another phase deferred, with what it waits on: {run.stderr} {work[-600:]}")
         build_tab = between((tmp / "parked-out" / "index.html").read_text(), 'data-phase="build"', "</a>") if run.returncode == 0 else ""
-        expect('<span class="count" title="3 of 5 done, dropped items aside">3/5</span>' in build_tab, f"and a deferred item no longer counts in its phase: {build_tab}")
+        expect('<span class="count" title="3 of 5 done, not counting dropped or set-aside items">3/5</span>' in build_tab, f"and a deferred item no longer counts in its phase: {build_tab}")
     early = copy_with(tmp, "early", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"', '[phases.plan]\nstatus = "now"')
     if early is not None:
         run = render(early, tmp / "early-out")

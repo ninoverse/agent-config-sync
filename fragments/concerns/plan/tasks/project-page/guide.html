@@ -7,7 +7,7 @@
     <dt>Title</dt>
     <dd>The main repository and the project's objective, joined by a dash, such as <code>example-service-health-checks</code>. The line under it says what the project is for.</dd>
     <dt>Calendar</dt>
-    <dd>The month the statuses were read in, that day outlined; the arrows step through the other months the project spans. Each day lists what happened or is coming: its events, outlined; the days phases start and end, a phase done within a day as one, and an approval in place of the end it marks; then its items, counted by what happened to them in the board's colours, such as <em>18 merged</em> or <em>2 amended</em>. On a phone, each is a box, and a count's box shows its number. A day with something on it opens the Agenda at that day.</dd>
+    <dd>The month the statuses were read in, that day outlined; the arrows step through the other months the project spans. Each day lists what happened or is coming: its events, outlined; the days phases start, end or reopen, a phase done within a day as one, and an approval in place of the end it marks; then its items, counted by what happened to them in the board's colours, such as <em>18 merged</em> or <em>2 amended</em>. On a phone, each is a box, and a count's box shows its number. A day with something on it opens the Agenda at that day.</dd>
     <dt>PR statuses as of</dt>
     <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
@@ -18,7 +18,7 @@
       <ul>
         <li><strong>Done</strong>: the phase is over, and its view is the record of it.</li>
         <li><strong>Amended</strong>: done, and items came in after, each marked Amended with its day and why, and listed together at the phase's end.</li>
-        <li><strong>Now</strong>: in progress. Its tab also counts the items it tracks that are done, such as 3/6; dropped items aren't counted. Two phases can be Now at once: Verify starts with the first merge, while Build goes on.</li>
+        <li><strong>Now</strong>: in progress. Its tab also counts the items it tracks that are done, such as 3/6; dropped and set-aside items aren't counted. Two phases can be Now at once: Verify starts with the first merge, while Build goes on.</li>
         <li><strong>To come</strong>: not started yet.</li>
         <li><strong>Not needed</strong>: skipped.</li>
       </ul>
@@ -36,7 +36,7 @@
     <dt>2 Research</dt>
     <dd>What exists today, one numbered piece at a time (R1, R2…), and what each piece raises: usually a decision for the Analysis.</dd>
     <dt>3 Analysis</dt>
-    <dd>The decisions (D1, D2…), each with its options, a recommendation and its reasons, and your answer with its date. When the decisions are many, they come in batches, each a section; the evidence behind them is in the Research.</dd>
+    <dd>The decisions (D1, D2…), each with its options, a recommendation and its reasons, and the owner's answer with its date. When the decisions are many, they come in batches, each a section; the evidence behind them is in the Research.</dd>
     <dt>4 Plan</dt>
     <dd>The PRs as the owner approved them, one at a time in each repository; the settings only the owner can change (S1…); and the risk register (RK1…), each risk with the step that closes it. It ends with its approval: the day the owner approved it, and the items added since, grouped by the day they came in and why.</dd>
     <dt>5 Build</dt>
@@ -46,7 +46,7 @@
     <dt>Reuse</dt>
     <dd>What other projects can take from this one: a template, a shared rule or workflow, or a page to link instead, each with how to take it and the items that built it. Often Not needed.</dd>
     <dt>Retrospective</dt>
-    <dd>The project told for a portfolio, in your voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
+    <dd>The project told for a portfolio, in the owner's voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
     <dt>Deferred</dt>
     <dd>What was deferred (T1…), and what other phases have deferred or are to move to another project, each with what it waits on and where it goes. Deferring an item lets the Retrospective go ahead without it.</dd>
   </dl>
@@ -71,11 +71,11 @@
     <dt>Definitions</dt>
     <dd>A card of terms, each with what it means here, such as the Brief's Problem and Objective. In Reuse, each term is a card of its own, titled by it: a piece another project can take.</dd>
     <dt>Contents</dt>
-    <dd>At the top of the Analysis and the Plan, when they have several sections: each section, a link to its cards, and the Plan's approval.</dd>
+    <dd>At the top of the Analysis and the Plan, when they have several sections: each section, a link to its cards, and what closes the phase.</dd>
     <dt>Imported pages</dt>
     <dd>A page written before this one, kept whole inside a phase, such as an earlier version of the Analysis.</dd>
-    <dt>Approval</dt>
-    <dd>At the end of a phase the owner approves, such as the Plan: the day they did, and the items added since.</dd>
+    <dt>Approval, Amendments</dt>
+    <dd>At the end of a phase the owner approves, such as the Plan: the day they did, and the items added since, by day and why. A phase done without an approval that took items later ends with its Amendments instead: the day it ended, then those items.</dd>
   </dl>
 </section>
 
@@ -101,7 +101,7 @@
     <dt>First line</dt>
     <dd>The item's number and its summary: the name it goes by wherever it's linked. The number never changes and is never reused, and its letters say what the item is: G ground rule, SC success criterion, R research piece, D decision, Q question, S setting, RK risk, C check, L lesson, T deferred work. A PR carries its repository's prefix, such as AC-1.</dd>
     <dt>Chips</dt>
-    <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved; and the link to where the item lives, such as its PR on GitHub. A project can add chips of its own, such as what a comparison found. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, <em>To agree</em> until the owner agrees them, or <em>Dropped</em>, and Verify says whether they're met.</dd>
+    <dd>What a word or two says: the kind, described under Kinds; the status, in the item's own words, with the day it got there; <em>Amended</em>, with the day the item was added after its phase was approved, or ended; and the link to where the item lives, such as its PR on GitHub. A project can add chips of its own, such as what a comparison found. A card shows its status only in the phase that keeps it: the Plan shows its PRs as approved, and Build says where they stand; the Brief shows its success criteria, <em>To agree</em> until the owner agrees them, or <em>Dropped</em>, and Verify says whether they're met.</dd>
     <dt>Title</dt>
     <dd>The full title, when the summary is shorter. A PR's is the title it merges with.</dd>
     <dt>Options</dt>
@@ -113,7 +113,7 @@
     <dt>Needs</dt>
     <dd>What has to be done first. The board's waves come from it. On a success criterion, it reads <em>Verified by</em>: the checks that prove the criterion is met; on a risk, <em>Closes with</em>: the step that closes it.</dd>
     <dt>Why amended</dt>
-    <dd>Why the item was added after its phase was approved.</dd>
+    <dd>Why the item was added after its phase was approved, or ended.</dd>
     <dt>Needed by, Carried out by, Mentioned in</dt>
     <dd>The items that need this one, and the items that mention it, each a list. A decision's card lists the PRs and settings that name it as <em>Carried out by</em>, and anything else as <em>Mentioned in</em>. On a check, the criteria that need it read <em>Verifies</em>; on a step, the risks it closes read <em>Closes</em>.</dd>
   </dl>
@@ -128,7 +128,7 @@
     <li><strong>Blocked</strong>: it waits on something, which the page names beside its chip, even on a folded card: <em>waits on</em> an item or an event, or, for a risk, <em>closes with</em> the step that closes it.</li>
     <li><strong>Done</strong>: finished, with the day.</li>
     <li><strong>Happened</strong>: a risk only, when what it describes came true, with the day and the question or the blocker that took it over.</li>
-    <li><strong>Dropped</strong>: struck through, with why.</li>
+    <li><strong>Dropped</strong>: struck through, with why. An item is never deleted: one that no longer belongs is Dropped.</li>
     <li><strong>Deferred</strong>: any item, parked until a trigger outside the project, which the page names beside its chip, or until the owner says, which <span class="pill ask">Your go</span> beside it marks, or <span class="pill ask">Your call</span> on a question or a decision. Deferred lists it, and it no longer holds its phase open.</li>
     <li><strong>To be moved</strong>: any item another project will take, named beside its chip. Deferred lists it too.</li>
     <li><strong>Moved</strong>: any item another project has taken, with a chip to its card on that project's page, where a chip links back. It is done with here.</li>
@@ -139,7 +139,7 @@
 
 <section class="block" id="guide-kinds">
   <h3>Kinds</h3>
-  <p class="intro">The first chip on a card, and the word at the end of a chip on the board, say what kind of change an item is. A PR's kind is what its merge releases, so no field repeats it.</p>
+  <p class="intro">The first chip on a card, and the word at the end of a chip on the board, give an item's kind. A PR's kind is what its merge releases, so no field repeats it; Owner marks what only the owner can do, such as a setting.</p>
   <!--kinds-->
 </section>
 
@@ -154,12 +154,12 @@
   </ul>
   <p>A chip's stripe and tint follow its status, so a glance at the board says where the work stands:</p>
   <!--chips-->
-  <p>A done chip fades, a blocked one has a dashed border and says what it waits on, and a dropped one is struck through, with why. Click a chip to open its card.</p>
+  <p>A done chip fades; a blocked one has a dashed border and says what it waits on; a deferred one is grey, dashed too, and says what it waits on, or <em>Your go</em>; and a dropped one is struck through, with why. Click a chip to open its card.</p>
 </section>
 
 <section class="block" id="guide-agenda">
   <h3>The Agenda</h3>
-  <p class="intro">The Agenda button, top right, opens over the page everything with a date, the ones still ahead first. Who holds the ball is in the header, on every view.</p>
+  <p class="intro">The Agenda button, top right, opens over the page everything with a date, the ones still ahead first.</p>
   <dl class="defs">
     <dt>Coming up</dt>
     <dd>Every date still ahead, soonest first.</dd>
@@ -180,22 +180,13 @@
   </ul>
 </section>
 
-<section class="block" id="guide-changes">
-  <h3>What changed, and when</h3>
-  <ul>
-    <li>The Agenda holds it all by day: what is coming up, soonest first, then what happened, newest first.</li>
-    <li>An item is never deleted. One that no longer belongs is Dropped, saying why, and the Agenda has the day.</li>
-    <li>Under the calendar, the header says when the PR statuses were last read. Anything later isn't on the page yet.</li>
-  </ul>
-</section>
-
 <section class="block" id="guide-answering">
   <h3>Answering</h3>
   <p>The page only shows the state: nothing on it changes anything. The owner answers in the chat with the agent, naming items by number:</p>
   <ul>
     <li><em>D3: b</em>, to take option b of a decision;</li>
-    <li><em>EX-2 is merged</em>, once the PR is merged;</li>
+    <li><em>T2: go</em>, to start an item deferred until the owner says;</li>
     <li><em>S1 is set</em>, once the setting is changed.</li>
   </ul>
-  <p>The agent updates the project's data, publishes the page again, and says in the chat what changed.</p>
+  <p>A PR needs no message: the agent reads each one from GitHub before it publishes. It updates the project's data, publishes the page again, and says in the chat what changed.</p>
 </section>
