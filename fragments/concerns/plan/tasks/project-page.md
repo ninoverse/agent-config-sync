@@ -51,9 +51,11 @@ It writes nothing, and names the file and the item, when:
 - no phase has content yet;
 - an id is used twice anywhere on the page, a link points at an id nothing
   has, or a `[[ref]]` or a `needs` names no item;
-- a status is unknown, a Blocked item doesn't say what it waits on, a Dropped
-  item doesn't say why, or a phase that is Not needed doesn't say why, or has
-  a `<phase>.toml`: its tab doesn't open, so nothing in it would show;
+- a status is unknown, a Blocked or Deferred item doesn't say what it waits
+  on, a Dropped item doesn't say why, one To be moved doesn't name its project
+  in `to`, or a Moved one doesn't link its card there in `to`; or a phase that
+  is Not needed doesn't say why, or has a `<phase>.toml`: its tab doesn't
+  open, so nothing in it would show;
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
@@ -105,7 +107,12 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   - `short`, the name it goes by wherever it is linked;
   - `kind`: `major`, `minor`, `patch`, `owner` or `together`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
-    `result`, once it lands;
+    `result`, once it lands: `open`, `ready`, `blocked`, `done` or `dropped`;
+    `happened`, for a risk; or, for any item, `deferred`, `to-move`, with the
+    project that takes it in `to`, or `moved`, with its card's address there
+    in `to`;
+  - `from`, on an item moved in from another project, its card's address on
+    that project's page;
   - `url`, the PR's address once it is open, where its state is read from;
   - `needs`, the ids of the items to finish first; a success criterion's are
     the checks that prove it, which its card shows as Verified by;
@@ -129,7 +136,8 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   `waves` subtitles each wave. Without `auto`, it takes `columns` and `row`s.
   Either way, it opens at its first column with an unfinished item.
   A `results` section in the same phase leaves out what the board shows until
-  it has a `result`, and then shows the result alone.
+  it has a `result`, and then shows the result alone, or until it moves, and
+  then shows the link to its new page.
 - A `defs` section is one card of `[[section.def]]`s, each a `term` and its
   `text`, such as the Brief's project. In Reuse, each term is a card of its
   own, titled by it: a piece another project can take.

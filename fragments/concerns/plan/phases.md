@@ -84,9 +84,9 @@ they answer.
   Most of it comes from the other phases, and the figures are counted from the
   data wherever they can be. It also renders alone, as a page the user can
   share.
-- **Deferred**: each deferred item, what it waits on, and where it goes when
-  that comes. Deferring an item there lets the Retrospective go ahead without
-  it.
+- **Deferred**: its deferred work and questions, and what other phases have
+  set aside, each with what it waits on and where it goes when that comes.
+  Deferring an item lets the Retrospective go ahead without it.
 
 ## Lessons
 
@@ -114,6 +114,11 @@ from the lesson.
 - A risk that comes true is Happened, naming the question or the blocker that
   took it over: it is no longer a risk. What has already happened is never
   written as a risk.
+- Any item can be set aside: Deferred, parked until a trigger outside the
+  project, which it names; To be moved, once the user decides another project
+  takes it, naming that project; or Moved, once that project's page has it,
+  linking its card there, which links back. An item set aside no longer holds
+  its phase open, and Deferred lists it until it moves.
 - What an item needs is data, not prose: the board's waves come from it, and
   each card lists what needs it and what mentions it.
 - Name an item with its number and its summary, never the number alone: the

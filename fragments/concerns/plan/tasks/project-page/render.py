@@ -47,8 +47,11 @@ PHASES = [
 ]
 PHASE_NAME = dict(PHASES)
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
-ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "dropped": "Dropped"}
+ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
+# Set aside: out of its phase's way until a trigger comes, or until another project takes
+# it, and listed in Deferred. A moved item is done with here.
+PARKED = ("deferred", "to-move")
 # The types of item that can come true: a risk that does is no longer a risk.
 HAPPENS = ("risk",)
 # The types of item that carry out a decision.
@@ -346,6 +349,12 @@ def check_status(entry, item_type, where):
         problem(where, "only a risk happens: any other item that is finished is `done`")
     elif status == "happened" and not entry.get("result"):
         problem(where, "a risk that happened names, in `result`, the question or the blocker that took it over")
+    elif status == "deferred" and not entry.get("waits") and not entry.get("needs"):
+        problem(where, "a deferred item says what it waits on, in `waits` or `needs`")
+    elif status == "to-move" and not entry.get("to"):
+        problem(where, "an item to be moved names the project that takes it, in `to`")
+    elif status == "moved" and not str(entry.get("to", "")).startswith("https://"):
+        problem(where, "a moved item links its card on the other project's page, in `to`, an https:// address")
 
 
 def collect_items(phases):
@@ -381,6 +390,9 @@ def collect_items(phases):
                 url = item.get("url")
                 if url is not None and not (isinstance(url, str) and url.startswith("https://")):
                     problem(where, "`url` is an https:// address, such as the PR's on GitHub")
+                origin = item.get("from")
+                if origin is not None and not (isinstance(origin, str) and origin.startswith("https://")):
+                    problem(where, "`from` is the https:// address of its card on the page it moved from")
                 needs = item.get("needs", [])
                 if not (isinstance(needs, list) and all(isinstance(n, str) for n in needs)):
                     problem(where, "`needs` is a list of item ids")
@@ -424,7 +436,7 @@ def collect_items(phases):
                 problem(where, f"{item_id}'s status is set twice, here and in {item['status_from']}.toml")
                 continue
             check_status(dict(entry, needs=item["needs"]), item["type"], where)
-            for field in ("status", "waits", "why", "result"):
+            for field in ("status", "waits", "why", "result", "to"):
                 if field in entry:
                     item[field] = entry[field]
             if "on" in entry:
@@ -621,8 +633,9 @@ def refs_list(ids, plain=False):
 
 
 def state_line(item):
-    """A board chip's status badge, with when it was reached, what a Blocked item waits
-    on, or why one was Dropped, its references as text, since the chip is a link."""
+    """A board chip's status badge, with when it was reached, what a Blocked or Deferred
+    item waits on, where one To be moved goes, or why one was Dropped, its references as
+    text, since the chip is a link."""
     status = item.get("status")
     if not status or status not in ITEM_STATUS:
         return ""
@@ -630,10 +643,12 @@ def state_line(item):
     if item.get("on"):
         line += f' <span class="on">{day(item["on"])}</span>'
     note = ""
-    if status == "blocked":
+    if status in ("blocked", "deferred"):
         note = item.get("waits") or refs_list(item["needs"])
         prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
         note = f"{prefix} {note}" if note else ""
+    elif status == "to-move":
+        note = f"to {item.get('to', '')}"
     elif status == "dropped":
         note = item.get("why", "")
     if note:
@@ -680,8 +695,16 @@ def waits_label(item):
 
 
 def waits_tag(item):
-    """What a blocked item waits on, as words beside its chip, as a board chip says it:
-    a folded card shows it, and its references are text, since a summary is a toggle."""
+    """What a waiting item waits on, or where it goes, as words beside its chip, as a board
+    chip says it: a folded card shows it, and its references are text, since a summary is a
+    toggle. A moved item has a chip instead, to its card on the page that took it."""
+    status = item.get("status")
+    if status == "moved":
+        return f'<a class="pill link" href="{esc(item.get("to", ""))}" target="_blank" rel="noopener">Its new page</a>'
+    if status == "to-move":
+        return f'<span class="waits">to {refs_as_text(item.get("to", ""))}</span>'
+    if status not in ("blocked", "deferred"):
+        return ""
     note = item.get("waits") or refs_list(item["needs"], plain=True)
     prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
     return f'<span class="waits">{prefix} {refs_as_text(note)}</span>' if note else ""
@@ -705,13 +728,15 @@ def card(item):
     shown = own or (item["type"] == "criterion" and item.get("status") in ("open", "dropped"))
     if shown:
         tags.append(status_pill(item))
-        if item["status"] == "blocked":
+        if waits_tag(item):
             tags.append(waits_tag(item))
     if item["amended"]:
         when = f' {day(item["amended"]["on"])}' if item["amended"]["on"] else ""
         tags.append(f'<span class="pill amended">Amended{when}</span>')
     if isinstance(item.get("url"), str):
         tags.append(link_html(item["url"]))
+    if isinstance(item.get("from"), str):
+        tags.append(f'<a class="pill link" href="{esc(item["from"])}" target="_blank" rel="noopener">Its old page</a>')
     rows = []
     if short and short != text_of(item.get("title", "")):
         rows.append(("Title", item.get("title", "")))
@@ -751,11 +776,11 @@ def result_card(item, on_board=False):
     status, tags, rows = item.get("status"), [], []
     if not on_board and status in ITEM_STATUS:
         tags.append(status_pill(item))
-        if status == "blocked":
+        if waits_tag(item):
             tags.append(waits_tag(item))
-            # The items it waits on stay links, under the fold.
-            if not item.get("waits") and item["needs"]:
-                rows.append((waits_label(item), refs_ul(item["needs"])))
+        # The items it waits on stay links, under the fold.
+        if status in ("blocked", "deferred") and not item.get("waits") and item["needs"]:
+            rows.append((waits_label(item), refs_ul(item["needs"])))
         elif status == "dropped":
             rows.append(("Why", item.get("why", "")))
     if item.get("result"):
@@ -908,6 +933,10 @@ def render_section(section, key, data, data_dir):
         parts.append(table_html(["Repository", "Its part"], rows, section.get("min_width"), "repos"))
     elif kind == "items":
         cards = [card(ITEMS[item["id"]]) for item in section.get("item", []) if item.get("id") in ITEMS]
+        # Deferred's work goes on with what other phases set aside, each linked to its own card.
+        work = next((s for s in data.get("section", []) if s.get("kind") == "items" and s.get("type") == "deferred"), None)
+        if key == "deferred" and section is work:
+            cards += [result_card(item) for item in ITEMS.values() if item["phase"] != key and item.get("status") in PARKED]
         empty = not cards
         # One button opens, or closes, every folded card in the section.
         if SCRIPTED and sum('<details class="fold">' in c for c in cards) > 1:
@@ -932,13 +961,14 @@ def render_section(section, key, data, data_dir):
         start = left[0] + 1 if left and left[0] > 0 else None
         parts.append(table_html(head, cells, section.get("min_width", 160 * len(columns) + 140), "board", start))
     elif kind == "results":
-        # An item the board shows is here only once it has a result, since the board says the rest.
+        # An item the board shows is here only once it has a result, since the board says the rest,
+        # or once it has moved, since a board's chip can't hold the link to its new page.
         shown = on_boards(data)
         for item_id in section.get("ids") or list(data.get("status", {})):
             if item_id not in ITEMS:
                 problem(where, f"`ids` names {item_id}, which no item has")
-            elif item_id not in shown or ITEMS[item_id].get("result"):
-                parts.append(result_card(ITEMS[item_id], on_board=item_id in shown))
+            elif item_id not in shown or ITEMS[item_id].get("result") or ITEMS[item_id].get("status") == "moved":
+                parts.append(result_card(ITEMS[item_id], on_board=item_id in shown and ITEMS[item_id].get("status") != "moved"))
         # Early on, nothing has a result yet, which the section says rather than vanishing.
         if not parts:
             parts.append('  <p class="note">Nothing yet.</p>')
@@ -1502,14 +1532,15 @@ def stylesheet(project, data_dir):
 
 
 def progress():
-    """For each phase, how many of the statuses it keeps are done, of those not Dropped;
-    a risk that happened is done with, since a question or a blocker took it over."""
+    """For each phase, how many of the statuses it keeps are done, of those not Dropped or
+    set aside; a risk that happened is done with, since a question or a blocker took it
+    over, and so is an item moved to another project."""
     counts = {}
     for item in ITEMS.values():
         key, status = item.get("status_from"), item.get("status")
-        if key and status in ITEM_STATUS and status != "dropped":
+        if key and status in ITEM_STATUS and status != "dropped" and status not in PARKED:
             done, total = counts.get(key, (0, 0))
-            counts[key] = (done + (status in ("done", "happened")), total + 1)
+            counts[key] = (done + (status in ("done", "happened", "moved")), total + 1)
     return counts
 
 

@@ -47,7 +47,7 @@
     <dt>8 Retrospective</dt>
     <dd>The project told for a portfolio, in your voice: the problem, the approach, the outcome, the figures, counted from the data where they can be, and the lessons (L1…) it taught.</dd>
     <dt>9 Deferred</dt>
-    <dd>What was deferred (T1…), what each item waits on, and where it goes when that comes. Deferring an item here lets the Retrospective go ahead without it.</dd>
+    <dd>What was deferred (T1…), and what other phases have deferred or are to move to another project, each with what it waits on and where it goes. Deferring an item lets the Retrospective go ahead without it.</dd>
   </dl>
 </section>
 
@@ -64,7 +64,7 @@
     <dt>Board</dt>
     <dd>The order of the work, in waves. It has a part of this guide to itself.</dd>
     <dt>Results</dt>
-    <dd>A card per item whose status the phase keeps: the status, the day it got there, and what the item waits on, or what came of it, such as the version a merge released. An item the board shows is here only once it has a result, and then with the result alone, since the board says the rest. Each card folds, as an item's does.</dd>
+    <dd>A card per item whose status the phase keeps: the status, the day it got there, and what the item waits on, or what came of it, such as the version a merge released. An item the board shows is here only once it has a result, and then with the result alone, since the board says the rest, or once it has moved, with the link to its new page. Each card folds, as an item's does.</dd>
     <dt>Figures</dt>
     <dd>Headline numbers. The note under them says which were counted from the project's data, and on what day.</dd>
     <dt>Definitions</dt>
@@ -120,7 +120,7 @@
 
 <section class="block" id="guide-statuses">
   <h3>Statuses</h3>
-  <p class="intro">Every item is in one of five states, and a risk can end in a sixth; the page words each one the way the item's type says it: a decision is Taken, a PR Merged, a risk Closed.</p>
+  <p class="intro">Every item is in one of five states, a risk can end in a sixth, and any item can be set aside in three more; the page words each one the way the item's type says it: a decision is Taken, a PR Merged, a risk Closed.</p>
   <ul>
     <li><strong>Waits on the owner</strong>: the owner acts next, such as merging a PR, taking a decision or changing a setting. The header lists these under The owner, each with what to do.</li>
     <li><strong>Ready</strong>: everything it needs is done, and the agent can start it.</li>
@@ -128,6 +128,9 @@
     <li><strong>Done</strong>: finished, with the day.</li>
     <li><strong>Happened</strong>: a risk only, when what it describes came true, with the day and the question or the blocker that took it over.</li>
     <li><strong>Dropped</strong>: struck through, with why.</li>
+    <li><strong>Deferred</strong>: any item, parked until a trigger outside the project, which the page names beside its chip. Deferred lists it, and it no longer holds its phase open.</li>
+    <li><strong>To be moved</strong>: any item another project will take, named beside its chip. Deferred lists it too.</li>
+    <li><strong>Moved</strong>: any item another project has taken, with a chip to its card on that project's page, where a chip links back. It is done with here.</li>
   </ul>
   <p>Each row below is a type of item, in the words its statuses take, and what the owner does while one waits on them:</p>
   <!--statuses-->

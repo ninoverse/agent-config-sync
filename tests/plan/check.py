@@ -203,6 +203,22 @@ def check_example(tmp):
         (reused / "reuse.toml").write_text('[[section]]\nid = "log"\ntitle = "The log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n')
         run = render(reused, tmp / "reused-log-out")
         expect(run.returncode == 1 and "Reuse holds only defs sections" in run.stderr, f"and nothing else: {run.stderr}")
+    parked = copy_with(tmp, "parked", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the next release train"')
+    if parked is not None and replace_in(parked, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"'):
+        run = render(parked, tmp / "parked-out")
+        work = between((tmp / "parked-out" / "phases" / "deferred.html").read_text(), 'id="work"', "</section>") if run.returncode == 0 else ""
+        expect('<span class="n">EX-2</span>' in work and 'st-deferred">Deferred · 7 Oct</span><span class="waits">waits on the next release train</span>' in work, f"Deferred lists what another phase deferred, with what it waits on: {run.stderr} {work[-600:]}")
+        expect("EX-2 is still" not in run.stderr, f"and a deferred item doesn't hold its phase open: {run.stderr}")
+    moved = copy_with(tmp, "moved", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "moved"\non = 2026-10-08\nto = "https://example.com/health-v2#ex-1"')
+    if moved is not None and replace_in(moved, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nfrom = "https://example.com/health-v1#hc-1"\n'):
+        run = render(moved, tmp / "moved-out")
+        moved_build = (tmp / "moved-out" / "index.html").read_text() if run.returncode == 0 else ""
+        moved_plan = (tmp / "moved-out" / "phases" / "plan.html").read_text() if run.returncode == 0 else ""
+        moved_deferred = (tmp / "moved-out" / "phases" / "deferred.html").read_text() if run.returncode == 0 else ""
+        moved_card = between(between(moved_build, 'id="results"', "</section>"), '<span class="n">EX-2</span>', "</article>")
+        expect('st-moved">Moved · 8 Oct</span><a class="pill link" href="https://example.com/health-v2#ex-1" target="_blank" rel="noopener">Its new page</a>' in moved_card, f"a moved item, though on the board, shows in the results with a link to its card on the page that took it: {run.stderr} {moved_card[:400]}")
+        expect('href="https://example.com/health-v1#hc-1" target="_blank" rel="noopener">Its old page</a>' in moved_plan, "and an item moved in links back to where it came from")
+        expect('<span class="n">EX-2</span>' not in moved_deferred, "a moved item is done with here, so Deferred doesn't list it")
     came_true = '[status.RK1]\nstatus = "happened"\non = 2026-10-07\nresult = "It did, under load: [[Q1]] took it over."'
     happened = copy_with(tmp, "happened", EXAMPLE, "build.toml", '[status.RK1]\nstatus = "blocked"', came_true)
     if happened is not None:
@@ -411,6 +427,9 @@ BROKEN = [
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "pieces"', "`type` is one of"),
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
     (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"\n', "", "a blocked item says what it waits on"),
+    (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "to-move"', "an item to be moved names the project that takes it, in `to`"),
+    (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "moved"\nto = "the next project"', "a moved item links its card on the other project's page"),
+    (EXAMPLE, "build.toml", '[status.EX-1]\nstatus = "done"', '[status.EX-1]\nstatus = "deferred"', "a deferred item says what it waits on"),
     (FULL, "plan.toml", 'status = "dropped"\nwhy = "The first one covers it."', 'status = "happened"\nresult = "Two were needed."', "only a risk happens"),
     (FULL, "plan.toml", 'status = "done"\non = 2026-10-06\nresult = "They are hashed before export."', 'status = "happened"\non = 2026-10-06', "a risk that happened names, in `result`"),
     (EXAMPLE, "project.toml", 'why = "Two routes', 'what = "Two routes', "a phase that is not needed says why"),
