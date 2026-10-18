@@ -197,7 +197,7 @@ def check_example(tmp):
         render(shipped, tmp / "shipped-out")
         board = (tmp / "shipped-out" / "index.html").read_text()
         expect('<div class="scroll" data-start="2">' in board, "once its first column is done, a board opens at the next, which has work left")
-    reused = copy_with(tmp, "reused", EXAMPLE, "project.toml", '[phases.reuse]\nstatus = "not-needed"\nwhy = "Two routes are too little for another project to take. The service template\'s README links this project instead."', '[phases.reuse]\nstatus = "done"')
+    reused = copy_with(tmp, "reused", EXAMPLE, "project.toml", '[phases.reuse]\nstatus = "not-needed"\nwhy = "Two routes are too little for another project to take. The service template\'s README links this project instead."', '[phases.reuse]\nstatus = "now"')
     if reused is not None:
         (reused / "reuse.toml").write_text('[[section]]\nid = "takeaways"\ntitle = "What another project can take"\nkind = "defs"\n\n[[section.def]]\nterm = "The probes"\ntext = "[[EX-1]] and [[EX-2]], copied as they are."\n\n[[section.def]]\nterm = "The timeout"\ntext = "[[EX-3]], for a slow database."\n')
         run = render(reused, tmp / "reused-out")
@@ -207,11 +207,26 @@ def check_example(tmp):
         run = render(reused, tmp / "reused-log-out")
         expect(run.returncode == 1 and "Reuse holds only defs sections" in run.stderr, f"and nothing else: {run.stderr}")
     parked = copy_with(tmp, "parked", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the next release train"')
-    if parked is not None and replace_in(parked, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"'):
+    if parked is not None:
         run = render(parked, tmp / "parked-out")
         work = between((tmp / "parked-out" / "phases" / "deferred.html").read_text(), 'id="work"', "</section>") if run.returncode == 0 else ""
         expect('<span class="n">EX-2</span>' in work and 'st-deferred">Deferred · 7 Oct</span><span class="waits">waits on the next release train</span>' in work, f"Deferred lists what another phase deferred, with what it waits on: {run.stderr} {work[-600:]}")
-        expect("EX-2 is still" not in run.stderr, f"and a deferred item doesn't hold its phase open: {run.stderr}")
+        build_tab = between((tmp / "parked-out" / "index.html").read_text(), 'data-phase="build"', "</a>") if run.returncode == 0 else ""
+        expect('<span class="count" title="3 of 5 done, dropped items aside">3/5</span>' in build_tab, f"and a deferred item no longer counts in its phase: {build_tab}")
+    early = copy_with(tmp, "early", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"', '[phases.plan]\nstatus = "now"')
+    if early is not None:
+        run = render(early, tmp / "early-out")
+        expect(run.returncode == 1 and "Build has started, but Plan isn't done: say why it starts early, in `early`" in run.stderr, f"a phase starts once the one it follows is done: {run.stderr}")
+        if replace_in(early, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "now"\nearly = "the fix the outage needed, before the plan\'s approval"'):
+            run = render(early, tmp / "early-out")
+            started = between((tmp / "early-out" / "index.html").read_text(), 'id="on-2026-10-05"', "</li>") if run.returncode == 0 else ""
+            expect("Build starts early: the fix the outage needed, before the plan's approval" in started, f"or early, saying why, which the agenda shows: {run.stderr} {started}")
+    reopened = copy_with(tmp, "reopened", EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "now"\nreopened = [{ ended = 2026-10-06, on = 2026-10-07 }]')
+    if reopened is not None:
+        run = render(reopened, tmp / "reopened-out")
+        agenda = (tmp / "reopened-out" / "index.html").read_text() if run.returncode == 0 else ""
+        ended, again = between(agenda, 'id="on-2026-10-06"', "</ul>"), between(agenda, 'id="on-2026-10-07"', "</ul>")
+        expect("Build ends" in ended and "Build reopens" in again, f"a phase that reopened keeps the day it ended, and the day it reopened: {run.stderr} {ended[:300]} {again[:300]}")
     moved = copy_with(tmp, "moved", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "moved"\non = 2026-10-08\nto = "https://example.com/health-v2#ex-1"')
     if moved is not None and replace_in(moved, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nfrom = "https://example.com/health-v1#hc-1"\n'):
         run = render(moved, tmp / "moved-out")
@@ -411,7 +426,6 @@ def check_full(tmp):
 # Each stale copy of the example: the file, the text replaced, its replacement,
 # and the warning it must print. The page is still written.
 STALE = [
-    ("project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"', "Build is done, but EX-2 is still `open`"),
     ("plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]"]]', "D2 is a decision taken, but no PR or setting names it or needs it"),
     ("build.toml", 'on = 2026-10-06\nresult = "Released 1.4.0.', 'on = 2026-10-06\nnote = "Released 1.4.0.', "EX-1 is a merged PR without a `result`"),
     ("build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "done"', "C2 is `blocked`, but everything it needs is done"),
@@ -427,6 +441,10 @@ STALE = [
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
+    (EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"', "Build is done, but EX-2 is still `open`: new work reopens it"),
+    (EXAMPLE, "project.toml", '[phases.verify]\nstatus = "now"', '[phases.verify]\nstatus = "done"', "Verify is done, but Build isn't: it ends only after it"),
+    (EXAMPLE, "project.toml", 'status = "now"\nstart = 2026-10-05', 'status = "now"\nstart = 2026-10-02', "Build starts on 2 Oct, before Plan ends on 3 Oct: say why, in `early`"),
+    (EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "now"\nreopened = [{ on = 2026-10-06 }]', "each of `reopened` is { ended = <date>, on = <date> }"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "queues"\nkind = "prose"\nbody = "<p>One at a time.</p>"\n\n[[section]]\nid = "settings"', "Plan holds only items sections"),
     (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "Analysis holds only items sections"),
     (EXAMPLE, "build.toml", '[[section]]\nid = "questions"', '[[section]]\nid = "log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n\n[[section]]\nid = "questions"', "Build holds only board, results and items sections: what happened is in the Agenda"),

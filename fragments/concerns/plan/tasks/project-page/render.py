@@ -49,6 +49,14 @@ PHASE_NAME = dict(PHASES)
 # What the project leaves, after the six phases and unnumbered, since they don't run in
 # their order: what another project can take, the story of this one, and what waits.
 LEAVES = ("reuse", "retrospective", "deferred")
+# The phases' order. A phase starts once those it follows are done, or not needed, but
+# Verify and Reuse, which start once Build has; one that starts early says why. A phase
+# that runs beside others ends only after them, and never early.
+FOLLOWS = {"research": ("brief",), "analysis": ("research",), "plan": ("analysis",), "build": ("plan",), "retrospective": ("build", "verify")}
+STARTS_WITH = {"verify": "build", "reuse": "build"}
+ENDS_AFTER = {"verify": ("build",), "reuse": ("build", "verify"), "retrospective": ("brief", "research", "analysis", "plan", "build", "verify", "reuse")}
+# The phases that keep the statuses of live work, which reopen when new work comes in.
+LIVE = ("build", "verify")
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -262,12 +270,25 @@ def read_project(data_dir):
             status = "to-come"
         if status == "not-needed" and not entry.get("why"):
             problem(where, "a phase that is not needed says why, in `why`")
+        if not isinstance(entry.get("early", ""), str):
+            problem(where, "`early` says why the phase starts before those it follows are done")
+        reopened = []
+        for index, again in enumerate(entry.get("reopened", [])):
+            ended = as_date(again.get("ended"), where, f"reopened {index + 1}: ended") if isinstance(again, dict) else None
+            on = as_date(again.get("on"), where, f"reopened {index + 1}: on") if isinstance(again, dict) else None
+            if ended is None or on is None or on < ended:
+                problem(where, "each of `reopened` is { ended = <date>, on = <date> }: the day the phase ended, and the later day it reopened")
+                continue
+            reopened.append((ended, on))
         project["status"][key] = {
             "status": status,
             "why": entry.get("why", ""),
             "start": as_date(entry.get("start"), where, "start"),
             "end": as_date(entry.get("end"), where, "end"),
+            "early": entry.get("early", "") if isinstance(entry.get("early", ""), str) else "",
+            "reopened": reopened,
         }
+    check_order(project["status"])
     for index, entry in enumerate(project.get("glossary", [])):
         where = f"project.toml [[glossary]] {index + 1}"
         required(entry, "term", where)
@@ -288,6 +309,39 @@ def read_project(data_dir):
         if not all(isinstance(note, str) for note in handoff.get("notes", [])):
             problem("project.toml [handoff]", "`notes` is a list of texts")
     return project
+
+
+def names(keys):
+    words = [PHASE_NAME[key] for key in keys]
+    return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
+
+
+def check_order(statuses):
+    """The phases' order, in their states and their dates: a phase starts once those it
+    follows are done, or with `early` saying why, and ends only after those it runs beside."""
+    finished = {key for key, state in statuses.items() if state["status"] in ("done", "not-needed")}
+    started = {key for key, state in statuses.items() if state["status"] in ("now", "done")}
+    for key, name in PHASES:
+        state, where = statuses[key], f"project.toml [phases.{key}]"
+        if key in started and not state["early"]:
+            waiting = [other for other in FOLLOWS.get(key, ()) if other not in finished]
+            if waiting:
+                problem(where, f"{name} has started, but {names(waiting)} {'isn' if len(waiting) == 1 else 'aren'}'t done: say why it starts early, in `early`")
+            if key in STARTS_WITH and STARTS_WITH[key] not in started:
+                problem(where, f"{name} has started, but {PHASE_NAME[STARTS_WITH[key]]} hasn't: say why it starts early, in `early`")
+            for other in FOLLOWS.get(key, ()):
+                if state["start"] and statuses[other]["end"] and state["start"] < statuses[other]["end"]:
+                    problem(where, f"{name} starts on {day(state['start'])}, before {PHASE_NAME[other]} ends on {day(statuses[other]['end'])}: say why, in `early`")
+            other = STARTS_WITH.get(key)
+            if other and state["start"] and statuses[other]["start"] and state["start"] < statuses[other]["start"]:
+                problem(where, f"{name} starts on {day(state['start'])}, before {PHASE_NAME[other]} starts on {day(statuses[other]['start'])}: say why, in `early`")
+        if state["status"] == "done":
+            open_ = [other for other in ENDS_AFTER.get(key, ()) if other not in finished]
+            if open_:
+                problem(where, f"{name} is done, but {names(open_)} {'isn' if len(open_) == 1 else 'aren'}'t: it ends only after {'it' if len(open_) == 1 else 'them'}")
+            for other in ENDS_AFTER.get(key, ()):
+                if state["end"] and statuses[other]["end"] and state["end"] < statuses[other]["end"]:
+                    problem(where, f"{name} ends on {day(state['end'])}, before {PHASE_NAME[other]} ends on {day(statuses[other]['end'])}")
 
 
 def read_phases(data_dir, statuses):
@@ -499,7 +553,11 @@ def check_states(project, phases):
     for item_id, item in ITEMS.items():
         where, status = item["where"], item.get("status")
         if status in UNFINISHED and item["status_from"] and statuses[item["status_from"]]["status"] == "done":
-            warn(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`")
+            # Live work reopens its phase; anywhere else, a done phase holding it looks stale.
+            if item["status_from"] in LIVE:
+                problem(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`: new work reopens it, with `reopened`")
+            else:
+                warn(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`")
         if item["type"] == "decision" and status == "done" and has_prs:
             if not any(ITEMS[other]["type"] in CARRY_OUT for other in item["needed_by"] + item["mentioned_in"]):
                 warn(where, f"{item_id} is a decision taken, but no PR or setting names it or needs it")
@@ -1083,15 +1141,20 @@ def dated(project, phases):
         if item["amended"] and item["amended"]["on"]:
             found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended", "amended", item_id))
     # A phase's dates, each said once: one that starts and ends the same day is one
-    # mark, and an end on the day of its approval is the approval.
+    # mark, and an end on the day of its approval is the approval. An early start says
+    # why, and a phase that reopened keeps the day it ended, and the day it reopened.
     for key, state in project["status"].items():
         name, start, end = PHASE_NAME[key], state["start"], state["end"]
         approved = phases.get(key, {}).get("approved")
+        early = f" early: {state['early']}" if state["early"] else ""
+        for ended, on in state["reopened"]:
+            found.append((ended, "phase", f"{name} ends", f"{name} ends", None, None))
+            found.append((on, "phase", f"{name} reopens", f"{name} reopens", None, None))
         if start and start == end:
-            found.append((start, "phase", f"{name}, one day", f"{name}, one day", None, None))
+            found.append((start, "phase", f"{name}, one day{',' + early if early else ''}", f"{name}, one day", None, None))
             continue
         if start:
-            found.append((start, "phase", f"{name} starts", f"{name} starts", None, None))
+            found.append((start, "phase", f"{name} starts{early}", f"{name} starts", None, None))
         if end and end != approved:
             found.append((end, "phase", f"{name} ends", f"{name} ends", None, None))
     for key, data in phases.items():

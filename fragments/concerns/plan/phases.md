@@ -28,6 +28,13 @@ they answer.
   or not written yet, doesn't open. Build and Verify can both be Now: Verify
   starts with the first merge. A phase that is Now shows on its tab how many
   of its items are done, and Deferred's tab how many items wait.
+- The phases run in order: each starts once the one before it is Done or Not
+  needed, but Verify and Reuse, which start once Build has. One that starts
+  early says why, and the Agenda shows it on the day it started. A phase that
+  runs beside others ends only after them, never early: Verify after Build,
+  Reuse after both, and the Retrospective after every other. Build and Verify
+  reopen when new work comes in, and keep the day each ended and the day it
+  reopened.
 - The page shows the current state, and the Agenda what happened, by day.
   Each publish, tell the user what changed since the last, as rendering
   against the data as last published lists it: a correction first, saying
