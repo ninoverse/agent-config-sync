@@ -52,10 +52,11 @@ It writes nothing, and names the file and the item, when:
 - an id is used twice anywhere on the page, a link points at an id nothing
   has, or a `[[ref]]` or a `needs` names no item;
 - a status is unknown, a Blocked or Deferred item doesn't say what it waits
-  on, a Dropped item doesn't say why, one To be moved doesn't name its project
-  in `to`, or a Moved one doesn't link its card there in `to`; or a phase that
-  is Not needed doesn't say why, or has a `<phase>.toml`: its tab doesn't
-  open, so nothing in it would show;
+  on, a Blocked one waits on `owner`, which makes it Open, a Dropped item
+  doesn't say why, one To be moved doesn't name its project in `to`, or a
+  Moved one doesn't link its card there in `to`; or a phase that is Not
+  needed doesn't say why, or has a `<phase>.toml`: its tab doesn't open, so
+  nothing in it would show;
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
@@ -105,12 +106,14 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   `<span class="pill ...">` and nothing else, such as what a comparison found,
   shows as a chip instead, so a folded card shows it. Optionally, it has:
   - `short`, the name it goes by wherever it is linked;
-  - `kind`: `major`, `minor`, `patch`, `owner` or `together`;
+  - `kind`: `major`, `minor`, `patch` or `owner`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
     `result`, once it lands: `open`, `ready`, `blocked`, `done` or `dropped`;
     `happened`, for a risk; or, for any item, `deferred`, `to-move`, with the
     project that takes it in `to`, or `moved`, with its card's address there
-    in `to`;
+    in `to`. A deferred item's `waits` is `owner` when it waits on the user's
+    go, or their call on a question or a decision, which its card shows as
+    theirs, and the header counts under them;
   - `from`, on an item moved in from another project, its card's address on
     that project's page;
   - `url`, the PR's address once it is open, where its state is read from;

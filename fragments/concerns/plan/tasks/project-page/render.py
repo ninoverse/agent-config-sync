@@ -56,7 +56,7 @@ PARKED = ("deferred", "to-move")
 HAPPENS = ("risk",)
 # The types of item that carry out a decision.
 CARRY_OUT = ("pr", "setting")
-KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner", "together": "Together"}
+KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner"}
 # What a status reads as for each type of item, and what the user does while one is open;
 # for some, what its `needs` read as on its card, and on the cards of what it needs.
 TYPES = {
@@ -117,7 +117,6 @@ KIND_MEANING = {
     "minor": "Merging it releases a minor version: something new, and nothing that worked breaks.",
     "patch": "Merging it releases a patch: a fix, with nothing new.",
     "owner": "Only the owner can do it, such as a setting in a service they own.",
-    "together": "The owner and the agent do it together, in a session.",
 }
 SECTION_KINDS = ("prose", "table", "repos", "items", "board", "results", "figures", "defs")
 SOURCES = {"coined": "Coined for this project", "borrowed": "Borrowed from elsewhere"}
@@ -349,6 +348,8 @@ def check_status(entry, item_type, where):
         problem(where, "only a risk happens: any other item that is finished is `done`")
     elif status == "happened" and not entry.get("result"):
         problem(where, "a risk that happened names, in `result`, the question or the blocker that took it over")
+    elif status == "blocked" and entry.get("waits") == "owner":
+        problem(where, "an item that waits on the owner is `open`: `waits = \"owner\"` is for one deferred until they say")
     elif status == "deferred" and not entry.get("waits") and not entry.get("needs"):
         problem(where, "a deferred item says what it waits on, in `waits` or `needs`")
     elif status == "to-move" and not entry.get("to"):
@@ -643,7 +644,9 @@ def state_line(item):
     if item.get("on"):
         line += f' <span class="on">{day(item["on"])}</span>'
     note = ""
-    if status in ("blocked", "deferred"):
+    if status == "deferred" and item.get("waits") == "owner":
+        line += f' <span class="mine">{yours(item)}</span>'
+    elif status in ("blocked", "deferred"):
         note = item.get("waits") or refs_list(item["needs"])
         prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
         note = f"{prefix} {note}" if note else ""
@@ -690,6 +693,12 @@ def day_pill(date):
     return f'<span class="pill day">{day(date)}</span>'
 
 
+def yours(item):
+    """What the owner gives to start an item deferred until they say: a call on a question
+    or a decision, a go on anything else."""
+    return "Your call" if item.get("type") in ("question", "decision") else "Your go"
+
+
 def waits_label(item):
     return TYPES.get(item.get("type"), {}).get("waits", "waits on").capitalize()
 
@@ -697,7 +706,8 @@ def waits_label(item):
 def waits_tag(item):
     """What a waiting item waits on, or where it goes, as words beside its chip, as a board
     chip says it: a folded card shows it, and its references are text, since a summary is a
-    toggle. A moved item has a chip instead, to its card on the page that took it."""
+    toggle. One deferred until the owner says, and a moved item, have a chip instead: the
+    owner's, and one to its card on the page that took it."""
     status = item.get("status")
     if status == "moved":
         return f'<a class="pill link" href="{esc(item.get("to", ""))}" target="_blank" rel="noopener">Its new page</a>'
@@ -705,6 +715,8 @@ def waits_tag(item):
         return f'<span class="waits">to {refs_as_text(item.get("to", ""))}</span>'
     if status not in ("blocked", "deferred"):
         return ""
+    if status == "deferred" and item.get("waits") == "owner":
+        return f'<span class="pill ask">{yours(item)}</span>'
     note = item.get("waits") or refs_list(item["needs"], plain=True)
     prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
     return f'<span class="waits">{prefix} {refs_as_text(note)}</span>' if note else ""
@@ -1152,11 +1164,20 @@ def agenda_day(entries):
     return "".join(lines)
 
 
+def parked_line(count, linked):
+    """Under the owner's column, how many items are deferred until the owner says, linked
+    to Deferred, which lists them."""
+    if not count:
+        return ""
+    words = f"Deferred until you say: {count}"
+    return f'<p class="more"><a href="#deferred">{words}</a></p>' if linked else f'<p class="more">{words}</p>'
+
+
 def calendar_view(project, phases):
     """The header's calendar, every month the project spans with today's shown; who
-    holds the ball, which the header shows under it: the user, the agent, or a date
-    coming up; and the agenda: every date coming up, the notes for the next session,
-    and what happened."""
+    holds the ball, which the header shows under it: the user, with what they have
+    deferred, the agent, or a date coming up; and the agenda: every date coming up,
+    the notes for the next session, and what happened."""
     found = dated(project, phases)
     by_day = {}
     for date, cls, text, label, word, ref in found:
@@ -1175,6 +1196,8 @@ def calendar_view(project, phases):
     ahead = sorted((e for e in found if e[0] > TODAY or (e[0] == TODAY and e[1] == "event")), key=lambda e: e[0])
     owner = [i for i, item in ITEMS.items() if item.get("status") == "open"]
     agent = [i for i, item in ITEMS.items() if item.get("status") == "ready"]
+    # What waits on the owner, but not now: counted, not listed, since it isn't to do yet.
+    parked = sum(1 for item in ITEMS.values() if item.get("status") == "deferred" and item.get("waits") == "owner")
 
     def column(title, rows, empty, more=""):
         body = "".join(rows) if rows else f'<li class="none">{empty}</li>'
@@ -1187,7 +1210,7 @@ def calendar_view(project, phases):
     more = f'<p class="more"><a href="#coming-up">{len(ahead) - 3} more in the agenda</a></p>' if len(ahead) > 3 else ""
     ball = (
         '<section class="hold" id="ball" aria-labelledby="ball-title"><h2 id="ball-title">Who holds the ball</h2><div class="ball">'
-        + column("The owner", owner_rows, "Nothing to do.")
+        + column("The owner", owner_rows, "Nothing to do.", parked_line(parked, "deferred" in phases))
         + column("The agent", agent_rows, "Nothing ready.")
         + column("A date", date_rows, "No date ahead.", more)
         + "</div></section>"

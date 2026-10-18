@@ -241,6 +241,17 @@ def check_example(tmp):
     expect('id="g1"' in phase["brief"], "the brief holds the ground rules")
     t1 = between(phase["deferred"], 'id="t1"', "</article>")
     expect('Waiting</span><span class="waits">waits on the metrics stack</span></span></summary>' in t1 and "<dt>Waits on</dt>" not in t1, f"a blocked card says what it waits on beside its chip, folded, and not again under it: {t1[:400]}")
+    t2 = between(phase["deferred"], 'id="t2"', "</article>")
+    expect('<span class="pill st-deferred">Deferred</span><span class="pill ask">Your go</span></span></summary>' in t2 and "waits on" not in t2, f"an item deferred until the owner says shows it as theirs, beside its chip: {t2[:400]}")
+    yours = copy_with(tmp, "yours", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "deferred"\nwaits = "owner"')
+    if yours is not None and replace_in(yours, "build.toml", 'id = "Q1"\ntitle = "The probe\'s timeout in production"\nstatus = "done"', 'id = "Q1"\ntitle = "The probe\'s timeout in production"\nstatus = "deferred"\nwaits = "owner"'):
+        run = render(yours, tmp / "yours-out")
+        build = (tmp / "yours-out" / "index.html").read_text() if run.returncode == 0 else ""
+        chip = between(build, '<a class="chip s-deferred" href="#ex-2">', "</a>")
+        expect('<span class="mine">Your go</span>' in chip and "waits on" not in chip, f"a board chip says it too: {run.stderr} {chip}")
+        expect('<span class="pill ask">Your call</span>' in between(build, 'id="q1"', "</article>"), "and a question deferred until the owner says waits on their call")
+        owner = between(between(build, 'id="ball"', "</section>"), "<h3>The owner</h3>", "</div>")
+        expect('<p class="more"><a href="#deferred">Deferred until you say: 3</a></p>' in owner and "EX-2" not in owner, f"the header counts what waits on the owner but not yet, without listing it: {owner}")
     sc2 = between(phase["verify"], '<span class="n">SC2</span>', "</article>")
     expect('<span class="waits">waits on C2 Cut the database in staging</span>' in sc2 and '<dt>Waits on</dt><dd><ul class="list"><li><a class="ref" href="#c2">' in sc2, f"and when it waits on items, they stay links under the fold: {sc2[:500]}")
     sc1, c1 = between(phase["brief"], 'id="sc1"', "</article>"), between(phase["verify"], 'id="c1"', "</article>")
@@ -258,6 +269,7 @@ def check_example(tmp):
     owner, agent = between(ball, "<h3>The owner</h3>", "</ul>"), between(ball, "<h3>The agent</h3>", "</ul>")
     expect("EX-2" in owner and "EX-1" not in owner and "Q1" not in owner, f"the owner's column lists the open items, and only those: {owner}")
     expect("EX-3" in agent and "EX-2" not in agent, f"the agent's column lists the ready items: {agent}")
+    expect('<p class="more"><a href="#deferred">Deferred until you say: 1</a></p>' in between(ball, "<h3>The owner</h3>", "</div>") and "T2" not in owner, "and counts, under them, what is deferred until the owner says")
     order = [page.find(mark) for mark in ('class="months"', 'class="glance"', 'id="ball"', '<nav class="phases"')]
     expect(-1 not in order and order == sorted(order), f"the calendar, the card under it, who holds the ball, then the phases: {order}")
     expect('<p class="glance">PR statuses as of 7 Oct 2026, 18:00 UTC.</p>' in page, "the card says when the PRs' statuses were read")
@@ -267,7 +279,7 @@ def check_example(tmp):
     expect('Renovate\'s weekly run <span class="automated">Automated</span>' in between(page, 'id="coming-up"', "</section>"), "the agenda marks the automated run too")
     expect("<th>Waits on the owner</th>" in phase["guides"] and "<th>The owner's part</th>" in phase["guides"], "the guide's statuses table names the owner, not you")
     expect('<span class="pill k-owner">Owner</span>' in phase["plan"], "an item only the owner can do reads Owner")
-    expect('class="more"' not in ball, "with three dates or fewer ahead, nothing points to more")
+    expect('class="more"' not in between(ball, "<h3>A date</h3>", "</div>"), "with three dates or fewer ahead, nothing points to more")
     asked = copy_with(tmp, "asked", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"')
     if asked is not None:
         render(asked, tmp / "asked-out")
@@ -427,6 +439,7 @@ BROKEN = [
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "pieces"', "`type` is one of"),
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
     (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"\n', "", "a blocked item says what it waits on"),
+    (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"', 'waits = "owner"', "an item that waits on the owner is `open`"),
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "to-move"', "an item to be moved names the project that takes it, in `to`"),
     (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "moved"\nto = "the next project"', "a moved item links its card on the other project's page"),
     (EXAMPLE, "build.toml", '[status.EX-1]\nstatus = "done"', '[status.EX-1]\nstatus = "deferred"', "a deferred item says what it waits on"),

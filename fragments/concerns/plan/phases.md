@@ -115,10 +115,11 @@ from the lesson.
   took it over: it is no longer a risk. What has already happened is never
   written as a risk.
 - Any item can be set aside: Deferred, parked until a trigger outside the
-  project, which it names; To be moved, once the user decides another project
-  takes it, naming that project; or Moved, once that project's page has it,
-  linking its card there, which links back. An item set aside no longer holds
-  its phase open, and Deferred lists it until it moves.
+  project, which it names, or until the user says, which the page marks as
+  theirs; To be moved, once the user decides another project takes it, naming
+  that project; or Moved, once that project's page has it, linking its card
+  there, which links back. An item set aside no longer holds its phase open,
+  and Deferred lists it until it moves.
 - What an item needs is data, not prose: the board's waves come from it, and
   each card lists what needs it and what mentions it.
 - Name an item with its number and its summary, never the number alone: the
@@ -126,12 +127,13 @@ from the lesson.
   put the name after its noun, as in "the merge of HMI-8", never in a
   possessive.
 - Under the calendar, the page says who holds the ball: the owner, the user
-  who decides, merges and changes settings, for every Open item; the agent, for
-  every Ready one; or a date coming up, with an automated run marked as such.
-  The Agenda holds every date the project has, ahead and past, and the notes for
-  the next session. All of it is built from the statuses: never repeat a status
-  in prose, which goes stale the next time it changes. Say each fact once: a
-  field doesn't repeat a chip, such as a PR's kind, nor a card another card.
+  who decides, merges and changes settings, for every Open item, with how many
+  are deferred until they say; the agent, for every Ready one; or a date coming
+  up, with an automated run marked as such. The Agenda holds every date the
+  project has, ahead and past, and the notes for the next session. All of it
+  is built from the statuses: never repeat a status in prose, which goes stale
+  the next time it changes. Say each fact once: a field doesn't repeat a chip,
+  such as a PR's kind, nor a card another card.
 - One glossary per project: the terms coined for it, and the terms borrowed. It
   sits in Guides, after the guide to using the page.
 

@@ -10,10 +10,22 @@ type = "deferred"
 id = "T1"
 title = "The probes on the service's dashboard"
 short = "Probe dashboard"
-kind = "together"
 status = "blocked"
 waits = "the metrics stack"
 fields = [
   ["What", "Chart each probe's failures beside the restarts they caused."],
   ["Goes to", "A PR of its own in Plan."],
+]
+
+# `waits = "owner"` parks an item until the user says: their go, or their call
+# on a question. The header counts it under the user, without listing it.
+[[section.item]]
+id = "T2"
+title = "The same probes on the batch workers"
+short = "Probes on workers"
+status = "deferred"
+waits = "owner"
+fields = [
+  ["What", "The workers serve no HTTP, so a probe there would be a file each one touches, or a port opened for it alone."],
+  ["Goes to", "A decision of its own in the Analysis."],
 ]

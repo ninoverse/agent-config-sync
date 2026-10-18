@@ -210,7 +210,6 @@
   .k-minor { color: var(--accent); background: var(--accent-soft); }
   .k-patch { color: var(--open); background: var(--open-soft); }
   .k-owner { color: var(--ready); background: var(--ready-soft); }
-  .k-together { color: var(--done); background: var(--done-soft); }
   /* What a project does with a repository. */
   .u-change { color: var(--accent); background: var(--accent-soft); }
   .u-read { color: var(--na); background: var(--na-soft); }
@@ -276,6 +275,7 @@
   .chip b { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
   .chip .w { grid-column: 1 / -1; color: var(--ink-muted); font-size: 0.72rem; margin-top: 2px; }
   .chip .w .waits { font-size: inherit; }
+  .chip .w .mine { color: var(--open); font-weight: 700; }
   .chip .kind { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.04em; text-transform: uppercase; }
   .chip .kind::before { content: '· '; }
   .chip.s-done { --c: var(--done); opacity: 0.6; }

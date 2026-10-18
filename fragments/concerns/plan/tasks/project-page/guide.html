@@ -11,7 +11,7 @@
     <dt>PR statuses as of</dt>
     <dd>Under the calendar: when the PRs were last read from GitHub, so anything that happened after isn't on the page yet.</dd>
     <dt>Who holds the ball</dt>
-    <dd>Three blocks, one under another, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
+    <dd>Three blocks, one under another, one for each that can hold it. <strong>The owner</strong>: every item that waits on the person who decides, merges and changes settings, each with what to do, such as Merge or Decide, and under them how many items wait on them but not yet, deferred until they say, with a link to Deferred. <strong>The agent</strong>: what the agent does next, the items that are Ready. <strong>A date</strong>: the next three dates, each a link to its day in the Agenda, which lists the rest; <span class="automated">Automated</span> marks a run that starts on its own, such as a scheduled workflow.</dd>
     <dt>Phases</dt>
     <dd>
       <p>A tab per phase, numbered in the order the phases run. The highlighted tab is the one you're reading. Under each name is the phase's state:</p>
@@ -128,7 +128,7 @@
     <li><strong>Done</strong>: finished, with the day.</li>
     <li><strong>Happened</strong>: a risk only, when what it describes came true, with the day and the question or the blocker that took it over.</li>
     <li><strong>Dropped</strong>: struck through, with why.</li>
-    <li><strong>Deferred</strong>: any item, parked until a trigger outside the project, which the page names beside its chip. Deferred lists it, and it no longer holds its phase open.</li>
+    <li><strong>Deferred</strong>: any item, parked until a trigger outside the project, which the page names beside its chip, or until the owner says, which <span class="pill ask">Your go</span> beside it marks, or <span class="pill ask">Your call</span> on a question or a decision. Deferred lists it, and it no longer holds its phase open.</li>
     <li><strong>To be moved</strong>: any item another project will take, named beside its chip. Deferred lists it too.</li>
     <li><strong>Moved</strong>: any item another project has taken, with a chip to its card on that project's page, where a chip links back. It is done with here.</li>
   </ul>

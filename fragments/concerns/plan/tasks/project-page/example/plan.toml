@@ -10,8 +10,8 @@ title = "The PRs"
 kind = "items"
 type = "pr"
 
-# `kind` is what a merge releases (major, minor, patch), or owner or together;
-# its chip says so, so no field repeats it.
+# `kind` is what a merge releases (major, minor, patch), or owner; its chip
+# says so, so no field repeats it.
 # `short` names the item wherever it is linked. `needs` lists what has to be
 # done first: it decides the board's waves, and a loop in it fails the render.
 # `url` is the PR's address once it is open, where its state is read from. A
