@@ -129,7 +129,10 @@ KIND_MEANING = {
     "patch": "Merging it releases a patch: a fix, with nothing new.",
     "owner": "Only the owner can do it, such as a setting in a service they own.",
 }
-SECTION_KINDS = ("prose", "table", "repos", "items", "board", "results", "figures", "defs")
+SECTION_KINDS = ("prose", "table", "repos", "items", "board", "results", "figures", "defs", "timeline", "roads", "risks", "cost", "next", "decisions")
+# The Retrospective's record, built from the other phases rather than written: how the
+# phases went, what was dropped, the risks, what it cost, what waits, and every decision.
+BUILT = ("timeline", "roads", "risks", "cost", "next", "decisions")
 SOURCES = {"coined": "Coined for this project", "borrowed": "Borrowed from elsewhere"}
 # What a project does with each repository it involves, as the chip beside its name says.
 USES = {"change": "Change", "read": "Read", "new": "New"}
@@ -162,6 +165,7 @@ STATES = {}  # each phase's state and dates, as project.toml gives them
 TODAY = None  # the day the state was read
 LINKABLE = None  # the ids a reference links to, on a page that holds only some; None for all
 COUNTED = []  # the headline figures counted from the data, for a `figures` section with `auto`
+SPAN = []  # the project's first and last day, from every date it holds but its events
 SCRIPTED = True  # whether the page runs page.js; the Retrospective alone doesn't
 
 
@@ -484,6 +488,7 @@ def collect_items(phases):
                     amended=amended,
                     on=as_date(item.get("on"), where, "on"),
                     status_from=key if "status" in item else None,
+                    batch=section.get("title") or section.get("id", ""),
                 )
     for key, data in phases.items():
         for item_id, entry in data.get("status", {}).items():
@@ -843,14 +848,20 @@ def card(item):
     return card_html(esc(item["id"]), short or item.get("title", ""), tags, rows, anchor_of(item["id"]), fold=True)
 
 
+def linked_name(item):
+    """An item's summary, linked to its own card where the page holds it."""
+    name = short_of(item)
+    if LINKABLE is None or item["id"] in LINKABLE:
+        name = f'<a class="ref" href="#{anchor_of(item["id"])}">{name}</a>'
+    return name
+
+
 def result_card(item, on_board=False):
     """Where an item stands, in the phase that keeps its status: its number, and its
     summary linked to its own card; its status as a chip; then what it waits on, why
     it was dropped, or what came of it, folded as an item's card is. For an item on the
     board, which says the rest, only what came of it."""
-    name = short_of(item)
-    if LINKABLE is None or item["id"] in LINKABLE:
-        name = f'<a class="ref" href="#{anchor_of(item["id"])}">{name}</a>'
+    name = linked_name(item)
     status, tags, rows = item.get("status"), [], []
     if not on_board and status in ITEM_STATUS:
         tags.append(status_pill(item))
@@ -971,6 +982,9 @@ def render_section(section, key, data, data_dir):
         named = kinds[0] if len(kinds) == 1 else f"{', '.join(kinds[:-1])} and {kinds[-1]}"
         problem(where, f"{PHASE_NAME[key]} holds only {named} sections: {ELSEWHERE[key]}")
         return ""
+    if kind in BUILT and key != "retrospective":
+        problem(where, f"a `{kind}` section is built for the Retrospective, from the other phases")
+        return ""
     if kind != "prose":
         required(section, "title", where)
     if not isinstance(section.get("min_width", 0), int):
@@ -1075,10 +1089,162 @@ def render_section(section, key, data, data_dir):
             # Its terms' column grows to fit the widest, which may be a chip.
             terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in entries)
             parts.append(f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>')
+    elif kind in BUILT:
+        parts.append(built_html(kind, section, where))
     if empty:
         problem(where, "it shows nothing but its title: give it content, or remove it")
     title = f'  <h3>{section["title"]}</h3>\n' if section.get("title") else ""
     return f'<section class="block" id="{section_id}">\n{title}' + "\n".join(parts) + "\n</section>"
+
+
+# ------------------------------------------------------------------ the Retrospective's record
+#
+# What each built part lists, as data, then the HTML that shows it, so another renderer
+# can take the same lists.
+
+
+def phase_span(state):
+    """When a phase ran, in words: its days, or that it runs still."""
+    start, end = state["start"], state["end"]
+    if start and end:
+        return day(start) if start == end else f"{day(start)} – {day(end)}"
+    return f"From {day(start)}" if start else (f"Until {day(end)}" if end else "")
+
+
+def timeline(lines):
+    """Each phase that ran, or was skipped, but the Retrospective and Deferred: its name,
+    when, whether it started early or reopened, and the line written for it, or why
+    it wasn't needed."""
+    rows = []
+    for key, name in PHASES:
+        state = STATES[key]
+        if key in ("retrospective", "deferred") or state["status"] == "to-come":
+            continue
+        marks = (["started early"] if state["early"] else []) + [f"reopened {day(on)}" for _, on in state["reopened"]]
+        said = state["why"] if state["status"] == "not-needed" else lines.get(key, "")
+        rows.append((name, "Not needed" if state["status"] == "not-needed" else phase_span(state), marks, said))
+    return rows
+
+
+def dropped():
+    """Every road not taken: each item dropped, in the order the phases hold them."""
+    return [item for item in ITEMS.values() if item.get("status") == "dropped"]
+
+
+def risks():
+    return [item for item in ITEMS.values() if item["type"] == "risk"]
+
+
+def waiting():
+    """What comes next, by who or what starts it: the owner's say, a trigger outside the
+    project, or another project. Deferred work not yet picked up counts as much as an
+    item another phase set aside."""
+    groups = {"Until the owner says": [], "Waiting on a trigger": [], "Ready to start": [], "To another project": []}
+    for item in ITEMS.values():
+        status = item.get("status")
+        if status == "deferred":
+            groups["Until the owner says" if item.get("waits") == "owner" else "Waiting on a trigger"].append(item)
+        elif status in ("to-move", "moved"):
+            groups["To another project"].append(item)
+        elif item["type"] == "deferred" and status in UNFINISHED:
+            groups[{"open": "Until the owner says", "blocked": "Waiting on a trigger", "ready": "Ready to start"}[status]].append(item)
+    return {name: items for name, items in groups.items() if items}
+
+
+def decisions():
+    """Every decision, by the section that holds it: what was chosen, and when."""
+    batches = {}
+    for item in ITEMS.values():
+        if item["type"] == "decision":
+            batches.setdefault(item["batch"], []).append(item)
+    return batches
+
+
+def cost():
+    """What the data can count of what it took: the days, the PRs by repository, the
+    settings changed by hand, and the decisions."""
+    rows = []
+    if SPAN:
+        first, last = SPAN
+        rows.append(("Time", f"{(last - first).days + 1} days, from {day(first)} to {day(last)}"))
+    prs = [item for item in ITEMS.values() if item["type"] == "pr"]
+    merged = [item for item in prs if item.get("status") == "done"]
+    if prs:
+        by_repo = {}
+        for item in merged:
+            prefix = item["id"].rsplit("-", 1)[0]
+            by_repo[prefix] = by_repo.get(prefix, 0) + 1
+        closed = sum(1 for item in prs if item.get("status") == "dropped")
+        line = f"{len(merged)} merged" + (": " + ", ".join(f"{count} {prefix}" for prefix, count in by_repo.items()) if by_repo else "")
+        rows.append(("PRs", line + (f"; {closed} closed unmerged" if closed else "")))
+    settings = sum(1 for item in ITEMS.values() if item["type"] == "setting" and item.get("status") == "done")
+    if settings:
+        rows.append(("Settings", f"{settings} changed by hand"))
+    taken = sum(1 for item in ITEMS.values() if item["type"] == "decision" and item.get("status") == "done")
+    if taken:
+        rows.append(("Decisions", f"{taken} taken"))
+    return rows
+
+
+def built_html(kind, section, where):
+    """A part of the Retrospective's record, from the lists above. One with nothing to
+    list says so, as a Results section does."""
+    if kind == "timeline":
+        rows = timeline(section.get("lines", {}))
+        written = any(said for *_, said in rows)
+        head = ["Phase", "When"] + (["What came of it"] if written else [])
+        cells = []
+        for name, span, marks, said in rows:
+            when = span + "".join(f' <span class="waits">{mark}</span>' for mark in marks)
+            cells.append([name, when] + ([said] if written else []))
+        return table_html(head, cells, section.get("min_width"), "timeline") if cells else '  <p class="note">No phase has run yet.</p>'
+    if kind == "roads":
+        cards = [result_card(item) for item in dropped()]
+        return "\n".join(cards) if cards else '  <p class="note">Nothing was dropped.</p>'
+    if kind == "risks":
+        cards = []
+        for item in risks():
+            rows = []
+            if item["needs"]:
+                rows.append((TYPES["risk"]["needs"], refs_ul(item["needs"])))
+            if item.get("result"):
+                rows.append(("Result", item["result"]))
+            if item.get("status") == "dropped":
+                rows.append(("Why", item.get("why", "")))
+            tags = [status_pill(item)] if item.get("status") in ITEM_STATUS else []
+            cards.append(card_html(esc(item["id"]), linked_name(item), tags, rows, fold=True))
+        return "\n".join(cards) if cards else '  <p class="note">The register holds no risk.</p>'
+    if kind == "next":
+        groups = waiting()
+        if not groups:
+            return '  <p class="note">Nothing waits.</p>'
+        terms = "".join(
+            f'<dt>{name}</dt><dd><ul class="list">' + "".join(f"<li>[[{item['id']}]] {waits_tag(item)}</li>" for item in items) + "</ul></dd>"
+            for name, items in groups.items()
+        )
+        return f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>'
+    if kind == "decisions":
+        parts, batches = [], decisions()
+        for batch, items in batches.items():
+            # The option chosen has a column only in a batch whose decisions have options;
+            # a decision not taken, or not yet, says so beside its name.
+            with_options = any(item.get("chosen") for item in items)
+            rows = []
+            for item in items:
+                name = f"[[{item['id']}]]" + (f" {status_pill(dict(item, on=None))}" if item.get("status") in ITEM_STATUS and item["status"] != "done" else "")
+                options = dict(option for option in item.get("options", []) if is_pair(option))
+                chosen = f'<span class="key">{esc(item["chosen"])}</span> {options[item["chosen"]]}' if item.get("chosen") in options else ""
+                rows.append([name] + ([chosen] if with_options else []) + [day(item["on"]) if item.get("on") else ""])
+            # A batch is titled only when there are several.
+            heading = f"  <h4>{batch}</h4>\n" if len(batches) > 1 else ""
+            parts.append(heading + table_html(["Decision"] + (["Chosen"] if with_options else []) + ["Day"], rows, section.get("min_width", 640 if with_options else None), "decisions"))
+        return "\n".join(parts) if parts else '  <p class="note">No decision yet.</p>'
+    # What it cost: what the data counts, then what it can't, written.
+    rows = [[label, text] for label, text in cost()] + [row for row in section.get("rows", []) if is_pair(row)]
+    if any(not is_pair(row) for row in section.get("rows", [])):
+        problem(where, "each of `rows` is a [label, text] pair")
+    terms = "".join(f"<dt>{label}</dt><dd>{text}</dd>" for label, text in rows)
+    return f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>' if rows else '  <p class="note">Nothing to count yet.</p>'
 
 
 def amendments_html(ids):
@@ -1762,6 +1928,7 @@ def counted(project, phases):
     # The project's span: what happened, not what is announced.
     dates = [date for date, cls, *_ in dated(project, phases) if cls != "event"]
     if dates:
+        SPAN[:] = [min(dates), max(dates)]
         figures.append(((max(dates) - min(dates)).days + 1, "day, start to finish", "days, start to finish"))
     return [(str(value), one if value == 1 else many) for value, one, many in figures if value]
 

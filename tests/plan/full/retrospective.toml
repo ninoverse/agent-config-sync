@@ -22,6 +22,40 @@ value = "15 s"
 label = "between scrapes"
 
 [[section]]
+id = "how-it-went"
+title = "How it went"
+kind = "timeline"
+
+[section.lines]
+build = "One PR, merged on its second review."
+
+[[section]]
+id = "roads"
+title = "Roads not taken"
+kind = "roads"
+
+[[section]]
+id = "risks-closed"
+title = "Risks, and how they closed"
+kind = "risks"
+
+[[section]]
+id = "what-it-took"
+title = "What it took"
+kind = "cost"
+rows = [["Running costs", "One scrape every 15 seconds."]]
+
+[[section]]
+id = "next"
+title = "What comes next"
+kind = "next"
+
+[[section]]
+id = "decision-log"
+title = "Decision log"
+kind = "decisions"
+
+[[section]]
 id = "cost"
 title = "What it cost"
 kind = "table"

@@ -67,7 +67,7 @@ It writes nothing, and names the file and the item, when:
 - an item is in a phase that doesn't hold its type, the Analysis or the Plan
   has a section other than `items`, Build one other than a `board`, `results`
   or `items`, Verify one other than `items` or `results`, or Reuse one other
-  than `defs`;
+  than `defs`; or a phase other than the Retrospective has a part it builds;
 - a section shows nothing but its title, such as a card section with no
   cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;
@@ -97,7 +97,9 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   `coined` or `borrowed`; and `css`, stylesheets of the project's own, beside
   it.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
-  `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`.
+  `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`;
+  or, in the Retrospective, one of the parts it builds from the other phases,
+  below.
   A section that carries on the one before it can go without a `title`, and
   `--since` then names it by that section's. A phase the user approves, such
   as the Plan, has `approved`, the day they did.
@@ -152,6 +154,13 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
 - A `defs` section is one card of `[[section.def]]`s, each a `term` and its
   `text`, such as the Brief's project. In Reuse, each term is a card of its
   own, titled by it: a piece another project can take.
+- The Retrospective builds its record from the other phases, in sections of
+  their own kinds: `timeline`, how each phase went, with a line for each in
+  `lines`, keyed by the phase; `roads`, every item dropped, with why; `risks`,
+  each risk and how it ended; `cost`, what the data counts of what it took,
+  then `rows`, `[label, text]` pairs for what it can't; `next`, what waits, by
+  who or what starts it; and `decisions`, every decision with the option
+  chosen. One with nothing to list says so.
 - A `figures` section with `auto = true` starts with what the data counts: PRs
   merged, releases, decisions taken, settings changed by hand, lessons adopted,
   and the days from the first date to the last. Its `figure`s follow.

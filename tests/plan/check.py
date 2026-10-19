@@ -386,7 +386,14 @@ def check_full(tmp):
     expect("warning:" not in run.stderr, f"full/ renders without a warning: {run.stderr}")
     page = (out / "index.html").read_text()
     expect('data-open="retrospective"' in page, "full/ opens on its retrospective")
-    expect('<span class="off t-not-needed">' in page and "Nothing here is worth copying." not in page, "a phase that is not needed has a tab that doesn't open")
+    expect('<span class="off t-not-needed">' in page and "Nothing here is worth copying." not in between(page, '<nav class="phases leaves"', "</nav>"), "a phase that is not needed has a tab that doesn't open")
+    built = {sid: between(page, f'id="{sid}"', "</section>") for sid in ("how-it-went", "roads", "risks-closed", "what-it-took", "next", "decision-log")}
+    expect("<td>Build</td><td></td><td>One PR, merged on its second review.</td>" in built["how-it-went"] and "<td>Reuse</td><td>Not needed</td><td>Nothing here is worth copying.</td>" in built["how-it-went"], f"the Retrospective builds how the phases went, each with its line, or why it wasn't needed: {built['how-it-went'][:600]}")
+    expect('<span class="n">MX-2</span>' in built["roads"] and '<span class="n">L3</span>' in built["roads"] and "The first one covers it." in built["roads"], "and every road not taken, from every phase, with why")
+    expect('<span class="n">RK1</span>' in built["risks-closed"] and 'st-done">Closed · 6 Oct<' in built["risks-closed"] and "They are hashed before export." in built["risks-closed"], "and how each risk ended")
+    expect("<dt>Time</dt><dd>38 days, from 1 Sep to 8 Oct</dd>" in built["what-it-took"] and "<dt>PRs</dt><dd>1 merged: 1 MX; 1 closed unmerged</dd>" in built["what-it-took"] and "<dt>Running costs</dt>" in built["what-it-took"], f"and what it took, what the data counts first: {built['what-it-took']}")
+    expect("<dt>Waiting on a trigger</dt>" in built["next"] and 'href="#t1"' in built["next"], "and what comes next, by what starts it")
+    expect('<span class="key">b</span> <code>/stats</code>' in built["decision-log"] and "<h4>" not in built["decision-log"], "and every decision, with the option chosen, a batch titled only when there are several")
     expect(page.count('<span class="off t-done">') == 3, "nor does a phase done but never written, such as full/'s Brief")
     expect('id="cost"' in page and "<th>Days</th>" in page, "a table renders")
     expect('id="old-status"' in page and 'href="#old-status"' in page, "an imported page's ids and links move under its prefix")
@@ -452,6 +459,7 @@ STALE = [
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
+    (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "roads"\ntitle = "Roads not taken"\nkind = "roads"\n\n[[section]]\nid = "pieces"', "a `roads` section is built for the Retrospective"),
     (EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"', "Build is done, but EX-2 is still `open`: new work reopens it"),
     (EXAMPLE, "project.toml", '[phases.verify]\nstatus = "now"', '[phases.verify]\nstatus = "done"', "Verify is done, but Build isn't: it ends only after it"),
     (EXAMPLE, "project.toml", 'status = "now"\nstart = 2026-10-05', 'status = "now"\nstart = 2026-10-02', "Build starts on 2 Oct, before Plan ends on 3 Oct: say why, in `early`"),

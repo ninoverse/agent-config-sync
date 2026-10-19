@@ -337,7 +337,10 @@
   ol.options li { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: baseline; padding: 8px 12px; border: 1px solid var(--rule); border-radius: var(--corner-md); background: var(--bg); }
   ol.options li.chosen { border-color: var(--accent-fill); background: var(--accent-soft); }
   ol.options li.recommended { border-color: var(--outline); background: var(--ready-soft); }
-  ol.options .key { font-family: var(--font-mono); font-weight: 700; }
+  ol.options .key, table.decisions .key { font-family: var(--font-mono); font-weight: 700; }
+  table.decisions td:last-child { white-space: nowrap; }
+  /* The decision log's batches, each a table under its title. */
+  section.block > h4 { margin: 18px 0 8px; font-size: 0.98rem; }
   .vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   /* A simple list: anything that holds several things, such as what mentions an item. */
   ul.list { margin: 0; padding-left: 18px; list-style: disc; }
