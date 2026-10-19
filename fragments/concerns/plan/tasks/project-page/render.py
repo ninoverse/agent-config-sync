@@ -1082,9 +1082,12 @@ def render_section(section, key, data, data_dir):
     elif kind == "defs":
         entries = section.get("def", [])
         empty = not entries
-        if key == "reuse":
-            # Reuse's pieces stand apart: each term a card of its own, titled by it.
-            parts += [card_html("", entry.get("term", ""), rows=[("", entry.get("text", ""))]) for entry in entries]
+        if any(not all(is_pair(field) for field in entry.get("fields", [])) for entry in entries):
+            problem(where, "a definition's `fields` are [label, text] pairs")
+        if key == "reuse" or any("fields" in entry for entry in entries):
+            # Reuse's pieces stand apart, and so does a definition with fields of its own, such
+            # as something only using it revealed: each term a card, titled by it.
+            parts += [card_html("", entry.get("term", ""), rows=[tuple(field) for field in entry["fields"]] if "fields" in entry else [("", entry.get("text", ""))]) for entry in entries]
         else:
             # Its terms' column grows to fit the widest, which may be a chip.
             terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in entries)

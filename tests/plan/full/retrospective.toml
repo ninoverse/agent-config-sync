@@ -22,6 +22,15 @@ value = "15 s"
 label = "between scrapes"
 
 [[section]]
+id = "found"
+title = "Found by using it"
+kind = "defs"
+
+[[section.def]]
+term = "A scrape that timed out"
+fields = [["Expected", "Fifteen seconds is time enough."], ["Observed", "A slow night took twenty."], ["Changed", "Thirty, in [[MX-1]]."]]
+
+[[section]]
 id = "how-it-went"
 title = "How it went"
 kind = "timeline"

@@ -388,6 +388,8 @@ def check_full(tmp):
     expect('data-open="retrospective"' in page, "full/ opens on its retrospective")
     expect('<span class="off t-not-needed">' in page and "Nothing here is worth copying." not in between(page, '<nav class="phases leaves"', "</nav>"), "a phase that is not needed has a tab that doesn't open")
     built = {sid: between(page, f'id="{sid}"', "</section>") for sid in ("how-it-went", "roads", "risks-closed", "what-it-took", "next", "decision-log")}
+    found = between(page, 'id="found"', "</section>")
+    expect("<h4>A scrape that timed out</h4>" in found and "<dt>Observed</dt><dd>A slow night took twenty.</dd>" in found, f"a definition with fields is a card of its own, titled by its term: {found[:400]}")
     expect("<td>Build</td><td></td><td>One PR, merged on its second review.</td>" in built["how-it-went"] and "<td>Reuse</td><td>Not needed</td><td>Nothing here is worth copying.</td>" in built["how-it-went"], f"the Retrospective builds how the phases went, each with its line, or why it wasn't needed: {built['how-it-went'][:600]}")
     expect('<span class="n">MX-2</span>' in built["roads"] and '<span class="n">L3</span>' in built["roads"] and "The first one covers it." in built["roads"], "and every road not taken, from every phase, with why")
     expect('<span class="n">RK1</span>' in built["risks-closed"] and 'st-done">Closed · 6 Oct<' in built["risks-closed"] and "They are hashed before export." in built["risks-closed"], "and how each risk ended")

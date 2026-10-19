@@ -153,7 +153,9 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   then shows the link to its new page.
 - A `defs` section is one card of `[[section.def]]`s, each a `term` and its
   `text`, such as the Brief's project. In Reuse, each term is a card of its
-  own, titled by it: a piece another project can take.
+  own, titled by it: a piece another project can take. So is a definition
+  with `fields`, `[label, text]` pairs in place of its `text`, such as what
+  only using it revealed: Expected, Observed, Changed.
 - The Retrospective builds its record from the other phases, in sections of
   their own kinds: `timeline`, how each phase went, with a line for each in
   `lines`, keyed by the phase; `roads`, every item dropped, with why; `risks`,
