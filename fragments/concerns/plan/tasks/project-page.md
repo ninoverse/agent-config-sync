@@ -49,6 +49,8 @@ later, and nothing else.
 It writes nothing, and names the file and the item, when:
 
 - no phase has content yet;
+- an id doesn't start with its type's letters, which *Project phases* lists,
+  or a PR's starts with another type's rather than its repository's prefix;
 - an id is used twice anywhere on the page, a link points at an id nothing
   has, or a `[[ref]]` or a `needs` names no item;
 - a status is unknown, a Blocked or Deferred item doesn't say what it waits

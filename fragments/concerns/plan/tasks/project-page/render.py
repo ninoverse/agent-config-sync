@@ -100,6 +100,9 @@ TYPE_NAMES = {
     "lesson": ("Lesson", "L1"),
     "deferred": ("Deferred work", "T1"),
 }
+# The letters each type's numbers start with, as its example shows. A PR's are its
+# repository's own, which can't be another type's.
+PREFIXES = {key: re.match(r"[A-Z]+", example).group() for key, (_, example) in TYPE_NAMES.items() if key != "pr"}
 # The types of card each phase holds: a card of any other type belongs elsewhere.
 PHASE_TYPES = {
     "brief": ("criterion", "rule"),
@@ -648,6 +651,11 @@ def check_rules(project, phases):
     running = {}  # the PRs in progress, by repository
     for item_id, item in ITEMS.items():
         where, status = item["where"], item.get("status")
+        letters = re.match(r"[A-Za-z]+", item_id).group()
+        if item["type"] in PREFIXES and letters != PREFIXES[item["type"]]:
+            problem(where, f"{item_id} is a `{item['type']}` item, whose numbers start with {PREFIXES[item['type']]}, such as {TYPE_NAMES[item['type']][1]}")
+        elif item["type"] == "pr" and letters in PREFIXES.values():
+            problem(where, f"{item_id} is a PR, whose number starts with its repository's prefix, such as AC-1: {letters} starts another type's")
         # A question about what to build is a decision, taken before the Plan's approval or
         # deferred; only one amended in since, on the day or after, can still wait.
         later = item["amended"] and item["amended"]["on"] and approved and item["amended"]["on"] >= approved
