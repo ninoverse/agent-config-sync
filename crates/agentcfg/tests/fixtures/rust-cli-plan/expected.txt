@@ -29,10 +29,18 @@ AGENTS.md (region)
     concerns/fragment-authoring/tasks/new-value.md
 .agents/plan-phases.md (region)
     concerns/plan/phases.md
+.agents/close-project.md (region)
+    concerns/plan/tasks/close-project.md
 .agents/create-project.md (region)
     concerns/plan/tasks/create-project.md
+.agents/resume-project.md (region)
+    concerns/plan/tasks/resume-project.md
 .agents/review-project.md (region)
     concerns/plan/tasks/review-project.md
+.agents/split-project.md (region)
+    concerns/plan/tasks/split-project.md
+.agents/update-project.md (region)
+    concerns/plan/tasks/update-project.md
 CLAUDE.md (region)
     language/rust/automation.md
 .claude/skills/gates/SKILL.md (whole)

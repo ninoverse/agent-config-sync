@@ -3,8 +3,7 @@ name: split-project
 title: Splitting a project
 when: Running a project in phases
 description: Move part of a project run in phases into a new project, with a page of its own
-emit: [claude]
-argument-hint: "<artifact url> <new objective>"
+argument-hint: "<page> <new objective>"
 ---
 
 Moves part of a project into a new one, as *Project phases* says of an item To

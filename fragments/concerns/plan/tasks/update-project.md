@@ -3,8 +3,7 @@ name: update-project
 title: Updating a project
 when: Running a project in phases
 description: Record what changed in a project run in phases, and publish its page
-emit: [claude]
-argument-hint: "<artifact url> [what changed]"
+argument-hint: "<page> [what changed]"
 ---
 
 Changes a project's data as *Project phases* says, and publishes its page again.
@@ -13,10 +12,10 @@ The project, and what changed: $ARGUMENTS
 
 ## Steps
 
-1. Read the data as last published: each `src/<file>` beside the page, with the
-   Artifact tool's `read` action by path, into a directory of its own. Edit a
-   copy of it, since `--since` compares with the data as read. A session that
-   published the page itself can start from the copy it kept.
+1. Read the data as last published into a directory of its own: the copy kept
+   at the last publish or, for a page published as a claude.ai artifact, each
+   `src/<file>` beside it, read by path with the Artifact tool. Edit a copy of
+   it, since `--since` compares with the data as read.
 2. Read the notes for the next session, under `[handoff]`, then the Brief.
 3. Make the change in the data, never on the page:
    - a status takes `on`, the day, and its `result`, `why` or `waits`;

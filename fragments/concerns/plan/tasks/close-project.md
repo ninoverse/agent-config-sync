@@ -3,8 +3,7 @@ name: close-project
 title: Closing a project
 when: Running a project in phases
 description: Close a project run in phases once its objective is met
-emit: [claude]
-argument-hint: "<artifact url>"
+argument-hint: "<page>"
 ---
 
 Closes a project once the user says its objective is met, leaving its page as
