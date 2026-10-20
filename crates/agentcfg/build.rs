@@ -78,7 +78,12 @@ fn collect_files(
         let entry = entry?;
         let path = entry.path();
         if entry.file_type()?.is_dir() {
-            collect_files(root, &path, out)?;
+            // Python leaves compiled bytecode in a `__pycache__` beside a script that
+            // another one imports, such as the plan concern's renderer: not content,
+            // and not text `include_str!` can read.
+            if entry.file_name() != "__pycache__" {
+                collect_files(root, &path, out)?;
+            }
         } else if !entry.file_name().to_string_lossy().starts_with('.') {
             // A `.gitkeep` holding an empty value directory is not content.
             out.push((display(path.strip_prefix(root)?)?, path));

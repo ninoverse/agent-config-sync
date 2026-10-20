@@ -18,6 +18,10 @@
 # The screenshot smoke test's Playwright, which `npm ci` installs there.
 /tests/browser-ui/node_modules/
 
+# Python's compiled bytecode, which a script importing the plan concern's renderer
+# leaves beside it. build.rs skips it too.
+__pycache__/
+
 # Coverage artefacts from `cargo llvm-cov`.
 *.profraw
 *.profdata
