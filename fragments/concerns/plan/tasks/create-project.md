@@ -2,27 +2,41 @@
 name: create-project
 title: Building the project page
 when: Running a project in phases
-description: Build or update a project's page from its TOML data, and check it
+description: Start a project run in phases, and build its page from TOML data
 argument-hint: "<data directory> [out directory]"
 ---
 
-Builds the page *Project phases* describes, from TOML files, and checks it
-before anything is published.
+Starts a project as *Project phases* describes, and builds its page from TOML
+files, checked before anything is published. Every skill that runs a project
+renders its page this way: this is the kit's reference, for its checks and its
+data.
 
 The project: $ARGUMENTS
 
-## Start a project
+## Steps
 
-Copy the example outside the repository. A project's data is its own record,
-published beside its page, and not part of any repository:
+1. Agree the page's name with the user, `<main repository>-<objective>`, and
+   the repositories the project involves. Show: the name.
+2. Copy the example outside the repository. A project's data is its own record,
+   published beside its page, and not part of any repository:
 
-```bash
-cp -r .agents/create-project/example <data directory>
-```
+   ```bash
+   cp -r .agents/create-project/example <data directory>
+   ```
 
-Then set `repo`, `objective`, `summary` and `read_at` in `project.toml`, and
-each phase's status, and write the Brief with the user. The example's comments
-say what each field holds.
+   Set `repo`, `objective`, `summary` and `read_at` in `project.toml`, and each
+   phase's status: one not needed says why, and one that starts before those it
+   follows are done says why, in `early`. The example's comments say what each
+   field holds.
+3. Write the Brief with the user, discussing it before anything is written: the
+   problem, the objective, the scope, the success criteria, each with how it is
+   checked, the repositories and the ground rules. Keep the criteria's statuses
+   in `verify.toml`, under `[status]`, so the Brief shows them as agreed.
+4. Render it, as below. Fix every problem, and fix each warning or tell the user
+   why it stands. Show: the line the render prints, and each warning left.
+5. Look at each phase with content at a laptop's width and a phone's, in the
+   `--inline` preview, or with `/take-screenshot` where the repository has it.
+6. Publish it with `/publish-project`.
 
 ## Render
 
@@ -213,24 +227,3 @@ doesn't say it is an amendment, with `amended`.
   `wide = true`. It can take its `body` from a `file` instead, and `prefix`
   moves that file's ids, and the links to them, under a prefix: the way to
   bring in a page that predates the kit.
-
-## Before publishing
-
-Read the state again. For each PR item with a `url` that isn't `done` or
-`dropped`, read the PR with the GitHub tools you have; `render.py` never reaches
-GitHub.
-
-- Merged: `done`, `on` its merge day, with its `result`: what it released, and
-  what its *Done when* showed.
-- Closed without a merge: ask the user whether it is `dropped`, with `why`, or
-  replaced by a new PR.
-- Still open: `open` once it waits only on the user's merge, `ready` or
-  `blocked` while work remains.
-
-Then set `read_at` to now and render with `--since`, given the data as last
-published, and fix each warning or tell the user why it stands. Open the
-`--inline` preview, or capture it with `/take-screenshot` where the repository
-has it, and look at the phase that changed. Then publish `index.html`, with
-`phases/` and the data files, as `src/`, beside it, and tell the user what
-changed, from what `--since` printed: a correction first, saying what was
-wrong.

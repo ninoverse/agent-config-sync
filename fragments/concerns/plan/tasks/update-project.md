@@ -1,0 +1,44 @@
+---
+name: update-project
+title: Updating a project
+when: Running a project in phases
+description: Record what changed in a project run in phases, and publish its page
+emit: [claude]
+argument-hint: "<artifact url> [what changed]"
+---
+
+Changes a project's data as *Project phases* says, and publishes its page again.
+
+The project, and what changed: $ARGUMENTS
+
+## Steps
+
+1. Read the data as last published: each `src/<file>` beside the page, with the
+   Artifact tool's `read` action by path, into a directory of its own. Edit a
+   copy of it, since `--since` compares with the data as read. A session that
+   published the page itself can start from the copy it kept.
+2. Read the notes for the next session, under `[handoff]`, then the Brief.
+3. Make the change in the data, never on the page:
+   - a status takes `on`, the day, and its `result`, `why` or `waits`;
+   - an item that no longer belongs is `dropped`, with `why`, never deleted;
+   - an item added to the Brief, the Research, the Analysis or the Plan once
+     it is done, or approved, is `amended`, with the day and why;
+   - new work in Build or Verify, once done, reopens it, with `reopened`;
+   - a decision taken has its `chosen` option, and `on`;
+   - an item set aside is `deferred`, with what it waits on, or `to-move`,
+     naming the project that takes it.
+
+   Show: each change, in the words the page will use.
+4. After a merge, also:
+   1. confirm the merge from the PR, and check what it released, as *Git flow*
+      says;
+   2. mark the PR `done`, `on` its merge day, with its `result`: what it
+      released, and what its *Done when* showed;
+   3. start the next PR in that repository, the one the board has Ready there,
+      with the user's go where the ground rules ask for it.
+
+   Show: the merge, and what it released.
+5. Update the notes for the next session, under `[handoff]`: what is in flight,
+   where, and what comes next.
+6. Publish with `/publish-project`, which reads the state again, renders with
+   `--since` and tells the user what changed.

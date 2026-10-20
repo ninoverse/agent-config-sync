@@ -9,6 +9,12 @@ phases, and one page tracks it: the project page, which `/create-project`
 builds. Each phase starts with a discussion with the user, and nothing is
 written before they answer.
 
+A skill runs each step of a project, in numbered steps that say what to show
+the user: `/create-project` starts it, `/update-project` records what changes,
+`/publish-project` publishes the page, `/review-project` checks it with fresh
+eyes, `/split-project` moves part of it to a new project, `/close-project`
+closes it, and `/resume-project` picks it up in a new session.
+
 ## The page
 
 - One page per project, named `<main repository>-<objective>`, such as
@@ -161,9 +167,11 @@ from the lesson.
 ## Before a session ends
 
 Update the notes for the next session: what is in flight, where, and what comes
-next. A new session reads them, then the Brief, before anything else.
+next. A new session reads them, then the Brief, before anything else, as
+`/resume-project` does.
 
 ## After a merge
 
 Confirm the merge from the PR and check what it released, as *Git flow* says.
-Then start the next PR in that repository, update the page, and report.
+Then start the next PR in that repository, update the page, and report:
+`/update-project` runs these steps.

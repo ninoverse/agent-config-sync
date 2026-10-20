@@ -31,6 +31,8 @@ AGENTS.md (region)
     concerns/plan/phases.md
 .agents/create-project.md (region)
     concerns/plan/tasks/create-project.md
+.agents/review-project.md (region)
+    concerns/plan/tasks/review-project.md
 CLAUDE.md (region)
     language/rust/automation.md
 .claude/skills/gates/SKILL.md (whole)
@@ -39,10 +41,20 @@ CLAUDE.md (region)
     language/rust/tasks/new-unit.md
 .claude/skills/new-value/SKILL.md (whole)
     concerns/fragment-authoring/tasks/new-value.md
+.claude/skills/close-project/SKILL.md (whole)
+    concerns/plan/tasks/close-project.md
 .claude/skills/create-project/SKILL.md (whole)
     concerns/plan/tasks/create-project.md
 .claude/skills/publish-project/SKILL.md (whole)
     concerns/plan/tasks/publish-project.md
+.claude/skills/resume-project/SKILL.md (whole)
+    concerns/plan/tasks/resume-project.md
+.claude/skills/review-project/SKILL.md (whole)
+    concerns/plan/tasks/review-project.md
+.claude/skills/split-project/SKILL.md (whole)
+    concerns/plan/tasks/split-project.md
+.claude/skills/update-project/SKILL.md (whole)
+    concerns/plan/tasks/update-project.md
 .claude/skills/why/SKILL.md (whole)
 .claude/settings.json (whole)
 .agents/create-project/example/analysis.toml (whole)

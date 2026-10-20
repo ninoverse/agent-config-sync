@@ -2,15 +2,45 @@
 name: publish-project
 title: Publishing the project page
 when: Running a project in phases
-description: Publish or update a project page as a claude.ai artifact
+description: Publish a project page as a claude.ai artifact, with its state read again
 emit: [claude]
-argument-hint: "<out directory> [artifact url]"
+argument-hint: "<data directory> [artifact url]"
 ---
 
-Publishes the page `/create-project` built as a claude.ai artifact, with its
-data beside it, so the next session starts from the data.
+Publishes the page *Building the project page* renders as a claude.ai artifact,
+with its data beside it, so the next session starts from the data.
 
 The page to publish: $ARGUMENTS
+
+## Steps
+
+1. Read the state again, right before publishing: `render.py` never reaches
+   GitHub. For each PR item with a `url` that isn't `done` or `dropped`, read
+   the PR with the GitHub tools you have:
+   - merged: `done`, `on` its merge day, with its `result`, what it released
+     and what its *Done when* showed;
+   - closed without a merge: ask the user whether it is `dropped`, with `why`,
+     or replaced by a new PR;
+   - still open: `open` once it waits only on the user's merge, `ready` or
+     `blocked` while work remains.
+
+   Show: each PR read, and its state.
+2. Set `read_at` to now, in UTC.
+3. Render with `--since`, given the data as last published:
+
+   ```bash
+   python3 .agents/create-project/render.py <data directory> <out directory> \
+     --since <published directory>
+   ```
+
+   Fix every problem, and fix each warning or tell the user why it stands: the
+   page lists those left in its Warnings. Show: what `--since` printed.
+4. Open the `--inline` preview, or capture it with `/take-screenshot` where the
+   repository has it, and look at what changed.
+5. Publish, as below, then keep a copy of the data as published: the next
+   `--since` compares with it.
+6. Tell the user what changed, from what `--since` printed: a correction
+   first, saying what was wrong. Show: the link.
 
 ## The first publish
 
@@ -30,8 +60,6 @@ since the user finds the page by it.
   them: the files as read are the data as last published, which `--since`
   compares with. The notes for the next session, under `[handoff]`, say what
   was in flight.
-- Read the project's state again right before publishing, as *Building the
-  project page* says, and set `read_at` to that time.
 - Publish to the same `url`, with the files that changed, and `null` for a
   phase file that no longer exists.
 - A session that neither published nor read the live page has to read it in
@@ -46,8 +74,7 @@ own, titled `<repo>-<objective>-retrospective`, with an `icon` such as `notes`.
 It carries no data of its own: publish it again from the project's data
 whenever the Retrospective changes. Whom to share it with is the user's choice.
 
-## Hand it over
+## Before the session ends
 
-Give the user the link, and say in one sentence what changed. Before the
-session ends, update `[handoff]` and publish it, so the next session starts
-where this one stopped.
+Update `[handoff]`, the notes for the next session, and publish them, so the
+next session starts where this one stopped.
