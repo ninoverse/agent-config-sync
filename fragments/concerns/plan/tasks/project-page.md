@@ -88,9 +88,11 @@ when:
 Fix the data and render again, or tell the user why the warning stands.
 
 `--since <directory>`, given the data as it was last published, also prints
-what has changed in each phase since, statuses in their type's words. An item
-that is gone gets a warning: an item is never deleted, but `dropped`, with
-`why`.
+what has changed in each phase since, statuses in their type's words. It
+writes nothing when an item is gone, since an item is never deleted, but
+`dropped`, with `why`; or when an item is new in the Brief, the Research, the
+Analysis or the Plan, which the published data had done, or approved, and
+doesn't say it is an amendment, with `amended`.
 
 ## The data
 

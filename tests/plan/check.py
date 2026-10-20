@@ -566,10 +566,11 @@ def check_since(tmp):
     if data is None:
         return
     added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\n\n[[section]]\nid = "settings"'
+    amended = added.replace('needs = ["EX-2"]', 'needs = ["EX-2"]\namended = { on = 2026-10-09, why = "the README, found silent on the probes" }')
     edited = [
         replace_in(data, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute."),
         replace_in(data, "plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D2]]", "[[D1]]"]]'),
-        replace_in(data, "plan.toml", '[[section]]\nid = "settings"', added),
+        replace_in(data, "plan.toml", '[[section]]\nid = "settings"', amended),
         replace_in(data, "project.toml", "updated = 2026-10-07", "updated = 2026-10-09"),
     ]
     if not all(edited):
@@ -579,12 +580,21 @@ def check_since(tmp):
     expect("  Plan: EX-1: Done when edited; EX-2: Carries out edited; EX-4 added.\n" in run.stdout, f"edited fields, a list among them, and a new item: {run.stdout}")
     expect("  Build: EX-2 To merge → Merged.\n" in run.stdout, f"a status in its type's words: {run.stdout}")
     expect("  project.toml: `handoff` edited.\n" in run.stdout and "read_at" not in run.stdout, f"project.toml's changes, read_at aside: {run.stdout}")
+    unmarked = copy_with(tmp, "unmarked", EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', added)
+    if unmarked is not None:
+        run = render(unmarked, tmp / "unmarked-out", "--since", str(EXAMPLE))
+        expect(run.returncode == 1 and "plan.toml: EX-4 is new since the published data, which had the Plan approved: an item added to it is an amendment" in run.stderr, f"an item added to an approved phase without `amended` stops the render: {run.stderr}")
+    asked = '[[section.item]]\nid = "Q2"\ntitle = "The probe\'s path behind the proxy"\nstatus = "open"\n'
+    live = copy_with(tmp, "live", EXAMPLE, "build.toml", '[[section.item]]\nid = "Q1"', asked + '\n[[section.item]]\nid = "Q1"')
+    if live is not None:
+        run = render(live, tmp / "live-out", "--since", str(EXAMPLE))
+        expect(run.returncode == 0 and "  Build: Q2 added;" in run.stdout, f"Build takes new work without `amended`: {run.stderr}")
 
     r2 = '\n\n[[section.item]]\nid = "R2"\ntitle = "What the platform does with a probe"\nfields = [\n  ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],\n  ["Raises", "[[D2]]"],\n]\n'
     deleted = copy_with(tmp, "deleted", EXAMPLE, "research.toml", r2, "\n")
     if deleted is not None:
         run = render(deleted, tmp / "deleted-out", "--since", str(EXAMPLE))
-        expect("  Research: R2 removed.\n" in run.stdout and "warning: research.toml: R2 is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`" in run.stderr, f"an item that is gone is warned about: {run.stdout} {run.stderr}")
+        expect(run.returncode == 1 and "research.toml: R2 is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`" in run.stderr, f"an item that is gone stops the render: {run.stderr}")
 
 
 def check_stale(tmp):

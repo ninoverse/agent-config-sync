@@ -57,6 +57,9 @@ STARTS_WITH = {"verify": "build", "reuse": "build"}
 ENDS_AFTER = {"verify": ("build",), "reuse": ("build", "verify"), "retrospective": ("brief", "research", "analysis", "plan", "build", "verify", "reuse")}
 # The phases that keep the statuses of live work, which reopen when new work comes in.
 LIVE = ("build", "verify")
+# The phases before them, which never reopen: an item added to one once it is done, or
+# approved, is an amendment.
+AMENDS = ("brief", "research", "analysis", "plan")
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -1685,8 +1688,9 @@ def said(snap, state):
 
 def changes_since(data_dir, published):
     """What changed since the data was last published, in words, for the user: each
-    phase's changes, then project.toml's. An item that is gone is warned about,
-    since an item is never deleted, but dropped, with why."""
+    phase's changes, then project.toml's. An item that is gone is a problem, since an
+    item is never deleted, but dropped, with why; so is one added to a phase that was
+    done, or approved, without saying it is an amendment."""
     old, new = raw(published, "the published"), raw(data_dir, "the new")
     (old_items, old_sections), (new_items, new_sections) = snapshot(old), snapshot(new)
     found = {key: [] for key, _ in PHASES}
@@ -1698,10 +1702,15 @@ def changes_since(data_dir, published):
         before, after = old_items.get(item_id), new_items.get(item_id)
         if after is None:
             note(before["phase"], f"{item_id} removed")
-            warn(f"{before['phase']}.toml", f"{item_id} is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`")
+            problem(f"{before['phase']}.toml", f"{item_id} is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`")
             continue
         if before is None:
             note(after["phase"], f"{item_id} added")
+            key = after["phase"]
+            was = old.get("project", {}).get("phases", {}).get(key, {}).get("status")
+            finished = "approved" if old.get(key, {}).get("approved") else "done" if was == "done" else None
+            if key in AMENDS and finished and "amended" not in after["written"]:
+                problem(f"{key}.toml", f"{item_id} is new since the published data, which had the {PHASE_NAME[key]} {finished}: an item added to it is an amendment, with `amended`, dated and saying why")
         elif before["written"] != after["written"]:
             note(after["phase"], f"{item_id}: {', '.join(edits(before['written'], after['written']))} edited")
         was = before["state"] if before else {}
