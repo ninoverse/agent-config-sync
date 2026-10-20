@@ -2055,6 +2055,11 @@ def main(argv):
         check_wording(project, phases)
         check_rules(project, phases)
     changes = changes_since(data_dir, Path(since)) if since is not None else None
+    # Against the data as last published, the render is for a publish, which shows the
+    # state as read: read long before, it may have changed since.
+    read_at = project["read_at"]
+    if since is not None and datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - read_at > datetime.timedelta(minutes=15):
+        warn("project.toml", f"the state was read at {read_at:%H:%M} UTC on {day(read_at.date())}, more than 15 minutes before this render: read it again right before publishing, and set `read_at`")
     COUNTED.extend(counted(project, phases))
     warned = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""
     if "--retrospective" in flags:

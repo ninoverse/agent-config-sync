@@ -8,6 +8,7 @@ render, with its own warning; a broken copy must fail with its own message and
 write nothing; everything else must render without a warning.
 """
 
+import datetime
 import re
 import shutil
 import subprocess
@@ -559,6 +560,12 @@ def check_since(tmp):
     """--since lists what changed in each phase since the data as published."""
     run = render(EXAMPLE, tmp / "since-same", "--since", str(EXAMPLE))
     expect(run.returncode == 0 and run.stdout.endswith("Since the published data: nothing has changed.\n"), f"unchanged data reports nothing: {run.stdout}")
+    expect("warning: project.toml: the state was read at 18:00 UTC on 7 Oct, more than 15 minutes before this render" in run.stderr, f"a render for a publish warns when the state was read long before: {run.stderr}")
+    now = datetime.datetime.now(datetime.UTC)
+    fresh = copy_with(tmp, "fresh", EXAMPLE, "project.toml", "read_at = 2026-10-07T18:00:00", f"read_at = {now:%Y-%m-%dT%H:%M:00}")
+    if fresh is not None:
+        run = render(fresh, tmp / "fresh-out", "--since", str(EXAMPLE))
+        expect(run.returncode == 0 and "more than 15 minutes" not in run.stderr, f"and not when it was just read: {run.stderr}")
     expect(render(EXAMPLE, tmp / "since-none", "--since", str(tmp / "nowhere")).returncode == 2, "--since names a directory that exists")
 
     merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-09\nresult = "Released 1.5.0."'

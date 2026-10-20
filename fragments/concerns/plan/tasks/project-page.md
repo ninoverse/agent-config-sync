@@ -83,7 +83,10 @@ when:
 - a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short
   title's;
 - a question in Build is dated before Build started: one asked before the
-  Plan's approval is a decision.
+  Plan's approval is a decision;
+- with `--since`, which renders for a publish, `read_at` is more than 15
+  minutes before the render: the page would show a state that may have
+  changed.
 
 Fix the data and render again, or tell the user why the warning stands.
 
