@@ -174,6 +174,10 @@ def check_example(tmp):
         analysis = tmp / "two-batches-out" / "phases" / "analysis.html"
         contents = between(analysis.read_text(), 'id="analysis-contents"', "</nav>") if analysis.exists() else ""
         expect('<li><a href="#decisions">Batch A</a></li><li><a href="#batch-b">Batch B</a></li>' in contents, f"the Analysis opens with a list of its sections, built from them: {run.stderr} {contents}")
+    raised = copy_with(tmp, "raised-later", EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"\namended = { on = 2026-10-07, why = "the cache, found in Build" }')
+    if raised is not None and replace_in(raised, "analysis.toml", 'recommended = "a"\nchosen = "a"\nfields = [["Reasons", "The service answers', 'recommended = "a"\nfields = [["Reasons", "The service answers'):
+        run = render(raised, tmp / "raised-later-out")
+        expect(run.returncode == 0, f"a decision amended in after the Plan's approval can wait on the owner: {run.stderr}")
     waiting = copy_with(tmp, "nothing-yet", EXAMPLE, "build.toml", 'title = "Results"\nkind = "results"\n', 'title = "Results"\nkind = "results"\nids = ["EX-2"]\n')
     if waiting is not None:
         run = render(waiting, tmp / "nothing-yet-out")
@@ -475,6 +479,7 @@ STALE = [
     ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest status, of 7 Oct"),
     ("project.toml", "updated = 2026-10-07", "updated = 2026-10-06", "the notes for the next session date from 6 Oct, before the last change"),
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "[[Q1]]\'s answer" }', "plan.toml item EX-3: [[Q1]]'s reads as \"Q1 The probe's timeout in production's\": put the link after its noun"),
+    ("build.toml", 'production"\nstatus = "done"\non = 2026-10-07', 'production"\nstatus = "done"\non = 2026-10-04', "Q1 is a question in Build dated 4 Oct, before Build started on 5 Oct"),
 ]
 
 # Each broken copy: the project it copies, the file, the text replaced, its
@@ -528,6 +533,7 @@ BROKEN = [
     (FULL, "build.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
+    (EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"', "D2 isn't taken, but the Plan was approved on 3 Oct"),
 ]
 
 

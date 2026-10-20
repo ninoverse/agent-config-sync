@@ -639,6 +639,18 @@ def check_rules(project, phases):
         problem("plan.toml", "the Plan is done, but not approved: give it `approved`, the day the owner approved it")
     if approved and build["start"] and build["start"] < approved and not build["early"]:
         problem("project.toml [phases.build]", f"Build starts on {day(build['start'])}, before the Plan's approval on {day(approved)}: say why, in `early`")
+    for item_id, item in ITEMS.items():
+        where, status = item["where"], item.get("status")
+        # A question about what to build is a decision, taken before the Plan's approval or
+        # deferred; only one amended in since, on the day or after, can still wait.
+        later = item["amended"] and item["amended"]["on"] and approved and item["amended"]["on"] >= approved
+        if approved and item["type"] == "decision" and status in UNFINISHED | {None} and not later:
+            problem(where, f"{item_id} isn't taken, but the Plan was approved on {day(approved)}: take it, or defer it, saying what it waits on")
+        # Build's questions are the ones its work raises: one dated earlier was most likely a decision.
+        if item["type"] == "question" and item["phase"] == "build" and item["on"]:
+            if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):
+                started = f" on {day(build['start'])}" if build["start"] else ""
+                warn(where, f"{item_id} is a question in Build dated {day(item['on'])}, before Build started{started}: one asked before the Plan's approval is a decision, in the Analysis")
 
 
 # ------------------------------------------------------------------ rendering

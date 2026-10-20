@@ -58,8 +58,10 @@ they answer.
   which branches need asking. A ground rule holds until the user changes it.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises.
-- **Analysis**: the decisions, and nothing else. Each lists its options, with
-  the reasons for the one recommended. Until the user answers, the page marks
+- **Analysis**: the decisions, and nothing else. A question about what to
+  build is one of them, taken before the Plan's approval unless the user
+  defers it, saying what it waits on. Each lists its options, with the
+  reasons for the one recommended. Until the user answers, the page marks
   that one; after, only the one chosen, with the date. Its card lists the PRs
   and settings that carry it out. One list is the default; only when the
   decisions are many do they come in batches, one section each, answered
@@ -77,8 +79,8 @@ they answer.
   the owner approves it, and Build starts only after that.
 - **Build**: the live state. A board of the PRs and settings in waves, built
   from what each needs; each PR's *Result* once it merges; and the questions
-  the work raises, and nothing else. What happened is in the Agenda, so Build
-  keeps no log of its own.
+  the work raises, and nothing else: one asked before the Plan's approval is
+  a decision. What happened is in the Agenda, so Build keeps no log of its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
   success criteria, Met or Not met yet, and nothing else. A check's title says
   how it is checked: what it proves is already on the PR it needs and the

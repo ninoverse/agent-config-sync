@@ -62,6 +62,8 @@ It writes nothing, and names the file and the item, when:
   Plan is done without `approved`; a phase ends before one it runs beside,
   such as Reuse before Build; or is Build or Verify, and done while it holds
   an unfinished item, which reopens it;
+- a decision isn't taken, or deferred, once the Plan is approved, unless it
+  was amended in on the day of the approval or after;
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
@@ -74,10 +76,16 @@ It writes nothing, and names the file and the item, when:
 - `needs` loops, or a date isn't one;
 - the HTML in a field doesn't nest.
 
-It still writes the page when a state looks stale, as *Project phases* says,
-or a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short
-title's, and prints a warning naming it. Fix the data and render again, or tell
-the user why the warning stands.
+It still writes the page, and prints a warning naming the file and the item,
+when:
+
+- a state looks stale, as *Project phases* says;
+- a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short
+  title's;
+- a question in Build is dated before Build started: one asked before the
+  Plan's approval is a decision.
+
+Fix the data and render again, or tell the user why the warning stands.
 
 `--since <directory>`, given the data as it was last published, also prints
 what has changed in each phase since, statuses in their type's words. An item
