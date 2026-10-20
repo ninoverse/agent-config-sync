@@ -652,6 +652,9 @@ def check_rules(project, phases):
         later = item["amended"] and item["amended"]["on"] and approved and item["amended"]["on"] >= approved
         if approved and item["type"] == "decision" and status in UNFINISHED | {None} and not later:
             problem(where, f"{item_id} isn't taken, but the Plan was approved on {day(approved)}: take it, or defer it, saying what it waits on")
+        # One recorded after the fact may have had no options, so this only warns.
+        if item["type"] == "decision" and not item.get("options"):
+            warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
         # Build's questions are the ones its work raises: one dated earlier was most likely a decision.
         if item["type"] == "question" and item["phase"] == "build" and item["on"]:
             if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):

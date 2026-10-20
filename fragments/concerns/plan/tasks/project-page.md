@@ -85,6 +85,7 @@ when:
   title's;
 - a question in Build is dated before Build started: one asked before the
   Plan's approval is a decision;
+- a decision has no `options`, as one recorded after the fact may not;
 - with `--since`, which renders for a publish, `read_at` is more than 15
   minutes before the render: the page would show a state that may have
   changed.
