@@ -1289,11 +1289,14 @@ def closing(key, data):
 def render_phase(key, data, data_dir, head=True):
     """A phase's view: its name, for screen readers only, since its tab shows the name
     and the state, unless it stands alone; then, for some phases, a list of its
-    sections; then its sections, and what closes it: its approval, or its amendments."""
+    sections; then its sections, and what closes it: its approval, or its amendments.
+    Nothing, for a phase whose file shows neither, such as one holding only statuses."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
     rendered = [(section, render_section(section, key, data, data_dir)) for section in data.get("section", [])]
     shown = [section for section, html in rendered if html]
     ending = closing(key, data)
+    if not shown and not ending:
+        return ""
     if key in CONTENTS and len(shown) > 1:
         links = "".join(f'<li><a href="#{section["id"]}">{section.get("title") or section["id"]}</a></li>' for section in shown)
         if ending:
@@ -2027,7 +2030,8 @@ def main(argv):
         return 0
     inline = "--inline" in flags
     # Only a phase with something to show has a view; the others' tabs don't open.
-    sections = {key: render_phase(key, phases[key], data_dir) for key, _ in PHASES if key in phases}
+    rendered = ((key, render_phase(key, phases[key], data_dir)) for key, _ in PHASES if key in phases)
+    sections = {key: text for key, text in rendered if text}
     if not sections:
         problem("project.toml", "no phase has anything to show yet: a project starts with its Brief, in brief.toml")
         failed()

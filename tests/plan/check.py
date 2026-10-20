@@ -199,6 +199,13 @@ def check_example(tmp):
         brief = tmp / "dropped-out" / "phases" / "brief.html"
         sc2 = between(brief.read_text(), 'id="sc2"', "</article>") if brief.exists() else ""
         expect('<span class="pill st-dropped">Dropped · 7 Oct</span>' in sc2 and "<dt>Why</dt><dd>The platform drains a process on its own.</dd>" in sc2, f"a dropped criterion says so in the Brief, with why: {sc2[:400]}")
+    statuses = copy_with(tmp, "statuses-only", EXAMPLE, "brief.toml", 'needs = ["C1"]\n', "")
+    if statuses is not None and replace_in(statuses, "brief.toml", 'needs = ["C2"]\n', ""):
+        (statuses / "verify.toml").write_text('[status.SC1]\nstatus = "done"\non = 2026-10-06\n\n[status.SC2]\nstatus = "blocked"\nwaits = "its checks, written in Verify"\n')
+        run = render(statuses, tmp / "statuses-only-out")
+        index = tmp / "statuses-only-out" / "index.html"
+        tab = '<li><span class="off t-now"><span class="n">6</span><span class="name">Verify</span>'
+        expect(run.returncode == 0 and tab in index.read_text() and not (tmp / "statuses-only-out" / "phases" / "verify.html").exists(), f"a phase whose file holds only statuses has nothing to show: its tab doesn't open: {run.stderr}")
 
     expect('<div class="scroll" data-start' not in page, "a board whose first column has work left opens at its start")
     shipped = copy_with(tmp, "shipped", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "done"\non = 2026-10-07\nresult = "Released 1.4.1."')
