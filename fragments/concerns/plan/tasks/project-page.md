@@ -58,9 +58,10 @@ It writes nothing, and names the file and the item, when:
   needed doesn't say why, or has a `<phase>.toml`: its tab doesn't open, so
   nothing in it would show;
 - a phase starts before those it follows are done, or before the day they
-  end, without `early` saying why; ends before a phase it runs beside, such
-  as Reuse before Build; or is Build or Verify, and done while it holds an
-  unfinished item, which reopens it;
+  end, or Build before the Plan's approval, without `early` saying why; the
+  Plan is done without `approved`; a phase ends before one it runs beside,
+  such as Reuse before Build; or is Build or Verify, and done while it holds
+  an unfinished item, which reopens it;
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;

@@ -628,6 +628,19 @@ def check_wording(project, phases):
     walk(project, "project.toml")
 
 
+def check_rules(project, phases):
+    """What the method holds the data to, beyond its shape: a problem where the data
+    shows a rule broken, and a warning where it can only suggest one."""
+    statuses = project["status"]
+    build = statuses["build"]
+    approved = phases.get("plan", {}).get("approved")
+    # Build starts only once the owner has approved the Plan, so a Done Plan has the day.
+    if statuses["plan"]["status"] == "done" and not approved:
+        problem("plan.toml", "the Plan is done, but not approved: give it `approved`, the day the owner approved it")
+    if approved and build["start"] and build["start"] < approved and not build["early"]:
+        problem("project.toml [phases.build]", f"Build starts on {day(build['start'])}, before the Plan's approval on {day(approved)}: say why, in `early`")
+
+
 # ------------------------------------------------------------------ rendering
 
 
@@ -2015,6 +2028,7 @@ def main(argv):
     if not problems:
         check_states(project, phases)
         check_wording(project, phases)
+        check_rules(project, phases)
     changes = changes_since(data_dir, Path(since)) if since is not None else None
     COUNTED.extend(counted(project, phases))
     warned = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""

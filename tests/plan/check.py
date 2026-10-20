@@ -519,6 +519,8 @@ BROKEN = [
     (EXAMPLE, "plan.toml", ', why = "the answer to [[Q1]]" }', " }", "`amended` is"),
     (EXAMPLE, "plan.toml", 'url = "https://github.com/example/example-service/pull/12"', 'url = "github.com/example/example-service/pull/12"', "`url` is an https:// address"),
     (FULL, "build.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
+    (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
+    (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
 ]
 
 
