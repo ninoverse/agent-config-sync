@@ -85,6 +85,8 @@ It still writes the page, and prints a warning naming the file and the item,
 when:
 
 - a state looks stale, as *Project phases* says;
+- text names an item by its number alone rather than its `[[ref]]`, outside a
+  `short`, which can't hold a link, and a link written by hand;
 - a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short
   title's;
 - a question in Build is dated before Build started: one asked before the

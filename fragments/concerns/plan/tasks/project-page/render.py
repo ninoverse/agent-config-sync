@@ -154,6 +154,11 @@ ITEM_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
 REF = re.compile(r"\[\[([^\]]*)\]\]")
 # [[HMI-8]]'s: a possessive on a link, which the page reads as its short title's.
 POSSESSIVE = re.compile(r"\[\[([^\]]*)\]\]['\u2019]s\b")
+# A word in text that could be an item's id, as ITEM_ID spells one.
+BARE = re.compile(r"(?<![\w.-])[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
+# The keys whose values are ids, addresses or statuses, rather than text a reader reads;
+# and `short`, a link's own text, which names an item bare since it can't hold a link.
+NOT_PROSE = ("id", "needs", "ids", "cells", "chosen", "recommended", "url", "from", "to", "status", "short")
 # Only an anchor made of these reaches location.hash from an artifact's link.
 ANCHOR = re.compile(r"[A-Za-z0-9._~-]+")
 # A pull request or an issue on GitHub, which a link names as GitHub does: owner/repo#12.
@@ -609,17 +614,26 @@ def check_states(project, phases):
 
 
 def check_wording(project, phases):
-    """Warnings for a possessive on a link: [[HMI-8]]'s merge reads as "HMI-8 Bump and
-    release callers's merge", since a link carries its short title."""
+    """Warnings for how text names an item: by its number alone, which leaves the reader
+    to look it up; or with a possessive on its link, since a link carries its short
+    title: [[HMI-8]]'s merge reads as "HMI-8 Bump and release callers's merge"."""
+    named = set()
 
     def walk(value, where):
         if isinstance(value, str):
             for ref in POSSESSIVE.findall(value):
                 if ref in ITEMS:
                     warn(where, f"[[{ref}]]'s reads as \"{ref} {short_of(ITEMS[ref])}'s\": put the link after its noun, as in \"the merge of [[{ref}]]\"")
+            # What a reader sees unlinked: the text but its links, written either way, and its tags.
+            seen = re.sub(r"<[^>]*>", " ", re.sub(r"<a\b.*?</a>", " ", REF.sub(" ", value), flags=re.S))
+            for word in BARE.findall(seen):
+                if word in ITEMS and (where, word) not in named:
+                    named.add((where, word))
+                    warn(where, f"{word} is named by its number alone: write [[{word}]], which links it with its summary")
         elif isinstance(value, dict):
-            for inner in value.values():
-                walk(inner, where)
+            for key, inner in value.items():
+                if key not in NOT_PROSE:
+                    walk(inner, where)
         elif isinstance(value, list):
             for inner in value:
                 walk(inner, where)

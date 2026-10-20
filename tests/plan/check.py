@@ -3,7 +3,8 @@
 Runs the project-page renderer the plan concern ships against its example, in
 both modes, against full/, which uses every section kind the example leaves
 out, against an edited copy compared with the example as if published, against
-stale copies of the example, and against broken copies. A stale copy must still
+stale copies of the example, copies naming an item where no link can, and
+broken copies. A stale copy must still
 render, with its own warning; a broken copy must fail with its own message and
 write nothing; everything else must render without a warning.
 """
@@ -483,6 +484,14 @@ STALE = [
     ("build.toml", 'production"\nstatus = "done"\non = 2026-10-07', 'production"\nstatus = "done"\non = 2026-10-04', "Q1 is a question in Build dated 4 Oct, before Build started on 5 Oct"),
     ("analysis.toml", 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\n', "", "D2 is a decision without `options`"),
     ("plan.toml", 'kind = "patch"\nneeds = ["Q1"]', 'kind = "patch"\nurl = "https://github.com/example/example-service/pull/15"\nneeds = ["Q1"]', "EX-2 and EX-3 are in progress at once in example/example-service"),
+    ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }', "plan.toml item EX-3: Q1 is named by its number alone: write [[Q1]]"),
+]
+
+# Each copy that names an item without its link, where it can't take one: the file,
+# the text replaced, and its replacement. It renders without a warning.
+UNLINKED = [
+    ("plan.toml", 'short = "Ten seconds in production"', 'short = "Ten seconds, after Q1"'),
+    ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to <a href=\\"https://example.com/old#q1\\">the old project\'s Q1</a>" }'),
 ]
 
 # Each broken copy: the project it copies, the file, the text replaced, its
@@ -625,6 +634,15 @@ def check_stale(tmp):
         expect((out / "index.html").exists(), f"stale case {index} still writes the page")
 
 
+def check_unlinked(tmp):
+    for index, (file, old, new) in enumerate(UNLINKED):
+        data = copy_with(tmp, f"unlinked-{index}", EXAMPLE, file, old, new)
+        if data is None:
+            continue
+        run = render(data, tmp / f"unlinked-{index}-out")
+        expect(run.returncode == 0 and "warning:" not in run.stderr, f"unlinked case {index} renders without a warning: {run.stderr.strip()}")
+
+
 def check_broken(tmp):
     for index, (base, file, old, new, message) in enumerate(BROKEN):
         data = copy_with(tmp, f"broken-{index}", base, file, old, new)
@@ -644,10 +662,11 @@ def main():
         check_full(tmp)
         check_since(tmp)
         check_stale(tmp)
+        check_unlinked(tmp)
         check_broken(tmp)
     for what in failed:
         print(f"FAIL: {what}", file=sys.stderr)
-    print(f"{'FAILED' if failed else 'passed'}: the example, full/, changes since a publish, {len(STALE)} stale copies and {len(BROKEN)} broken copies")
+    print(f"{'FAILED' if failed else 'passed'}: the example, full/, changes since a publish, {len(STALE)} stale copies, {len(UNLINKED)} unlinked copies and {len(BROKEN)} broken copies")
     return 1 if failed else 0
 
 
