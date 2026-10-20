@@ -94,8 +94,8 @@ when:
 - a decision has no `options`, as one recorded after the fact may not;
 - two PRs in one repository are in progress at once: open on GitHub, as
   their `url` says, and not done;
-- an adopted lesson with a `Becomes` field is needed, or named, by nothing in
-  Deferred or the Plan, where its change waits until it ships;
+- an adopted lesson with a `Becomes` field and nothing in Deferred or the Plan
+  name each other, though its change waits there until it ships;
 - with `--since`, which renders for a publish, `read_at` is more than 15
   minutes before the render: the page would show a state that may have
   changed.

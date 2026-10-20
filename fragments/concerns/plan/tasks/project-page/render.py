@@ -683,11 +683,13 @@ def check_rules(project, phases):
         # One recorded after the fact may have had no options, so this only warns.
         if item["type"] == "decision" and not item.get("options"):
             warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
-        labels = {field[0] for field in item.get("fields", []) if is_field(field)}
+        fields = dict(field for field in item.get("fields", []) if is_field(field))
+        labels = set(fields)
         # An adopted lesson's change waits in Deferred until it ships. The data can only show
-        # whether something there, or in the Plan, names the lesson, so this only warns.
+        # whether something there, or in the Plan, and the lesson name each other, so this only warns.
         if item["type"] == "lesson" and status == "done" and "Becomes" in labels:
-            if not any(ITEMS[other]["phase"] in ("deferred", "plan") for other in item["needed_by"] + item["mentioned_in"]):
+            carriers = item["needed_by"] + item["mentioned_in"] + [ref for ref in REF.findall(" ".join(texts_of(fields["Becomes"]))) if ref in ITEMS]
+            if not any(ITEMS[other]["phase"] in ("deferred", "plan") for other in carriers):
                 warn(where, f"{item_id} is an adopted lesson, but nothing in Deferred or the Plan carries its change: it waits in Deferred until it ships, needing the lesson")
         if item["type"] == "pr":
             missing = [label for label in ("Branch", "Done when") if label not in labels]

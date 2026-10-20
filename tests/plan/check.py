@@ -464,6 +464,9 @@ def check_full(tmp):
     if uncarried is not None:
         run = render(uncarried, tmp / "uncarried-out")
         expect(run.returncode == 0 and "warning: retrospective.toml item L2: L2 is an adopted lesson, but nothing in Deferred or the Plan carries its change" in run.stderr, f"an adopted lesson's change waits in Deferred, or the render warns: {run.stderr}")
+        if replace_in(uncarried, "retrospective.toml", "says what each call costs.", "says what each call costs, which [[T1]] carries."):
+            run = render(uncarried, tmp / "uncarried-named-out")
+            expect(run.returncode == 0 and "adopted lesson" not in run.stderr, f"and not when its Becomes names what carries it: {run.stderr}")
     linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
     if linked is not None:
         expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")
