@@ -65,6 +65,8 @@ It writes nothing, and names the file and the item, when:
 - a decision isn't taken, or deferred, once the Plan is approved, unless it
   was amended in on the day of the approval or after; or Build has started
   while the Brief has no success criterion, but dropped ones;
+- a PR's card has no `Branch` field, or no `Done when`: the owner approves
+  each PR with its branch, and Verify checks what its *Done when* says;
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;

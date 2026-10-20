@@ -12,7 +12,11 @@ id = "MX-1"
 title = "Expose the metrics endpoint"
 kind = "minor"
 url = "https://github.com/example/example-service/pull/3"
-fields = [["Carries out", "[[D1]]"]]
+fields = [
+  ["Branch", "<code>feat/metrics</code>"],
+  ["Carries out", "[[D1]]"],
+  ["Done when", "A scraper reads every metric from <code>/stats</code>."],
+]
 status = "done"
 on = 2026-10-06
 result = "Released 2.1.0."
@@ -21,6 +25,10 @@ result = "Released 2.1.0."
 id = "MX-2"
 title = "A second exporter"
 kind = "patch"
+fields = [
+  ["Branch", "<code>feat/second-exporter</code>"],
+  ["Done when", "Both exporters report the same totals."],
+]
 status = "dropped"
 why = "The first one covers it."
 

@@ -536,6 +536,8 @@ BROKEN = [
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
     (EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"', "D2 isn't taken, but the Plan was approved on 3 Oct"),
+    (EXAMPLE, "plan.toml", '  ["Branch", "<code>fix/readiness-timeout</code>"],\n', "", "EX-3 is a PR without a Branch field: the owner approves each PR with its branch"),
+    (EXAMPLE, "plan.toml", '  ["Done when", "A slow night in production takes no process out of service."],\n', "", "EX-3 is a PR without a Done when field"),
     (EXAMPLE, "verify.toml", '[status.SC1]\nstatus = "done"\non = 2026-10-06\n\n[status.SC2]\nstatus = "blocked"', '[status.SC1]\nstatus = "dropped"\nwhy = "Restarts are the platform\'s."\n\n[status.SC2]\nstatus = "dropped"\nwhy = "Traffic is too."', "brief.toml: Build has started, but the Brief has no success criterion"),
 ]
 
@@ -574,7 +576,7 @@ def check_since(tmp):
     data = copy_with(tmp, "since", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
     if data is None:
         return
-    added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\n\n[[section]]\nid = "settings"'
+    added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\nfields = [\n  ["Branch", "<code>docs/probes</code>"],\n  ["Done when", "The README names both routes."],\n]\n\n[[section]]\nid = "settings"'
     amended = added.replace('needs = ["EX-2"]', 'needs = ["EX-2"]\namended = { on = 2026-10-09, why = "the README, found silent on the probes" }')
     edited = [
         replace_in(data, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute."),

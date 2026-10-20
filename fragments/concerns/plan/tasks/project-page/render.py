@@ -655,6 +655,11 @@ def check_rules(project, phases):
         # One recorded after the fact may have had no options, so this only warns.
         if item["type"] == "decision" and not item.get("options"):
             warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
+        if item["type"] == "pr":
+            labels = {field[0] for field in item.get("fields", []) if is_field(field)}
+            missing = [label for label in ("Branch", "Done when") if label not in labels]
+            if missing:
+                problem(where, f"{item_id} is a PR without a {' or a '.join(missing)} field: the owner approves each PR with its branch, and Verify checks its Done when")
         # Build's questions are the ones its work raises: one dated earlier was most likely a decision.
         if item["type"] == "question" and item["phase"] == "build" and item["on"]:
             if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):
