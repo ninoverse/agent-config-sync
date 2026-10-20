@@ -79,7 +79,7 @@ def check_example(tmp):
     expect(unwritten in leaves and 'id="retrospective"' not in page, "a phase with nothing written has a tab that doesn't open, and no view")
     reuse = '<li><span class="off t-not-needed"><span class="name">Reuse</span><span class="state">Not needed</span></span></li>'
     expect(reuse in leaves and 'id="reuse"' not in page and "Two routes are too little" not in page and '"reuse"' not in manifest(page), "a phase not needed has a tab that doesn't open, and no view; its reason stays in the data")
-    expect('<span class="name">Deferred</span><span class="state">1 waiting</span>' in leaves, f"Deferred's tab says how many items wait: {leaves}")
+    expect('<span class="name">Deferred</span><span class="state">2 waiting</span>' in leaves, f"Deferred's tab says how many items wait, deferred work that is blocked among them: {leaves}")
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
     expect('<footer class="site"' not in page, "the page has no footer: the guides answer what it would")
     guides = phase["guides"]

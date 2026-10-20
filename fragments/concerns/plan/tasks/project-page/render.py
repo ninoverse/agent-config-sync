@@ -1849,7 +1849,8 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     # The views that aren't phases: the agenda, and the guides to using the page.
     views = "".join(f'<a href="#{key}" data-phase="{key}">{ICONS[key]}<span>{name}</span></a>' for key, name in (("agenda", "Agenda"), ("guides", "Guides")))
     tabs, leaves = [], []
-    waiting = sum(1 for item in ITEMS.values() if item.get("status") in PARKED)
+    # What waits in Deferred: an item set aside, and deferred work not picked up yet.
+    waiting = sum(1 for item in ITEMS.values() if item.get("status") in PARKED or (item["type"] == "deferred" and item.get("status") in UNFINISHED))
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
         state = PHASE_STATUS[status]
