@@ -206,6 +206,11 @@ def check_example(tmp):
         render(shipped, tmp / "shipped-out")
         board = (tmp / "shipped-out" / "index.html").read_text()
         expect('<div class="scroll" data-start="2">' in board, "once its first column is done, a board opens at the next, which has work left")
+    parked = copy_with(tmp, "parked-first", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the freeze to end"')
+    if parked is not None:
+        render(parked, tmp / "parked-first-out")
+        board = (tmp / "parked-first-out" / "index.html").read_text()
+        expect('<div class="scroll" data-start="2">' in board, "an item set aside is not work left: a board whose first column holds only it, and what is done, opens at the next")
     reused = copy_with(tmp, "reused", EXAMPLE, "project.toml", '[phases.reuse]\nstatus = "not-needed"\nwhy = "Two routes are too little for another project to take. The service template\'s README links this project instead."', '[phases.reuse]\nstatus = "now"')
     if reused is not None:
         (reused / "reuse.toml").write_text('[[section]]\nid = "takeaways"\ntitle = "What another project can take"\nkind = "defs"\n\n[[section.def]]\nterm = "The probes"\ntext = "[[EX-1]] and [[EX-2]], copied as they are."\n\n[[section.def]]\nterm = "The timeout"\ntext = "[[EX-3]], for a slow database."\n')

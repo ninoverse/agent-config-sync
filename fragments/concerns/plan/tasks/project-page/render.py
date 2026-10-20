@@ -1048,8 +1048,9 @@ def render_section(section, key, data, data_dir):
                 chips = "".join(chip(ITEMS[item_id]) for item_id in cell)
                 rendered.append(f'<div class="chips">{chips}</div>' if chips else "")
             cells.append(rendered)
-        # The board opens at its first column with work left, the finished ones behind it.
-        left = [index for index in range(len(columns)) if any(ITEMS[i].get("status") not in ("done", "happened", "dropped") for _, row in rows for i in row[index])]
+        # The board opens at its first column with work left, the finished ones behind it:
+        # an item set aside, deferred or moved, is not work left.
+        left = [index for index in range(len(columns)) if any(ITEMS[i].get("status") in UNFINISHED or not ITEMS[i].get("status") for _, row in rows for i in row[index])]
         start = left[0] + 1 if left and left[0] > 0 else None
         parts.append(table_html(head, cells, section.get("min_width", 160 * len(columns) + 140), "board", start))
     elif kind == "results":
