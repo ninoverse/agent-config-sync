@@ -482,6 +482,7 @@ STALE = [
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "[[Q1]]\'s answer" }', "plan.toml item EX-3: [[Q1]]'s reads as \"Q1 The probe's timeout in production's\": put the link after its noun"),
     ("build.toml", 'production"\nstatus = "done"\non = 2026-10-07', 'production"\nstatus = "done"\non = 2026-10-04', "Q1 is a question in Build dated 4 Oct, before Build started on 5 Oct"),
     ("analysis.toml", 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\n', "", "D2 is a decision without `options`"),
+    ("plan.toml", 'kind = "patch"\nneeds = ["Q1"]', 'kind = "patch"\nurl = "https://github.com/example/example-service/pull/15"\nneeds = ["Q1"]', "EX-2 and EX-3 are in progress at once in example/example-service"),
 ]
 
 # Each broken copy: the project it copies, the file, the text replaced, its

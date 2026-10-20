@@ -645,6 +645,7 @@ def check_rules(project, phases):
     # Criteria written after the work record it rather than steer it.
     if build["status"] in ("now", "done") and not any(item["type"] == "criterion" and item.get("status") != "dropped" for item in ITEMS.values()):
         problem("brief.toml", "Build has started, but the Brief has no success criterion: write them before the work, so they steer it")
+    running = {}  # the PRs in progress, by repository
     for item_id, item in ITEMS.items():
         where, status = item["where"], item.get("status")
         # A question about what to build is a decision, taken before the Plan's approval or
@@ -652,6 +653,11 @@ def check_rules(project, phases):
         later = item["amended"] and item["amended"]["on"] and approved and item["amended"]["on"] >= approved
         if approved and item["type"] == "decision" and status in UNFINISHED | {None} and not later:
             problem(where, f"{item_id} isn't taken, but the Plan was approved on {day(approved)}: take it, or defer it, saying what it waits on")
+        # Build's questions are the ones its work raises: one dated earlier was most likely a decision.
+        if item["type"] == "question" and item["phase"] == "build" and item["on"]:
+            if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):
+                started = f" on {day(build['start'])}" if build["start"] else ""
+                warn(where, f"{item_id} is a question in Build dated {day(item['on'])}, before Build started{started}: one asked before the Plan's approval is a decision, in the Analysis")
         # One recorded after the fact may have had no options, so this only warns.
         if item["type"] == "decision" and not item.get("options"):
             warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
@@ -660,11 +666,14 @@ def check_rules(project, phases):
             missing = [label for label in ("Branch", "Done when") if label not in labels]
             if missing:
                 problem(where, f"{item_id} is a PR without a {' or a '.join(missing)} field: the owner approves each PR with its branch, and Verify checks its Done when")
-        # Build's questions are the ones its work raises: one dated earlier was most likely a decision.
-        if item["type"] == "question" and item["phase"] == "build" and item["on"]:
-            if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):
-                started = f" on {day(build['start'])}" if build["start"] else ""
-                warn(where, f"{item_id} is a question in Build dated {day(item['on'])}, before Build started{started}: one asked before the Plan's approval is a decision, in the Analysis")
+            # A PR is in progress once it is open on GitHub, until it is done.
+            on_github = GITHUB.fullmatch(item.get("url") or "")
+            if on_github and status in UNFINISHED:
+                running.setdefault(on_github.group(1), []).append(item_id)
+    # One PR at a time in each repository. Two at once can be the owner's choice, so this only warns.
+    for repo, ids in running.items():
+        if len(ids) > 1:
+            warn("plan.toml", f"{', '.join(ids[:-1])} and {ids[-1]} are in progress at once in {repo}: the method runs one PR at a time in each repository")
 
 
 # ------------------------------------------------------------------ rendering
