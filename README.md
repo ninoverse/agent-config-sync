@@ -150,6 +150,7 @@ crates/agentcfg/            the composer: lib + bin, no markdown parser
 docs/plan.md                build sequence, decisions, glossary
 docs/fragment-authoring.md  how to write a fragment
 docs/profile-schema.md      the .agentprofile.yml schema
+docs/plan-kit.md            changing and checking the plan concern's kit
 ```
 
 ## Commands
