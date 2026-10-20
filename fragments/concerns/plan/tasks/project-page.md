@@ -93,16 +93,18 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   ended and later reopened; `[[event]]`s, the dates that aren't items, such
   as a scheduled run or a freeze, with `automated = true` on a run that starts
   on its own, which the page marks Automated; `[handoff]`, the notes for the
-  next session and the day they were `updated`; `[[glossary]]` entries,
-  `coined` or `borrowed`; and `css`, stylesheets of the project's own, beside
-  it.
+  next session and the day they were `updated`; `[[glossary]]` entries, each
+  a `term`, its `text` and its `source`, `coined` or `borrowed`; and `css`,
+  stylesheets of the project's own, beside it.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
   `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`;
   or, in the Retrospective, one of the parts it builds from the other phases,
   below.
   A section that carries on the one before it can go without a `title`, and
   `--since` then names it by that section's. A phase the user approves, such
-  as the Plan, has `approved`, the day they did.
+  as the Plan, has `approved`, the day they did. A section that shows a table,
+  such as a `table`, `repos` or `board`, takes `min_width`, the width in
+  pixels below which it scrolls sideways rather than squeeze its columns.
 - An `items` section has a `type`, which sets the words its statuses take:
   `piece`, `rule`, `criterion` (Met, Not met yet), `decision` (To decide,
   Taken), `question` (To answer, Answered), `pr` (To merge, Merged), `setting`
@@ -146,8 +148,11 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   and the later one where they stand.
 - A `board` with `auto = true` builds its waves from `needs`, over the item
   `types` it names, and its rows from each item's `repo`, or `rows_default`;
-  `waves` subtitles each wave. Without `auto`, it takes `columns` and `row`s.
-  Either way, it opens at its first column with an unfinished item.
+  `waves` subtitles each wave. Without `auto`, it takes `columns`, as
+  `[title, subtitle]` pairs, and `[[section.row]]`s, each a `name` and its
+  `cells`, a list of ids for each column. Either way, `rows_title` heads the
+  column of row names, and it opens at its first column with an unfinished
+  item.
   A `results` section in the same phase leaves out what the board shows until
   it has a `result`, and then shows the result alone, or until it moves, and
   then shows the link to its new page.
@@ -165,7 +170,11 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
   chosen. One with nothing to list says so.
 - A `figures` section with `auto = true` starts with what the data counts: PRs
   merged, releases, decisions taken, settings changed by hand, lessons adopted,
-  and the days from the first date to the last. Its `figure`s follow.
+  and the days from the first date to the last. Its `figure`s follow, each a
+  `value` and its `label`. A `note` under them says where they come from; with
+  `auto` and no `note`, it gives the day they were counted.
+- A `table` section has `head`, its column titles, and `rows`, each a list of
+  its cells.
 - Text is HTML, as the page shows it, and `[[D1]]` anywhere in it links to D1
   with its short title: name items that way, never by a bare number, and put
   the link after its noun, as in "the merge of `[[HMI-8]]`". Dates are TOML
@@ -173,7 +182,8 @@ that is gone gets a warning: an item is never deleted, but `dropped`, with
 - The calendar and the Agenda are built from every date the data holds: events,
   the days items reached their status, amendments, and the phases' dates.
   Nothing in them is written by hand.
-- A `prose` section can take its `body` from a `file` instead, and `prefix`
+- A `prose` section's `body` is set at reading width, or across the page with
+  `wide = true`. It can take its `body` from a `file` instead, and `prefix`
   moves that file's ids, and the links to them, under a prefix: the way to
   bring in a page that predates the kit.
 
