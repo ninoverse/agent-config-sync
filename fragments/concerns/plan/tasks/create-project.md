@@ -1,5 +1,5 @@
 ---
-name: project-page
+name: create-project
 title: Building the project page
 when: Running a project in phases
 description: Build or update a project's page from its TOML data, and check it
@@ -17,7 +17,7 @@ Copy the example outside the repository. A project's data is its own record,
 published beside its page, and not part of any repository:
 
 ```bash
-cp -r .agents/project-page/example <data directory>
+cp -r .agents/create-project/example <data directory>
 ```
 
 Then set `repo`, `objective`, `summary` and `read_at` in `project.toml`, and
@@ -27,7 +27,7 @@ say what each field holds.
 ## Render
 
 ```bash
-python3 .agents/project-page/render.py <data directory> <out directory>
+python3 .agents/create-project/render.py <data directory> <out directory>
 ```
 
 It writes `index.html`, holding the calendar, who holds the ball, the phase in

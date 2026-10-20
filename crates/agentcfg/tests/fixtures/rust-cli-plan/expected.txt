@@ -29,8 +29,8 @@ AGENTS.md (region)
     concerns/fragment-authoring/tasks/new-value.md
 .agents/plan-phases.md (region)
     concerns/plan/phases.md
-.agents/project-page.md (region)
-    concerns/plan/tasks/project-page.md
+.agents/create-project.md (region)
+    concerns/plan/tasks/create-project.md
 CLAUDE.md (region)
     language/rust/automation.md
 .claude/skills/gates/SKILL.md (whole)
@@ -39,21 +39,21 @@ CLAUDE.md (region)
     language/rust/tasks/new-unit.md
 .claude/skills/new-value/SKILL.md (whole)
     concerns/fragment-authoring/tasks/new-value.md
-.claude/skills/project-page/SKILL.md (whole)
-    concerns/plan/tasks/project-page.md
-.claude/skills/publish-project-page/SKILL.md (whole)
-    concerns/plan/tasks/publish-project-page.md
+.claude/skills/create-project/SKILL.md (whole)
+    concerns/plan/tasks/create-project.md
+.claude/skills/publish-project/SKILL.md (whole)
+    concerns/plan/tasks/publish-project.md
 .claude/skills/why/SKILL.md (whole)
 .claude/settings.json (whole)
-.agents/project-page/example/analysis.toml (whole)
-.agents/project-page/example/brief.toml (whole)
-.agents/project-page/example/build.toml (whole)
-.agents/project-page/example/deferred.toml (whole)
-.agents/project-page/example/plan.toml (whole)
-.agents/project-page/example/project.toml (whole)
-.agents/project-page/example/research.toml (whole)
-.agents/project-page/example/verify.toml (whole)
-.agents/project-page/guide.html (whole)
-.agents/project-page/page.css (whole)
-.agents/project-page/page.js (whole)
-.agents/project-page/render.py (whole)
+.agents/create-project/example/analysis.toml (whole)
+.agents/create-project/example/brief.toml (whole)
+.agents/create-project/example/build.toml (whole)
+.agents/create-project/example/deferred.toml (whole)
+.agents/create-project/example/plan.toml (whole)
+.agents/create-project/example/project.toml (whole)
+.agents/create-project/example/research.toml (whole)
+.agents/create-project/example/verify.toml (whole)
+.agents/create-project/guide.html (whole)
+.agents/create-project/page.css (whole)
+.agents/create-project/page.js (whole)
+.agents/create-project/render.py (whole)

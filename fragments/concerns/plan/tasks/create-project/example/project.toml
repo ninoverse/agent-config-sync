@@ -1,7 +1,7 @@
 # A project's data: this file, and a <phase>.toml beside it for each phase with
 # content. Render it with:
 #
-#   python3 .agents/project-page/render.py <this directory> <out directory>
+#   python3 .agents/create-project/render.py <this directory> <out directory>
 #
 # Text is HTML, written as the page shows it, and [[D1]] anywhere in it links
 # to item D1 with its short title. Dates are TOML dates, such as 2026-10-07.

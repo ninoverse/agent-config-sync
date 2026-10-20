@@ -1,5 +1,5 @@
 ---
-name: publish-project-page
+name: publish-project
 title: Publishing the project page
 when: Running a project in phases
 description: Publish or update a project page as a claude.ai artifact
@@ -7,8 +7,8 @@ emit: [claude]
 argument-hint: "<out directory> [artifact url]"
 ---
 
-Publishes the page `/project-page` built as a claude.ai artifact, with its data
-beside it, so the next session starts from the data.
+Publishes the page `/create-project` built as a claude.ai artifact, with its
+data beside it, so the next session starts from the data.
 
 The page to publish: $ARGUMENTS
 

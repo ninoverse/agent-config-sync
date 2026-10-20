@@ -5,9 +5,9 @@ when: Running a project in phases
 ---
 
 A project that takes more than one PR, or more than one repository, runs in
-phases, and one page tracks it: the project page, which `/project-page` builds.
-Each phase starts with a discussion with the user, and nothing is written before
-they answer.
+phases, and one page tracks it: the project page, which `/create-project`
+builds. Each phase starts with a discussion with the user, and nothing is
+written before they answer.
 
 ## The page
 

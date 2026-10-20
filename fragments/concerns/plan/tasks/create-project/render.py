@@ -2080,7 +2080,7 @@ def retrospective_page(project, phases, data_dir):
 {body}
 </section>
 </main>
-{site_footer(glossary(project.get("glossary", [])), "Built with <code>/project-page</code> from the data behind the project's page.")}
+{site_footer(glossary(project.get("glossary", [])), "Built with <code>/create-project</code> from the data behind the project's page.")}
 </div>
 """
     return title, expand_refs(text, "project.toml")

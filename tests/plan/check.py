@@ -17,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-KIT = Path("fragments/concerns/plan/tasks/project-page")
+KIT = Path("fragments/concerns/plan/tasks/create-project")
 EXAMPLE = KIT / "example"
 # The Warnings button's icon, as the renderer draws it.
 ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2l6.3 11H1.7z"/><path d="M8 6.6v3M8 11.6v.1"/></svg>'
