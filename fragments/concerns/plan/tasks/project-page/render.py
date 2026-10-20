@@ -683,8 +683,13 @@ def check_rules(project, phases):
         # One recorded after the fact may have had no options, so this only warns.
         if item["type"] == "decision" and not item.get("options"):
             warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
+        labels = {field[0] for field in item.get("fields", []) if is_field(field)}
+        # An adopted lesson's change waits in Deferred until it ships. The data can only show
+        # whether something there, or in the Plan, names the lesson, so this only warns.
+        if item["type"] == "lesson" and status == "done" and "Becomes" in labels:
+            if not any(ITEMS[other]["phase"] in ("deferred", "plan") for other in item["needed_by"] + item["mentioned_in"]):
+                warn(where, f"{item_id} is an adopted lesson, but nothing in Deferred or the Plan carries its change: it waits in Deferred until it ships, needing the lesson")
         if item["type"] == "pr":
-            labels = {field[0] for field in item.get("fields", []) if is_field(field)}
             missing = [label for label in ("Branch", "Done when") if label not in labels]
             if missing:
                 problem(where, f"{item_id} is a PR without a {' or a '.join(missing)} field: the owner approves each PR with its branch, and Verify checks its Done when")

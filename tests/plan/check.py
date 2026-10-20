@@ -460,6 +460,10 @@ def check_full(tmp):
         expect('id="l1"' in retro and 'id="glossary"' in retro and "lesson adopted" in retro, "it holds the lessons, the figures and the glossary")
         expect('id="guides"' not in retro and 'id="guide-board"' not in retro, "but not the guides, which are about the project page")
         expect('<details class="fold">' in retro and 'class="open-all"' not in retro, "its cards fold too, one at a time, since it has no script to open them all")
+    uncarried = copy_with(tmp, "uncarried", FULL, "deferred.toml", 'title = "The rule change from [[L2]]"\nshort = "Scrape-cost rule"\nstatus = "blocked"\nneeds = ["L2"]', 'title = "The scrape-cost rule"\nshort = "Scrape-cost rule"\nstatus = "blocked"')
+    if uncarried is not None:
+        run = render(uncarried, tmp / "uncarried-out")
+        expect(run.returncode == 0 and "warning: retrospective.toml item L2: L2 is an adopted lesson, but nothing in Deferred or the Plan carries its change" in run.stderr, f"an adopted lesson's change waits in Deferred, or the render warns: {run.stderr}")
     linked = copy_with(tmp, "full-linked", FULL, "retrospective.toml", "[[MX-1]] shows", '<a href=\\"#mx-1\\">MX-1</a> shows')
     if linked is not None:
         expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")
