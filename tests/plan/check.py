@@ -19,6 +19,8 @@ from pathlib import Path
 
 KIT = Path("fragments/concerns/plan/tasks/project-page")
 EXAMPLE = KIT / "example"
+# The Warnings button's icon, as the renderer draws it.
+ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2l6.3 11H1.7z"/><path d="M8 6.6v3M8 11.6v.1"/></svg>'
 FULL = Path(__file__).resolve().parent / "full"
 failed = []
 
@@ -83,6 +85,14 @@ def check_example(tmp):
     expect(reuse in leaves and 'id="reuse"' not in page and "Two routes are too little" not in page and '"reuse"' not in manifest(page), "a phase not needed has a tab that doesn't open, and no view; its reason stays in the data")
     expect('<span class="name">Deferred</span><span class="state">2 waiting</span>' in leaves, f"Deferred's tab says how many items wait, deferred work that is blocked among them: {leaves}")
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
+    expect('href="#warnings"' not in views and 'id="warnings"' not in page, "a page rendered without a warning has no Warnings")
+    warned = copy_with(tmp, "warned", EXAMPLE, "plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }')
+    if warned is not None and replace_in(warned, "analysis.toml", 'recommended = "a"\nchosen = "a"\nfields = [["Reasons", "One port', 'recommended = "a"\nfields = [["Reasons", "One port'):
+        render(warned, tmp / "warned-out")
+        index = tmp / "warned-out" / "index.html"
+        sheet = between(index.read_text(), '<dialog class="sheet" aria-labelledby="warnings-title">', "</dialog>") if index.exists() else ""
+        listed = ['<h3><code>plan.toml</code></h3>', '<li><b>item EX-3</b> Q1 is named by its number alone: write &#91;&#91;Q1]], which links it with its summary</li>', '<h3><code>analysis.toml</code></h3>', '<li>D1 is <code>done</code>, but none of its options is <code>chosen</code></li>']
+        expect(all(part in sheet for part in listed) and 'aria-label="Close the warnings"' in sheet and "<a " not in between(sheet, '<section class="phase"', "</section>"), f"the Warnings sheet lists each warning under the file it names, a key as code, a link as written: {sheet}")
     expect('<footer class="site"' not in page, "the page has no footer: the guides answer what it would")
     guides = phase["guides"]
     parts = ("header", "phases", "cards", "statuses", "kinds", "board", "agenda", "answering")
@@ -639,6 +649,9 @@ def check_stale(tmp):
         warned = [line for line in run.stderr.splitlines() if line.startswith("warning: ")]
         expect(any(message in line for line in warned), f"stale case {index} warns {message!r}; it said: {run.stderr.strip()}")
         expect((out / "index.html").exists(), f"stale case {index} still writes the page")
+        views = between((out / "index.html").read_text(), '<nav class="views"', "</nav>") if (out / "index.html").exists() else ""
+        shown = f'<a href="#warnings" data-phase="warnings">{ICON}<span>Warnings</span> <b class="n-warn">{len(warned)}</b></a>'
+        expect(shown in views, f"stale case {index} opens its {len(warned)} warnings from beside the Agenda and the Guides: {views[-300:]}")
 
 
 def check_unlinked(tmp):

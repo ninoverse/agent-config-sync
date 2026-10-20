@@ -47,7 +47,9 @@ they answer.
 - Rendering warns about what looks stale, such as a Done phase that still holds
   an unfinished item, a decision taken that no PR carries out or with no option
   chosen, a merged PR without its result, or an item Blocked on work that is
-  done. Fix each before publishing, or tell the user why it stands.
+  done. Fix each before publishing, or tell the user why it stands. The page
+  lists those that stand in its Warnings, a third view at its top right, which
+  shows only when there are some, with how many.
 
 ## The phases
 

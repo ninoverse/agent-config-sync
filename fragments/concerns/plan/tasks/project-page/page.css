@@ -115,6 +115,8 @@
   nav.views a:hover { border-color: var(--outline); }
   nav.views a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); box-shadow: inset 0 -3px 0 var(--accent-fill); }
   nav.views svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  /* How many warnings the render gave, in the tone of what waits on someone. */
+  nav.views .n-warn { min-width: 20px; padding: 0 6px; border-radius: var(--corner-full); background: var(--open-soft); color: var(--open); font-size: 0.78rem; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums; }
   .lede { font-size: 1.12rem; margin-top: 16px; }
   .readat { font-size: 0.9rem; color: var(--ink-muted); }
 
@@ -446,6 +448,8 @@
     /* A count's box shows its number; its word is for screen readers. */
     table.cal li.count { width: auto; height: auto; min-width: 15px; padding: 0 3px; font-size: 0.68rem; line-height: 1.35; text-align: center; border-radius: var(--corner-xs); }
     table.cal li.count .word { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    /* So does the Warnings button, beside its sign. */
+    nav.views a[href="#warnings"] > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .glance { padding: 10px 14px; }
     dialog.sheet { padding: 0 16px; }
     nav.phases ol { gap: 5px; }

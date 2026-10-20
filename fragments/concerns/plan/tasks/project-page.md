@@ -81,8 +81,9 @@ It writes nothing, and names the file and the item, when:
 - `needs` loops, or a date isn't one;
 - the HTML in a field doesn't nest.
 
-It still writes the page, and prints a warning naming the file and the item,
-when:
+It still writes the page, prints a warning naming the file and the item, and
+lists it in the page's Warnings, which opens beside the Agenda and the Guides,
+with how many there are, when:
 
 - a state looks stale, as *Project phases* says;
 - text names an item by its number alone rather than its `[[ref]]`, outside a

@@ -1912,8 +1912,23 @@ def progress():
 ICONS = {
     "agenda": '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>',
     "guides": '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M6.2 6.3a1.85 1.85 0 1 1 2.7 1.6c-.6.33-.9.75-.9 1.35v.25"/><path d="M8 11.4v.1"/></svg>',
+    "warnings": '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2l6.3 11H1.7z"/><path d="M8 6.6v3M8 11.6v.1"/></svg>',
     "close": '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
 }
+
+
+def warnings_view():
+    """The render's warnings, under the file each names, for whoever fixes the data: a key
+    in backticks as code, and a [[ref]] as written, since the warning is about the text."""
+    groups = {}
+    for line in warnings:
+        where, text = line.split(": ", 1)
+        file, _, rest = where.partition(" ")
+        text = re.sub(r"`([^`]*)`", r"<code>\1</code>", esc(text).replace("[[", "&#91;&#91;"))
+        # Where in the file, unless the warning starts with the item it is in.
+        head = f"<b>{esc(rest)}</b> " if rest and not text.startswith(rest.removeprefix("item ") + " ") else ""
+        groups.setdefault(file, []).append(f"<li>{head}{text}</li>")
+    return "\n".join(f'<section class="block"><h3><code>{esc(file)}</code></h3><ul class="warnings">{"".join(rows)}</ul></section>' for file, rows in groups.items())
 
 
 def sheet(key, name, note, inner, src=""):
@@ -1933,8 +1948,11 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     css = stylesheet(project, data_dir)
     title = f'{project.get("repo", "")}-{project.get("objective", "")}'
     counts = progress()
-    # The views that aren't phases: the agenda, and the guides to using the page.
+    # The views that aren't phases: the agenda, the guides to using the page, and the
+    # render's warnings, when it gave any, with how many.
     views = "".join(f'<a href="#{key}" data-phase="{key}">{ICONS[key]}<span>{name}</span></a>' for key, name in (("agenda", "Agenda"), ("guides", "Guides")))
+    if warnings:
+        views += f'<a href="#warnings" data-phase="warnings">{ICONS["warnings"]}<span>Warnings</span> <b class="n-warn">{len(warnings)}</b></a>'
     tabs, leaves = [], []
     # What waits in Deferred: an item set aside, and deferred work not picked up yet.
     waiting = sum(1 for item in ITEMS.values() if item.get("status") in PARKED or (item["type"] == "deferred" and item.get("status") in UNFINISHED))
@@ -1972,6 +1990,8 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     else:
         files["guides"] = guides_html + "\n"
         sheets.append(sheet("guides", "Guides", "", "", ' data-src="phases/guides.html"'))
+    if warnings:
+        sheets.append(sheet("warnings", "Warnings", "", f"\n{warnings_view()}\n"))
     read_at = project["read_at"]
     # What the agent reads again before each publish is the PRs, from GitHub.
     read = "PR statuses" if any(item["type"] == "pr" for item in ITEMS.values()) else "Statuses"
