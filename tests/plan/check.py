@@ -327,6 +327,13 @@ def check_example(tmp):
         owner = between(between(index.read_text(), 'id="ball"', "</section>"), "<h3>The owner</h3>", "</ul>") if index.exists() else ""
         lines = re.findall(r'<li><span class="pill ask">Merge</span> <a class="ref" href="#(ex-\d)">', owner)
         expect(lines == ["ex-2", "ex-3"], f"each of the owner's items has a line of its own, with what to do: {owner}")
+    approving = copy_with(tmp, "approving", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"\nend = 2026-10-03\n\n[phases.build]\nstatus = "now"\nstart = 2026-10-05\n\n[phases.verify]\nstatus = "now"\nstart = 2026-10-06', '[phases.plan]\nstatus = "now"\n\n[phases.build]\nstatus = "to-come"\n\n[phases.verify]\nstatus = "to-come"')
+    if approving is not None and replace_in(approving, "plan.toml", "approved = 2026-10-03\n", ""):
+        run = render(approving, tmp / "approving-out")
+        index = tmp / "approving-out" / "index.html"
+        owner = between(between(index.read_text(), 'id="ball"', "</section>"), "<h3>The owner</h3>", "</ul>") if index.exists() else ""
+        expect(owner.startswith('<h3>The owner</h3><ul><li><span class="pill ask">Approve</span> <a href="#plan">the Plan</a></li>'), f"a Plan not approved yet waits on the owner, first: {run.stderr} {owner}")
+    expect('href="#plan">the Plan' not in ball, "and once approved, no longer")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
     expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the agenda holds what happened")

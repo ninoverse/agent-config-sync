@@ -1470,6 +1470,10 @@ def calendar_view(project, phases):
         return f'<div class="col"><h3>{title}</h3><ul>{body}</ul>{more}</div>'
 
     owner_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in owner]
+    # A Plan written and not approved yet waits on the owner before anything else, though it isn't an item.
+    plan = phases.get("plan", {})
+    if project["status"]["plan"]["status"] == "now" and plan.get("section") and not plan.get("approved"):
+        owner_rows.insert(0, '<li><span class="pill ask">Approve</span> <a href="#plan">the Plan</a></li>')
     agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
     # The next three dates, each a link to its day in the agenda, which has them all.
     date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word, ref in ahead[:3]]
