@@ -40,11 +40,11 @@ since the user finds the page by it.
 
 ## The Retrospective, alone
 
-Once the Retrospective is written, render it with `--retrospective` and publish
-`retrospective.html` as an artifact of its own, titled
-`<repo>-<objective>-retrospective`, with an `icon` such as `notes`. It carries
-no data of its own: publish it again from the project's data whenever the
-Retrospective changes. Whom to share it with is the user's choice.
+For a project shown outside it, once its Retrospective has its story, render it
+with `--retrospective` and publish `retrospective.html` as an artifact of its
+own, titled `<repo>-<objective>-retrospective`, with an `icon` such as `notes`.
+It carries no data of its own: publish it again from the project's data
+whenever the Retrospective changes. Whom to share it with is the user's choice.
 
 ## Hand it over
 

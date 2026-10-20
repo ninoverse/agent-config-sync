@@ -87,15 +87,16 @@ they answer.
   shared rule, a shared workflow, or a page to link instead, and nothing else:
   each piece a card, saying what it is, how to take it, and the items that
   built it.
-- **Retrospective**: the project's record, its story in the user's voice: in
-  short, the problem, the approach, the outcome and the user's part; headline
-  figures and the day they were checked; how each phase went; what only using
-  it revealed; what the record corrected, as it was and as it is; roads not
-  taken; the risks and how they closed; what it cost; what was learned; what
-  comes next; the decision log. The record parts are built from the other
-  phases, and the figures counted from the data wherever they can be; the rest
-  is written with the user. It also renders alone, as a page the user can
-  share.
+- **Retrospective**: the project's record, built from the other phases:
+  headline figures, counted from the data, and the day they were checked; when
+  each phase ran; roads not taken; the risks and how they closed; what it
+  cost; what comes next; the decision log. Then what was learned. A project
+  shown outside it, such as in a portfolio, also gets its story, written with
+  the user in their voice: in short, the problem, the approach, the outcome
+  and the user's part; a line on how each phase went; what only using it
+  revealed; what the record corrected, as it was and as it is; and what the
+  data can't count of what it cost. Such a Retrospective also renders alone,
+  as a page the user can share.
 - **Deferred**: its deferred work and questions, and what other phases have
   set aside, each with what it waits on and where it goes when that comes.
   Deferring an item lets the Retrospective go ahead without it.
