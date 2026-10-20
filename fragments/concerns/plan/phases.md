@@ -56,6 +56,8 @@ they answer.
   with what the project does with it (changes it, reads it, or creates it), and
   the ground rules: how the user wants the project run, such as who merges and
   which branches need asking. A ground rule holds until the user changes it.
+  The success criteria are written before Build starts, so they steer the
+  work rather than record it.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises.
 - **Analysis**: the decisions, and nothing else. A question about what to

@@ -642,6 +642,9 @@ def check_rules(project, phases):
         problem("plan.toml", "the Plan is done, but not approved: give it `approved`, the day the owner approved it")
     if approved and build["start"] and build["start"] < approved and not build["early"]:
         problem("project.toml [phases.build]", f"Build starts on {day(build['start'])}, before the Plan's approval on {day(approved)}: say why, in `early`")
+    # Criteria written after the work record it rather than steer it.
+    if build["status"] in ("now", "done") and not any(item["type"] == "criterion" and item.get("status") != "dropped" for item in ITEMS.values()):
+        problem("brief.toml", "Build has started, but the Brief has no success criterion: write them before the work, so they steer it")
     for item_id, item in ITEMS.items():
         where, status = item["where"], item.get("status")
         # A question about what to build is a decision, taken before the Plan's approval or

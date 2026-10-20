@@ -1,0 +1,14 @@
+# The Brief: only its success criterion, which Build needs written before it starts.
+
+[[section]]
+id = "criteria"
+title = "Success criteria"
+kind = "items"
+type = "criterion"
+
+[[section.item]]
+id = "SC1"
+title = "A scraper reads the service's metrics from one endpoint"
+short = "One endpoint"
+status = "done"
+on = 2026-10-07

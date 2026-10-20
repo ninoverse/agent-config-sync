@@ -420,7 +420,7 @@ def check_full(tmp):
     expect("<dt>Time</dt><dd>38 days, from 1 Sep to 8 Oct</dd>" in built["what-it-took"] and "<dt>PRs</dt><dd>1 merged: 1 MX; 1 closed unmerged</dd>" in built["what-it-took"] and "<dt>Running costs</dt>" in built["what-it-took"], f"and what it took, what the data counts first: {built['what-it-took']}")
     expect("<dt>Waiting on a trigger</dt>" in built["next"] and 'href="#t1"' in built["next"], "and what comes next, by what starts it")
     expect('<span class="key">b</span> <code>/stats</code>' in built["decision-log"] and "<h4>" not in built["decision-log"], "and every decision, with the option chosen, a batch titled only when there are several")
-    expect(page.count('<span class="off t-done">') == 3, "nor does a phase done but never written, such as full/'s Brief")
+    expect(page.count('<span class="off t-done">') == 2, "nor does a phase done but never written, such as full/'s Research")
     expect('id="cost"' in page and "<th>Days</th>" in page, "a table renders")
     expect('id="old-status"' in page and 'href="#old-status"' in page, "an imported page's ids and links move under its prefix")
     expect('aria-labelledby="old-status-title"' in page and 'for="old-pick"' in page, "so do the attributes that name ids")
@@ -535,6 +535,7 @@ BROKEN = [
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
     (EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"', "D2 isn't taken, but the Plan was approved on 3 Oct"),
+    (EXAMPLE, "verify.toml", '[status.SC1]\nstatus = "done"\non = 2026-10-06\n\n[status.SC2]\nstatus = "blocked"', '[status.SC1]\nstatus = "dropped"\nwhy = "Restarts are the platform\'s."\n\n[status.SC2]\nstatus = "dropped"\nwhy = "Traffic is too."', "brief.toml: Build has started, but the Brief has no success criterion"),
 ]
 
 
