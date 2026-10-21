@@ -40,8 +40,7 @@ The project: $ARGUMENTS
    holds the ball, as the render prints them, and what is in flight and what
    comes next, as the notes say; then what changed since the last publish.
    Show: that summary, and each warning.
-5. When `--since` listed a change, publish it with `/publish-project`, now
-   that the user has read it in the chat: the page then shows what happened
-   while no session ran.
+5. Don't publish: what step 4 told the user stays in the chat until the next
+   `/update-project`, which reads the state again and publishes it.
 6. Carry on with what the notes say comes next, asking the user first about
    anything they leave open.
