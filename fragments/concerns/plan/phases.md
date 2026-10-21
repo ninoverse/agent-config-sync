@@ -54,9 +54,10 @@ closes it, and `/resume-project` picks it up in a new session.
 - Rendering warns about what looks stale, such as a Done phase that still holds
   an unfinished item, a decision taken that no PR carries out or with no option
   chosen, a merged PR without its result, or an item Blocked on work that is
-  done. Fix each before publishing, or tell the user why it stands. The page
-  lists those that stand in its Warnings, a third view at its top right, which
-  shows only when there are some, with how many.
+  done. Fix each before publishing, or tell the user why it stands; once they
+  agree, the data says why on its item, so no session asks again. The page
+  lists the warnings in its Warnings, a third view at its top right, which
+  shows only when there are some, with how many, those that stand apart.
 
 ## The phases
 

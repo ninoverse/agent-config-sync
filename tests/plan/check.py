@@ -524,6 +524,7 @@ STALE = [
     ("analysis.toml", 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\n', "", "D2 is a decision without `options`"),
     ("plan.toml", 'kind = "patch"\nneeds = ["Q1"]', 'kind = "patch"\nurl = "https://github.com/example/example-service/pull/15"\nneeds = ["Q1"]', "EX-2 and EX-3 are in progress at once in example/example-service"),
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }', "plan.toml item EX-3: Q1 is named by its number alone: write [[Q1]]"),
+    ("analysis.toml", 'chosen = "a"\nfields = [["Reasons", "One port', 'chosen = "a"\nstands = "Kept as it is."\nfields = [["Reasons", "One port', "D1 has `stands`, but no warning stands on it: remove `stands`"),
 ]
 
 # Each copy that names an item without its link, where it can't take one: the file,
@@ -684,6 +685,23 @@ def check_stale(tmp):
         expect(shown in views, f"stale case {index} opens its {len(warned)} warnings from beside the Agenda and the Guides: {views[-300:]}")
 
 
+def check_standing(tmp):
+    """A warning the owner chose to keep says why, on its item: the render prints it apart,
+    and the page's Warnings list it under its own heading, with the why."""
+    options = 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\n'
+    data = copy_with(tmp, "standing", EXAMPLE, "analysis.toml", options, 'stands = "Recorded after the fact, with only what was decided."\n')
+    if data is None:
+        return
+    run = render(data, tmp / "standing-out")
+    page = (tmp / "standing-out" / "index.html").read_text() if run.returncode == 0 else ""
+    expect("warning:" not in run.stderr, f"a warning that stands isn't printed as one to fix: {run.stderr}")
+    expect("stands: analysis.toml item D2: D2 is a decision without `options`: list them, with the reasons for the one recommended\n  why: Recorded after the fact, with only what was decided.\n" in run.stderr, f"it is printed apart, with why it stands: {run.stderr}")
+    expect("; 1 warning, 1 standing\n" in run.stdout, f"and the summary counts it apart: {run.stdout}")
+    views, sheet = between(page, '<nav class="views"', "</nav>"), between(page, 'aria-labelledby="warnings-title"', "</dialog>")
+    expect('<span>Warnings</span> <b class="n-warn">1</b>' in views, f"the Warnings button still counts it: {views[-200:]}")
+    expect("<h3>Standing, by the owner's choice</h3>" in sheet and "Recorded after the fact, with only what was decided." in sheet and "<h3><code>analysis.toml</code></h3>" not in sheet, f"the sheet lists it under its own heading, with the why: {sheet[-900:]}")
+
+
 def check_unlinked(tmp):
     for index, (file, old, new) in enumerate(UNLINKED):
         data = copy_with(tmp, f"unlinked-{index}", EXAMPLE, file, old, new)
@@ -712,6 +730,7 @@ def main():
         check_full(tmp)
         check_since(tmp)
         check_stale(tmp)
+        check_standing(tmp)
         check_unlinked(tmp)
         check_broken(tmp)
     for what in failed:

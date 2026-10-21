@@ -117,9 +117,13 @@ with how many there are, when:
   name each other, though its change waits there until it ships;
 - with `--since`, which renders for a publish, `read_at` is more than 15
   minutes before the render: the page would show a state that may have
-  changed.
+  changed;
+- an item has `stands`, but no warning about it to stand.
 
-Fix the data and render again, or tell the user why the warning stands.
+Fix the data and render again, or tell the user why the warning stands. Once
+they agree it stands, say why on its item, in `stands`: the render then prints
+its warnings apart, each with why, and the page's Warnings list them under a
+heading of their own.
 
 `--since <directory>`, given the data as it was last published, also prints
 what has changed in each phase since, statuses in their type's words. It
@@ -162,6 +166,7 @@ doesn't say it is an amendment, with `amended`.
   `<span class="pill ...">` and nothing else, such as what a comparison found,
   shows as a chip instead, so a folded card shows it. Optionally, it has:
   - `short`, the name it goes by wherever it is linked;
+  - `stands`, why its warnings stand, by the user's choice;
   - `kind`: `major`, `minor`, `patch` or `owner`;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
     `result`, once it lands: `open`, `ready`, `blocked`, `done` or `dropped`;

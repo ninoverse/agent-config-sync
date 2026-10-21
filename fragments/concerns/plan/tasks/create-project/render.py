@@ -171,6 +171,7 @@ FONTS = (
 )
 
 problems, warnings = [], []
+STANDS = {}  # the warnings that stand by the owner's choice, each with why, from its item's `stands`
 ITEMS = {}  # every item of every phase, by id, in phase order
 STATES = {}  # each phase's state and dates, as project.toml gives them
 TODAY = None  # the day the state was read
@@ -1974,18 +1975,43 @@ ICONS = {
 }
 
 
+def set_apart():
+    """Sets apart each warning about an item whose `stands` says why its warnings stand, by
+    the owner's choice, so that no session asks again; and warns about a `stands` that no
+    warning needs."""
+    about = re.compile(r"\w+\.toml (?:item (\S+)|\[status\.(\S+)\])")
+    held = set()
+    for line in warnings:
+        match = about.fullmatch(line.split(": ", 1)[0])
+        item_id = match and (match.group(1) or match.group(2))
+        if item_id in ITEMS and ITEMS[item_id].get("stands"):
+            STANDS[line] = ITEMS[item_id]["stands"]
+            held.add(item_id)
+    for item_id, item in ITEMS.items():
+        if item.get("stands") and item_id not in held:
+            warn(item["where"], f"{item_id} has `stands`, but no warning stands on it: remove `stands`")
+
+
 def warnings_view():
     """The render's warnings, under the file each names, for whoever fixes the data: a key
-    in backticks as code, and a [[ref]] as written, since the warning is about the text."""
-    groups = {}
+    in backticks as code, and a [[ref]] as written, since the warning is about the text.
+    Those that stand by the owner's choice come last, under a heading of their own, each
+    with why."""
+    groups, kept = {}, []
     for line in warnings:
         where, text = line.split(": ", 1)
         file, _, rest = where.partition(" ")
         text = re.sub(r"`([^`]*)`", r"<code>\1</code>", esc(text).replace("[[", "&#91;&#91;"))
         # Where in the file, unless the warning starts with the item it is in.
         head = f"<b>{esc(rest)}</b> " if rest and not text.startswith(rest.removeprefix("item ") + " ") else ""
-        groups.setdefault(file, []).append(f"<li>{head}{text}</li>")
-    return "\n".join(f'<section class="block"><h3><code>{esc(file)}</code></h3><ul class="warnings">{"".join(rows)}</ul></section>' for file, rows in groups.items())
+        if line in STANDS:
+            kept.append(f'<li><code>{esc(file)}</code> {head}{text}<p class="why">{STANDS[line]}</p></li>')
+        else:
+            groups.setdefault(file, []).append(f"<li>{head}{text}</li>")
+    sections = [f'<section class="block"><h3><code>{esc(file)}</code></h3><ul class="warnings">{"".join(rows)}</ul></section>' for file, rows in groups.items()]
+    if kept:
+        sections.append(f'<section class="block"><h3>Standing, by the owner\'s choice</h3><ul class="warnings">{"".join(kept)}</ul></section>')
+    return "\n".join(sections)
 
 
 def sheet(key, name, note, inner, src=""):
@@ -2146,7 +2172,10 @@ def failed():
     """Prints the problems, or else the warnings, and says whether there were problems."""
     if not problems:
         for line in warnings:
-            print(f"warning: {line}", file=sys.stderr)
+            if line not in STANDS:
+                print(f"warning: {line}", file=sys.stderr)
+        for line, why in STANDS.items():
+            print(f"stands: {line}\n  why: {plain_text(why)}", file=sys.stderr)
         return False
     for line in problems:
         print(line, file=sys.stderr)
@@ -2185,8 +2214,10 @@ def main(argv):
     read_at = project["read_at"]
     if since is not None and datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - read_at > datetime.timedelta(minutes=15):
         warn("project.toml", f"the state was read at {read_at:%H:%M} UTC on {day(read_at.date())}, more than 15 minutes before this render: read it again right before publishing, and set `read_at`")
+    set_apart()
     COUNTED.extend(counted(project, phases))
     warned = f"; {len(warnings)} warning{'s' if len(warnings) != 1 else ''}" if warnings else ""
+    warned += f", {len(STANDS)} standing" if STANDS else ""
     if "--retrospective" in flags:
         title, text = retrospective_page(project, phases, data_dir)
         check([("retrospective.html", text)])
