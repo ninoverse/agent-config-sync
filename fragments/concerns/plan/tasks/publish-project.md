@@ -28,7 +28,8 @@ The page to publish: $ARGUMENTS
 
    Show: each PR read, and its state.
 2. Set `read_at` to now, in UTC.
-3. Render with `--since`, given the data as last published:
+3. Render with `--since`, given the data as last published, or without it on
+   the first publish, which has none:
 
    ```bash
    python3 .agents/create-project/render.py <data directory> <out directory> \
@@ -42,7 +43,8 @@ The page to publish: $ARGUMENTS
 5. Publish, as below, then keep a copy of the data as published: the next
    `--since` compares with it.
 6. Tell the user what changed, from what `--since` printed: a correction
-   first, saying what was wrong. Show: the link.
+   first, saying what was wrong; or, on the first publish, that it is the
+   first. Show: the link.
 
 ## The first publish
 
