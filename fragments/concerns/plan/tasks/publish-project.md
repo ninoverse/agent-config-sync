@@ -23,7 +23,8 @@ The page to publish: $ARGUMENTS
    - closed without a merge: ask the user whether it is `dropped`, with `why`,
      or replaced by a new PR;
    - still open: `open` once it waits only on the user's merge, `ready` or
-     `blocked` while work remains.
+     `blocked` while work remains;
+   - no PR yet: it keeps its status.
 
    Show: each PR read, and its state.
 2. Set `read_at` to now, in UTC.
