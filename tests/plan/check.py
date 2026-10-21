@@ -354,6 +354,13 @@ def check_example(tmp):
         expect('<span class="st st-open">To test</span>' in board and "To merge" not in board, f"an Open item with an `ask` says it on its chip, rather than its type's word: {board[:600]}")
         expect('<span class="word"> to test</span>' in day7 and "to merge" not in day7, f"and the calendar counts it so: {day7}")
         expect("  the owner: Test EX-2 Readiness probe; Deploy EX-3 Ten seconds in production; deferred until they say: 1.\n" in run.stdout and "  Plan: EX-2: `ask` edited; EX-3: `ask` edited.\n  Build: EX-3 Ready → To deploy.\n" in run.stdout, f"and so does what the render prints: {run.stdout}")
+    waiting = copy_with(tmp, "waiting", EXAMPLE, "verify.toml", 'needs = ["EX-2"]\nstatus = "blocked"', 'needs = ["EX-1", "EX-2"]\nstatus = "blocked"')
+    if waiting is not None and replace_in(waiting, "plan.toml", 'needs = ["Q1"]\n', 'needs = ["Q1", "EX-2"]\n') and replace_in(waiting, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "blocked"'):
+        run = render(waiting, tmp / "waiting-out", "--inline")
+        index = (tmp / "waiting-out" / "index.html").read_text() if run.returncode == 0 else ""
+        board, c2 = between(index, '<table class="board"', "</table>"), between(index, 'id="c2"', "</article>")
+        expect('waits on EX-2 Readiness probe</span>' in board and "waits on Q1" not in board, f"a Blocked chip on the board names only what it still waits on, not what is done: {run.stderr} {board[-700:]}")
+        expect('<span class="waits">waits on EX-2 Readiness probe</span>' in c2 and "waits on EX-1" not in c2, f"and so does its card, which still lists all it needs: {c2}")
     approving = copy_with(tmp, "approving", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"\nend = 2026-10-03\n\n[phases.build]\nstatus = "now"\nstart = 2026-10-05\n\n[phases.verify]\nstatus = "now"\nstart = 2026-10-06', '[phases.plan]\nstatus = "now"\n\n[phases.build]\nstatus = "to-come"\n\n[phases.verify]\nstatus = "to-come"')
     if approving is not None and replace_in(approving, "plan.toml", "approved = 2026-10-03\n", ""):
         run = render(approving, tmp / "approving-out")

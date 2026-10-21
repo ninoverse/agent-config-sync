@@ -788,6 +788,11 @@ def refs_list(ids, plain=False):
     return ", ".join(f"{i} {short_of(ITEMS[i])}" if plain else f"[[{i}]]" for i in ids if i in ITEMS)
 
 
+def pending(item):
+    """What an item still waits on, of what it needs: what is done no longer holds it."""
+    return [need for need in item["needs"] if need in ITEMS and ITEMS[need].get("status") != "done"]
+
+
 def state_line(item):
     """A board chip's status badge, with when it was reached, what a Blocked or Deferred
     item waits on, where one To be moved goes, or why one was Dropped, its references as
@@ -802,7 +807,7 @@ def state_line(item):
     if status == "deferred" and item.get("waits") == "owner":
         line += f' <span class="mine">{yours(item)}</span>'
     elif status in ("blocked", "deferred"):
-        note = item.get("waits") or refs_list(item["needs"])
+        note = item.get("waits") or refs_list(pending(item))
         prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
         note = f"{prefix} {note}" if note else ""
     elif status == "to-move":
@@ -872,7 +877,7 @@ def waits_tag(item):
         return ""
     if status == "deferred" and item.get("waits") == "owner":
         return f'<span class="pill ask">{yours(item)}</span>'
-    note = item.get("waits") or refs_list(item["needs"], plain=True)
+    note = item.get("waits") or refs_list(pending(item), plain=True)
     prefix = TYPES.get(item.get("type"), {}).get("waits", "waits on")
     return f'<span class="waits">{prefix} {refs_as_text(note)}</span>' if note else ""
 
@@ -952,8 +957,8 @@ def result_card(item, on_board=False):
         if waits_tag(item):
             tags.append(waits_tag(item))
         # The items it waits on stay links, under the fold.
-        if status in ("blocked", "deferred") and not item.get("waits") and item["needs"]:
-            rows.append((waits_label(item), refs_ul(item["needs"])))
+        if status in ("blocked", "deferred") and not item.get("waits") and pending(item):
+            rows.append((waits_label(item), refs_ul(pending(item))))
         elif status == "dropped":
             rows.append(("Why", item.get("why", "")))
     if item.get("result"):
