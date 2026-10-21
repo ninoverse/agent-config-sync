@@ -32,6 +32,7 @@ end = 2026-10-02
 
 [phases.analysis]
 status = "done"
+start = 2026-10-02
 end = 2026-10-02
 
 [phases.plan]

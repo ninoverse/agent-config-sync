@@ -76,6 +76,9 @@ def check_starter(tmp):
         if replace_in(approved, "project.toml", "end = 2026-01-02\n", "end = 2026-01-02\n\n[phases.research]\nstatus = \"now\"\nstart = 2026-01-02\n"):
             run = render(approved, tmp / "approved-out")
             expect("  the agent: Write the Research.\n" in run.stdout, f"and writes it once it has started, until it has something to show: {run.stdout}")
+            (approved / "research.toml").write_text('[[section]]\nid = "pieces"\ntitle = "What exists"\nkind = "items"\ntype = "piece"\n\n[[section.item]]\nid = "R1"\ntitle = "A piece"\nfields = [["Raises", "Nothing yet."]]\n')
+            run = render(approved, tmp / "approved-out")
+            expect("  the owner: Approve the Research.\n" in run.stdout, f"then waits on the owner's approval, as the Brief and the Plan do: {run.stdout}")
 
 
 def check_example(tmp):
@@ -606,6 +609,8 @@ BROKEN = [
     (FULL, "build.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
     (EXAMPLE, "brief.toml", "approved = 2026-10-01\n", "", "brief.toml: the Brief is done, but not approved: give it `approved`"),
+    (EXAMPLE, "research.toml", "approved = 2026-10-02\n", "", "research.toml: the Research is done, but not approved: give it `approved`"),
+    (EXAMPLE, "research.toml", "approved = 2026-10-02", "approved = 2026-10-03", "Analysis starts on 2 Oct, before the Research's approval on 3 Oct: say why, in `early`"),
     (EXAMPLE, "brief.toml", "approved = 2026-10-01", "approved = 2026-10-02", "Research starts on 1 Oct, before the Brief's approval on 2 Oct: say why, in `early`"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
     (EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"', "D2 isn't taken, but the Plan was approved on 3 Oct"),

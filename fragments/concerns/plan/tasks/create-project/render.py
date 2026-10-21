@@ -61,7 +61,7 @@ LIVE = ("build", "verify")
 # approved, is an amendment.
 AMENDS = ("brief", "research", "analysis", "plan")
 # The phases the owner approves, each with the phase that starts only once they have.
-APPROVES = {"brief": "research", "plan": "build"}
+APPROVES = {"brief": "research", "research": "analysis", "plan": "build"}
 # The phases the agent writes with the owner, each starting with a discussion once the one
 # before it is done: until it has something to show, the agent holds it.
 WRITTEN = ("research", "analysis", "plan")
@@ -660,11 +660,12 @@ def check_rules(project, phases):
     statuses = project["status"]
     build = statuses["build"]
     approved = phases.get("plan", {}).get("approved")
-    # The Research starts only once the owner has approved the Brief, and Build only once
-    # they have approved the Plan, so a Done Brief or Plan has the day.
+    # The Research starts only once the owner has approved the Brief, the Analysis once they
+    # have approved the Research, and Build once they have approved the Plan, so each of
+    # those that is Done, with something written, has the day.
     for key, after in APPROVES.items():
         day_approved, then = phases.get(key, {}).get("approved"), statuses[after]
-        if statuses[key]["status"] == "done" and not day_approved:
+        if statuses[key]["status"] == "done" and phases.get(key, {}).get("section") and not day_approved:
             problem(f"{key}.toml", f"the {PHASE_NAME[key]} is done, but not approved: give it `approved`, the day the owner approved it")
         if day_approved and then["start"] and then["start"] < day_approved and not then["early"]:
             problem(f"project.toml [phases.{after}]", f"{PHASE_NAME[after]} starts on {day(then['start'])}, before the {PHASE_NAME[key]}'s approval on {day(day_approved)}: say why, in `early`")
@@ -1561,8 +1562,8 @@ def calendar_view(project, phases):
         return f'<div class="col"><h3>{title}</h3><ul>{body}</ul>{more}</div>'
 
     owner_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in owner]
-    # A Brief or a Plan written and not approved yet waits on the owner before anything else,
-    # though it isn't an item.
+    # A Brief, a Research or a Plan written and not approved yet waits on the owner before
+    # anything else, though it isn't an item.
     for key in reversed(APPROVES):
         if project["status"][key]["status"] == "now" and phases.get(key, {}).get("section") and not phases[key].get("approved"):
             owner_rows.insert(0, f'<li><span class="pill ask">Approve</span> <a href="#{key}">the {PHASE_NAME[key]}</a></li>')

@@ -70,7 +70,8 @@ closes it, and `/resume-project` picks it up in a new session.
   work rather than record it. The Brief is Done once the owner approves it,
   which agrees its success criteria, and the Research starts only after that.
 - **Research**: what exists, one numbered piece at a time, and what each piece
-  raises.
+  raises. It is Done once the owner approves it, since they may know what it
+  misses, and the Analysis starts only after that.
 - **Analysis**: the decisions, and nothing else. A question about what to
   build is one of them, taken before the Plan's approval unless the user
   defers it, saying what it waits on. Each lists its options, with the
@@ -158,14 +159,13 @@ from the lesson.
   put the name after its noun, as in "the merge of HMI-8", never in a
   possessive.
 - Under the calendar, the page says who holds the ball: the owner, the user
-  who decides, merges and changes settings, for the Brief and the Plan until
-  they approve them, and for every Open item, with how many are deferred
-  until they say; the agent, for every Ready one, and for the next phase,
-  to start and then to write, from the day the one before it is Done; or a
-  date coming up, with an automated run marked as such. The Agenda holds
-  every date the project has, ahead and past, and the notes for the next
-  session. All of it
-  is built from the statuses: never repeat a status in prose, which goes stale
+  who decides, merges and changes settings, for the Brief, the Research and
+  the Plan until they approve them, and for every Open item, with how many
+  are deferred until they say; the agent, for every Ready one, and for the
+  next phase, to start and then to write, from the day the one before it is
+  Done; or a date coming up, with an automated run marked as such. The
+  Agenda holds every date the project has, ahead and past, and the notes for
+  the next session. All of it is built from the statuses: never repeat a status in prose, which goes stale
   the next time it changes. Say each fact once: a field doesn't repeat a chip,
   such as a PR's kind, nor a card another card.
 - One glossary per project: the terms coined for it, and the terms borrowed. It

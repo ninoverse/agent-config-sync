@@ -1,4 +1,7 @@
 # Research: what exists, one numbered piece at a time, and what each raises.
+# The agent writes it as it finds it, and it is done once the user approves it.
+
+approved = 2026-10-02
 
 # Every section has an id, a title and a kind. "items" holds cards: each has an
 # id, a title, and its fields as [label, text] pairs. Its `type` sets the words

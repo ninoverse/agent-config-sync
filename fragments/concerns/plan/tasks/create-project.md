@@ -83,10 +83,11 @@ It writes nothing, and names the file and the item, when:
   needed doesn't say why, or has a `<phase>.toml`: its tab doesn't open, so
   nothing in it would show;
 - a phase starts before those it follows are done, or before the day they
-  end, the Research before the Brief's approval, or Build before the Plan's,
-  without `early` saying why; the Brief or the Plan is done without
-  `approved`; a phase ends before one it runs beside,
-  such as Reuse before Build; or is Build or Verify, and done while it holds
+  end, the Research before the Brief's approval, the Analysis before the
+  Research's, or Build before the Plan's, without `early` saying why; the
+  Brief, the Research or the Plan is done, with something written, without
+  `approved`; a phase ends before one it runs beside, such as Reuse before
+  Build; or is Build or Verify, and done while it holds
   an unfinished item, which reopens it;
 - a decision isn't taken, or deferred, once the Plan is approved, unless it
   was amended in on the day of the approval or after; or Build has started
@@ -161,9 +162,10 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   below.
   A section that carries on the one before it can go without a `title`, and
   `--since` then names it by that section's. A phase the user approves, the
-  Brief and the Plan, has `approved`, the day they did. A section that shows a table,
-  such as a `table`, `repos` or `board`, takes `min_width`, the width in
-  pixels below which it scrolls sideways rather than squeeze its columns.
+  Brief, the Research and the Plan, has `approved`, the day they did. A
+  section that shows a table, such as a `table`, `repos` or `board`, takes
+  `min_width`, the width in pixels below which it scrolls sideways rather
+  than squeeze its columns.
 - An `items` section has a `type`, which sets the words its statuses take:
   `piece`, `rule`, `criterion` (Met, Not met yet), `decision` (To decide,
   Taken), `question` (To answer, Answered), `pr` (To merge, Merged), `setting`
