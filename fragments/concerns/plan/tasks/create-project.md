@@ -34,9 +34,7 @@ The project: $ARGUMENTS
    in `verify.toml`, under `[status]`, so the Brief shows them as agreed.
 4. Render it, as below. Fix every problem, and fix each warning or tell the user
    why it stands. Show: the line the render prints, and each warning left.
-5. Look at each phase with content at a laptop's width and a phone's, in the
-   `--inline` preview, or with `/take-screenshot` where the repository has it.
-6. Publish it with `/publish-project`.
+5. Publish it with `/publish-project`.
 
 ## Render
 
