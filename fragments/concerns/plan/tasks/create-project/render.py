@@ -709,9 +709,16 @@ def check_rules(project, phases):
 
 
 def label_of(item):
-    """The status in the words of the item's type: a decision is Taken, a PR Merged."""
+    """The status in the words of the item's type: a decision is Taken, a PR Merged;
+    an Open item with an `ask` says it instead, as a PR to test reads To test."""
     status = item["status"]
+    if status == "open" and item.get("ask"):
+        return asked(item["ask"])
     return TYPES.get(item.get("type"), {}).get("labels", {}).get(status, ITEM_STATUS[status])
+
+
+def asked(ask):
+    return f"To {ask[:1].lower()}{ask[1:]}"
 
 
 def ask_of(item):
@@ -1745,6 +1752,8 @@ def said(snap, state):
     status = state.get("status")
     if status not in ITEM_STATUS:
         return "no status"
+    if status == "open" and snap["written"].get("ask"):
+        return asked(snap["written"]["ask"])
     return TYPES.get(snap["type"], {}).get("labels", {}).get(status, ITEM_STATUS[status])
 
 

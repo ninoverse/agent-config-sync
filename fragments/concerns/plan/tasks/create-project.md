@@ -182,7 +182,9 @@ doesn't say it is an amendment, with `amended`.
     phase's approval, or after its end in a phase without one, which lists it
     at its end under that day and `why`, and whose tab then reads Amended;
   - `repo`, the board row it goes in;
-  - `ask`, when what the user does while it is Open isn't what its type says.
+  - `ask`, when what the user does while it is Open isn't what its type says,
+    which its chip and the calendar then say instead: a PR with `ask = "Test"`
+    reads To test, not To merge.
 - A `repos` section lists the repositories, each a `[[section.repo]]` with its
   `name`, its `use`, `change`, `read` or `new`, shown as a chip, and its
   `part`.

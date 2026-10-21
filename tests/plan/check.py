@@ -345,6 +345,15 @@ def check_example(tmp):
         owner = between(between(index.read_text(), 'id="ball"', "</section>"), "<h3>The owner</h3>", "</ul>") if index.exists() else ""
         lines = re.findall(r'<li><span class="pill ask">Merge</span> <a class="ref" href="#(ex-\d)">', owner)
         expect(lines == ["ex-2", "ex-3"], f"each of the owner's items has a line of its own, with what to do: {owner}")
+    testing = copy_with(tmp, "testing", EXAMPLE, "plan.toml", 'short = "Readiness probe"\n', 'short = "Readiness probe"\nask = "Test"\n')
+    if testing is not None and replace_in(testing, "plan.toml", 'short = "Ten seconds in production"\n', 'short = "Ten seconds in production"\nask = "Deploy"\n') and replace_in(testing, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"'):
+        run = render(testing, tmp / "testing-out", "--since", str(EXAMPLE))
+        index = (tmp / "testing-out" / "index.html").read_text() if run.returncode == 0 else ""
+        board = between(index, '<table class="board"', "</table>")
+        day7 = between(calendar_of(index), 'href="#on-2026-10-07">7</a>', "</td>")
+        expect('<span class="st st-open">To test</span>' in board and "To merge" not in board, f"an Open item with an `ask` says it on its chip, rather than its type's word: {board[:600]}")
+        expect('<span class="word"> to test</span>' in day7 and "to merge" not in day7, f"and the calendar counts it so: {day7}")
+        expect("  the owner: Test EX-2 Readiness probe; Deploy EX-3 Ten seconds in production; deferred until they say: 1.\n" in run.stdout and "  Plan: EX-2: `ask` edited; EX-3: `ask` edited.\n  Build: EX-3 Ready → To deploy.\n" in run.stdout, f"and so does what the render prints: {run.stdout}")
     approving = copy_with(tmp, "approving", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"\nend = 2026-10-03\n\n[phases.build]\nstatus = "now"\nstart = 2026-10-05\n\n[phases.verify]\nstatus = "now"\nstart = 2026-10-06', '[phases.plan]\nstatus = "now"\n\n[phases.build]\nstatus = "to-come"\n\n[phases.verify]\nstatus = "to-come"')
     if approving is not None and replace_in(approving, "plan.toml", "approved = 2026-10-03\n", ""):
         run = render(approving, tmp / "approving-out")
