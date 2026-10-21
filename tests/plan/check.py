@@ -1,12 +1,12 @@
 """python3 tests/plan/check.py, from the repository root.
 
-Runs the project-page renderer the plan concern ships against its example, in
-both modes, against full/, which uses every section kind the example leaves
-out, against an edited copy compared with the example as if published, against
-stale copies of the example, copies naming an item where no link can, and
-broken copies. A stale copy must still
-render, with its own warning; a broken copy must fail with its own message and
-write nothing; everything else must render without a warning.
+Runs the project-page renderer the plan concern ships against the starter it
+ships, against example/, a project in its Build phase, in both modes, against
+full/, which uses every section kind the example leaves out, against an edited
+copy compared with the example as if published, against stale copies of the
+example, copies naming an item where no link can, and broken copies. A stale
+copy must still render, with its own warning; a broken copy must fail with its
+own message and write nothing; everything else must render without a warning.
 """
 
 import datetime
@@ -18,7 +18,8 @@ import tempfile
 from pathlib import Path
 
 KIT = Path("fragments/concerns/plan/tasks/create-project")
-EXAMPLE = KIT / "example"
+EXAMPLE = Path(__file__).resolve().parent / "example"
+STARTER = KIT / "starter"
 # The Warnings button's icon, as the renderer draws it.
 ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2l6.3 11H1.7z"/><path d="M8 6.6v3M8 11.6v.1"/></svg>'
 FULL = Path(__file__).resolve().parent / "full"
@@ -58,6 +59,15 @@ def board_cells(text):
     """Each cell of a board's one row: the row's name, then the ids in each wave."""
     cells = re.findall(r"<td>(.*?)</td>", between(text, '<table class="board"', "</table>"))
     return cells[:1] + [re.findall(r"<b>(.*?)</b>", cell) for cell in cells[1:]]
+
+
+def check_starter(tmp):
+    """The starter a new project copies holds its Brief alone, and renders as it is."""
+    files = sorted(path.name for path in STARTER.iterdir())
+    expect(files == ["brief.toml", "project.toml"], f"the starter holds project.toml and its Brief, and nothing of another project: {files}")
+    run = render(STARTER, tmp / "starter")
+    expect(run.returncode == 0 and "warning:" not in run.stderr, f"the starter renders without a warning: {run.stderr}")
+    expect("opening on Brief; loaded when picked: phases/guides.html" in run.stdout, f"and opens on its Brief, the only phase it has: {run.stdout}")
 
 
 def check_example(tmp):
@@ -738,6 +748,7 @@ def check_broken(tmp):
 def main():
     with tempfile.TemporaryDirectory() as name:
         tmp = Path(name)
+        check_starter(tmp)
         check_example(tmp)
         check_full(tmp)
         check_since(tmp)
@@ -747,7 +758,7 @@ def main():
         check_broken(tmp)
     for what in failed:
         print(f"FAIL: {what}", file=sys.stderr)
-    print(f"{'FAILED' if failed else 'passed'}: the example, full/, changes since a publish, {len(STALE)} stale copies, {len(UNLINKED)} unlinked copies and {len(BROKEN)} broken copies")
+    print(f"{'FAILED' if failed else 'passed'}: the starter, the example, full/, changes since a publish, {len(STALE)} stale copies, {len(UNLINKED)} unlinked copies and {len(BROKEN)} broken copies")
     return 1 if failed else 0
 
 

@@ -2,10 +2,10 @@ name: Project page smoke test
 
 # The project-page kit ships into every repository that selects concerns/plan,
 # and none of their CI runs it, so a change that broke the renderer would show
-# up only when a project next built its page. This renders the kit's example,
-# tests/plan/full/ and broken copies of the example, on the oldest Python the
-# kit supports, on changes to the concern or to the test, and Rust-only changes
-# skip it.
+# up only when a project next built its page. This renders the kit's starter,
+# tests/plan/example/, tests/plan/full/ and broken copies of the example, on
+# the oldest Python the kit supports, on changes to the concern or to the test,
+# and Rust-only changes skip it.
 
 on:
   push:
@@ -39,5 +39,5 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Render the example, full/ and the broken copies
+      - name: Render the starter, the example, full/ and the broken copies
         run: python3 tests/plan/check.py

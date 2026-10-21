@@ -17,17 +17,19 @@ The project: $ARGUMENTS
 
 1. Agree the page's name with the user, `<main repository>-<objective>`, and
    the repositories the project involves. Show: the name.
-2. Copy the example outside the repository. A project's data is its own record,
-   published beside its page, and not part of any repository:
+2. Copy the starter outside the repository: a project's data is its own
+   record, published beside its page, and not part of any repository. It holds
+   `project.toml` and the Brief, and nothing of another project:
 
    ```bash
-   cp -r .agents/create-project/example <data directory>
+   cp -r .agents/create-project/starter <data directory>
    ```
 
-   Set `repo`, `objective`, `summary` and `read_at` in `project.toml`, and each
-   phase's status: one not needed says why, and one that starts before those it
-   follows are done says why, in `early`. The example's comments say what each
-   field holds.
+   Set `repo`, `objective`, `summary` and `read_at` in `project.toml`, and the
+   day the Brief starts. A project that starts later than its Brief, such as
+   one split from another, sets each phase's status: one not needed says why,
+   and one that starts before those it follows are done says why, in `early`.
+   The starter's comments, and *The data* below, say what each field holds.
 3. Write the Brief with the user, discussing it before anything is written: the
    problem, the objective, the scope, the success criteria, each with how it is
    checked, the repositories and the ground rules. Keep the criteria's statuses

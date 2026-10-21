@@ -1,0 +1,36 @@
+# A new project's data: this file, and a <phase>.toml beside it for each phase
+# with content, starting with the Brief. Render it with:
+#
+#   python3 .agents/create-project/render.py <this directory> <out directory>
+#
+# Text is HTML, written as the page shows it, and [[SC1]] anywhere in it links
+# to item SC1 with its short title. Dates are TOML dates, such as 2026-10-07.
+# *Building the project page* says what every key holds.
+
+# The page's title is <repo>-<objective>: the main repository, then the
+# objective in kebab-case.
+repo = "repository"
+objective = "objective"
+summary = "What the project is for, in one sentence."
+# When the statuses were read, in UTC. Read them again before each publish.
+read_at = 2026-01-01T00:00:00
+
+# Every phase, in order: done, now, to-come or not-needed. A phase left out is
+# to-come; a new project starts with its Brief, on the day it starts.
+[phases.brief]
+status = "now"
+start = 2026-01-01
+
+# What the next session needs before it reads anything else: what is in
+# flight, where, and what comes next. Update it before a session ends.
+[handoff]
+updated = 2026-01-01
+notes = [
+  "The Brief is written, and waits on the user's approval. Then the Research.",
+]
+
+# One glossary for the project: the terms coined for it, and those borrowed.
+[[glossary]]
+term = "A term"
+text = "What it means here."
+source = "coined"

@@ -9,12 +9,14 @@ what every fragment follows; this covers what the kit adds.
 `fragments/concerns/plan/` holds `phases.md`, the method; a task per skill under
 `tasks/`; and the kit beside `tasks/create-project.md`, in
 `tasks/create-project/`: `render.py`, `page.css`, `page.js`, `guide.html` and
-`example/*.toml`. A repository that selects the concern gets the kit in
-`.agents/create-project/`, where every skill of the concern reaches it.
+`starter/*.toml`, which a new project copies. A repository that selects the
+concern gets the kit in `.agents/create-project/`, where every skill of the
+concern reaches it.
 
-The kit's smoke test is `tests/plan/check.py`, with `tests/plan/full/`, a
-project that uses every section kind the example leaves out. CI runs it on
-Python 3.11, the kit's floor, through `project-page-smoke.yml`.
+The kit's smoke test is `tests/plan/check.py`, with `tests/plan/example/`, a
+project in its Build phase, and `tests/plan/full/`, a project that uses every
+section kind the example leaves out. Neither ships. CI runs it on Python 3.11,
+the kit's floor, through `project-page-smoke.yml`.
 
 ## Checks
 
@@ -59,7 +61,7 @@ cargo run -q -p agentcfg -- check --repo <dir> --fragments ./fragments
 
 ```bash
 K=fragments/concerns/plan/tasks/create-project
-python3 -B $K/render.py $K/example <out> --inline
+python3 -B $K/render.py tests/plan/example <out> --inline
 python3 -B $K/render.py tests/plan/full <out> --retrospective
 ```
 

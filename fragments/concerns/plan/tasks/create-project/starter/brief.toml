@@ -1,0 +1,66 @@
+# Brief: what the project is for, how it will be judged, and the ground rules
+# the user set for working on it. Discuss it with the user before writing it.
+# The next session reads it first.
+
+[[section]]
+id = "the-project"
+title = "The project"
+kind = "defs"
+
+[[section.def]]
+term = "Problem"
+text = "What is wrong, or missing, today."
+
+[[section.def]]
+term = "Objective"
+text = "What will be true once the project is done."
+
+[[section.def]]
+term = "In scope"
+text = "What the project does."
+
+[[section.def]]
+term = "Out of scope"
+text = "What it leaves alone, and where that goes instead."
+
+# Success criteria, each saying what is measured, and how it is checked.
+# Written before Build, so they steer the work. Verify keeps their statuses,
+# and once the checks that prove one exist, its `needs` names them.
+[[section]]
+id = "criteria"
+title = "Success criteria"
+kind = "items"
+type = "criterion"
+
+[[section.item]]
+id = "SC1"
+title = "What is measured, and what meets it"
+fields = [
+  ["Checked by", "How it is checked."],
+]
+
+# Each repository, and what the project does with it: change, read or new.
+[[section]]
+id = "repositories"
+title = "Repositories"
+kind = "repos"
+
+[[section.repo]]
+name = "owner/repository"
+use = "change"
+part = "What the project does in it."
+
+# How the user wants the project run, such as who merges and which branches
+# need asking. A ground rule holds until the user changes it.
+[[section]]
+id = "ground-rules"
+title = "Ground rules"
+kind = "items"
+type = "rule"
+
+[[section.item]]
+id = "G1"
+title = "A rule, as the user put it"
+fields = [
+  ["Why", "Where it comes from, when that isn't plain."],
+]
