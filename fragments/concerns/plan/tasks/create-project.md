@@ -174,7 +174,8 @@ doesn't say it is an amendment, with `amended`.
     that project's page;
   - `url`, the PR's address once it is open, where its state is read from;
   - `needs`, the ids of the items to finish first; a success criterion's are
-    the checks that prove it, which its card shows as Verified by;
+    the checks that prove it, which its card shows as Verified by; a PR's can
+    be the checks of its branch, which it waits on before it merges;
   - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
     one each by its key: a decision's choices, shown as a list that marks the
     recommended one until one is chosen, and then only the chosen one;

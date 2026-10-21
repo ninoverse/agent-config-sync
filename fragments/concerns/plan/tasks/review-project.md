@@ -27,8 +27,8 @@ The project: $ARGUMENTS
      the one recommended, and does a PR or a setting carry it out?
    - the Plan: does each PR say its branch, what it needs first and its kind,
      with a *Done when* a check can prove? Does each success criterion have a
-     check, and each check the PR it needs? Is each risk one that hasn't
-     happened, with the step that closes it?
+     check, and each check the PR it needs, or that needs it? Is each risk
+     one that hasn't happened, with the step that closes it?
    - Build and Verify: does each status match what GitHub says, and each
      result what the PR did?
    - Deferred: does each item say what it waits on, and where it goes then?

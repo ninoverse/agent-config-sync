@@ -93,10 +93,12 @@ closes it, and `/resume-project` picks it up in a new session.
   the work raises, and nothing else: one asked before the Plan's approval is
   a decision. What happened is in the Agenda, so Build keeps no log of its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
-  success criteria, Met or Not met yet, and nothing else. A check's title says
-  how it is checked: what it proves is already on the PR it needs and the
-  criterion it verifies. Build ends with the last merge, Verify with the last
-  check.
+  success criteria, Met or Not met yet, and nothing else. A check of a branch,
+  run before its PR merges, such as the owner's test of it, is one the PR
+  needs, and can run at once; a check of what a merge did, such as its release,
+  needs the PR. A check's title says how it is checked: what it proves is
+  already on the PR it needs, or that needs it, and the criterion it verifies.
+  Build ends with the last merge, Verify with the last check.
 - **Reuse**: what another project can take from this one, such as a template, a
   shared rule, a shared workflow, or a page to link instead, and nothing else:
   each piece a card, saying what it is, how to take it, and the items that
