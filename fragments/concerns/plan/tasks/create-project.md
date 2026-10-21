@@ -60,6 +60,10 @@ the calendar or the Agenda, naming as text the items it doesn't hold. A link
 written by hand to one of those fails the render there. It needs Python 3.11 or
 later, and nothing else.
 
+Under the line that says what it wrote, it prints where the project stands, as
+the page's header shows it: each phase that is Now, with how far it is, and who
+holds the ball.
+
 It writes nothing, and names the file and the item, when:
 
 - no phase has content yet;

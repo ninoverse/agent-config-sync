@@ -1549,6 +1549,14 @@ def calendar_view(project, phases):
         + column("A date", date_rows, "No date ahead.", more)
         + "</div></section>"
     )
+    # The same, for the terminal, where the agent tells the user where the project stands.
+    owner_text = [plain_text(row) for row in owner_rows] + ([f"deferred until they say: {parked}"] if parked else [])
+    date_text = [f"{weekday(date)}, {plain_text(text)}" for date, cls, text, label, word, ref in ahead[:3]] + ([f"{len(ahead) - 3} more in the agenda"] if len(ahead) > 3 else [])
+    holders = [
+        f"  the owner: {'; '.join(owner_text) or 'nothing to do'}.",
+        f"  the agent: {'; '.join(plain_text(row) for row in agent_rows) or 'nothing ready'}.",
+        f"  a date: {'; '.join(date_text) or 'none ahead'}.",
+    ]
     handoff = project.get("handoff")
     notes = ""
     if handoff and handoff.get("notes"):
@@ -1577,7 +1585,12 @@ def calendar_view(project, phases):
     body = f"""<section class="block" id="coming-up"><h3>Coming up, soonest first</h3>{coming_html}</section>
 {notes}
 <section class="block" id="history"><h3>What happened, newest first</h3>{happened_html}</section>"""
-    return expand_refs(body, "the agenda"), grid, ball
+    return expand_refs(body, "the agenda"), grid, ball, holders
+
+
+def plain_text(fragment):
+    """A line of the page as the terminal shows it: each link as its id and short title."""
+    return html.unescape(text_of(REF.sub(lambda m: f"{m.group(1)} {short_of(ITEMS[m.group(1)])}" if m.group(1) in ITEMS else m.group(1), fragment)))
 
 
 def glossary_groups(entries, level):
@@ -1912,6 +1925,26 @@ def progress():
     return counts
 
 
+def waiting_count():
+    """What waits in Deferred: an item set aside, and deferred work not picked up yet."""
+    return sum(1 for item in ITEMS.values() if item.get("status") in PARKED or (item["type"] == "deferred" and item.get("status") in UNFINISHED))
+
+
+def phases_now(project):
+    """The phases in progress, for the terminal, as their tabs count them."""
+    counts, now = progress(), []
+    for key, name in PHASES:
+        if project["status"][key]["status"] != "now":
+            continue
+        if key == "deferred":
+            now.append(f"{name}, {waiting_count()} waiting")
+        elif key in counts:
+            now.append(f"{name}, {counts[key][0]} of {counts[key][1]} done")
+        else:
+            now.append(name)
+    return f"Now: {'; '.join(now) or 'no phase'}."
+
+
 ICONS = {
     "agenda": '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>',
     "guides": '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M6.2 6.3a1.85 1.85 0 1 1 2.7 1.6c-.6.33-.9.75-.9 1.35v.25"/><path d="M8 11.4v.1"/></svg>',
@@ -1957,8 +1990,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     if warnings:
         views += f'<a href="#warnings" data-phase="warnings">{ICONS["warnings"]}<span>Warnings</span> <b class="n-warn">{len(warnings)}</b></a>'
     tabs, leaves = [], []
-    # What waits in Deferred: an item set aside, and deferred work not picked up yet.
-    waiting = sum(1 for item in ITEMS.values() if item.get("status") in PARKED or (item["type"] == "deferred" and item.get("status") in UNFINISHED))
+    waiting = waiting_count()
     for number, (key, name) in enumerate(PHASES, start=1):
         status = project["status"][key]["status"]
         state = PHASE_STATUS[status]
@@ -2153,7 +2185,7 @@ def main(argv):
         problem("project.toml", "no phase has anything to show yet: a project starts with its Brief, in brief.toml")
         failed()
         return 1
-    agenda_html, months_html, ball_html = calendar_view(project, phases)
+    agenda_html, months_html, ball_html, holders = calendar_view(project, phases)
     opening = opening_phase(project["status"], sections)
     guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")
     title, files, shell = page(project, sections, opening, inline, data_dir, agenda_html, months_html, ball_html, guides_html)
@@ -2180,6 +2212,9 @@ def main(argv):
             (out_dir / "phases" / f"{key}.html").write_text(text, encoding="utf-8")
     loaded = ", ".join(f"phases/{key}.html" for key in files) or "none"
     print(f"{title}: index.html, {len(out.encode()) // 1024} KB, opening on {PHASE_NAME[opening]}; loaded when picked: {loaded}{warned}")
+    print(phases_now(project))
+    print("Who holds the ball:")
+    print("\n".join(holders))
     if changes:
         print_changes(changes)
     return 0

@@ -67,6 +67,8 @@ def check_example(tmp):
     if run.returncode:
         return
     expect("warning:" not in run.stderr, f"the example renders without a warning: {run.stderr}")
+    standing = "\nNow: Build, 3 of 6 done; Verify, 2 of 4 done; Deferred, 2 waiting.\nWho holds the ball:\n  the owner: Merge EX-2 Readiness probe; deferred until they say: 1.\n  the agent: EX-3 Ten seconds in production.\n  a date: Mon 12 Oct, Renovate's weekly run Automated; Wed 14 Oct, Production deploys freeze until the 21st.\n"
+    expect(standing in run.stdout, f"the render prints where the project stands, as the page's header says it: {run.stdout}")
     page = (out / "index.html").read_text()
     phase = {p.stem: p.read_text() for p in (out / "phases").iterdir()}
     expect(sorted(phase) == ["analysis", "brief", "deferred", "guides", "plan", "research", "verify"], f"the phases loaded on demand: {sorted(phase)}")
@@ -419,6 +421,8 @@ def check_full(tmp):
     if run.returncode:
         return
     expect("warning:" not in run.stderr, f"full/ renders without a warning: {run.stderr}")
+    standing = "\nNow: Retrospective, 1 of 2 done; Deferred, 1 waiting.\nWho holds the ball:\n  the owner: Review L1 Names first.\n  the agent: nothing ready.\n  a date: none ahead.\n"
+    expect(standing in run.stdout, f"and says when a holder has nothing: {run.stdout}")
     page = (out / "index.html").read_text()
     expect('data-open="retrospective"' in page, "full/ opens on its retrospective")
     expect('<span class="off t-not-needed">' in page and "Nothing here is worth copying." not in between(page, '<nav class="phases leaves"', "</nav>"), "a phase that is not needed has a tab that doesn't open")

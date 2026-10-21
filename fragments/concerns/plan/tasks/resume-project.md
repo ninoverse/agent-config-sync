@@ -21,9 +21,9 @@ The project: $ARGUMENTS
 3. Read each PR in flight again, from GitHub, set `read_at`, and render with
    `--since`, given the data as published: what changed is what happened while
    no session ran. Fix what stops the render.
-4. Tell the user where the project stands: the phase in progress, who holds
-   the ball, what is in flight and what comes next, as the notes and the page
-   say; then what changed since the last publish. Show: that summary, and each
-   warning.
+4. Tell the user where the project stands: the phase in progress and who holds
+   the ball, as the render prints them, and what is in flight and what comes
+   next, as the notes say; then what changed since the last publish. Show: that
+   summary, and each warning.
 5. Carry on with what the notes say comes next, asking the user first about
    anything they leave open.
