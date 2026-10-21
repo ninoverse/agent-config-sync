@@ -68,7 +68,7 @@ closes it, and `/resume-project` picks it up in a new session.
   which branches need asking. A ground rule holds until the user changes it.
   The success criteria are written before Build starts, so they steer the
   work rather than record it. The Brief is Done once the owner approves it,
-  and the Research starts only after that.
+  which agrees its success criteria, and the Research starts only after that.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises.
 - **Analysis**: the decisions, and nothing else. A question about what to

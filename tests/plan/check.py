@@ -537,6 +537,8 @@ STALE = [
     ("plan.toml", 'kind = "patch"\nneeds = ["Q1"]', 'kind = "patch"\nurl = "https://github.com/example/example-service/pull/15"\nneeds = ["Q1"]', "EX-2 and EX-3 are in progress at once in example/example-service"),
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }', "plan.toml item EX-3: Q1 is named by its number alone: write [[Q1]]"),
     ("analysis.toml", 'chosen = "a"\nfields = [["Reasons", "One port', 'chosen = "a"\nstands = "Kept as it is."\nfields = [["Reasons", "One port', "D1 has `stands`, but no warning stands on it: remove `stands`"),
+    ("verify.toml", '[status.SC2]\nstatus = "blocked"\n', "", "SC2 has no status, though the Brief's approval on 1 Oct agreed it: it is `blocked`, Not met yet, waiting on its checks"),
+    ("verify.toml", '[status.SC2]\nstatus = "blocked"', '[status.SC2]\nstatus = "open"', "SC2 is still `open`, To agree, though the Brief's approval on 1 Oct agreed it: it is `blocked`, Not met yet, waiting on its checks"),
 ]
 
 # Each copy that names an item without its link, where it can't take one: the file,

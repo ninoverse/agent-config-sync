@@ -32,10 +32,13 @@ The project: $ARGUMENTS
    The starter's comments, and *The data* below, say what each field holds.
 3. Write the Brief with the user, discussing it before anything is written: the
    problem, the objective, the scope, the success criteria, each with how it is
-   checked, the repositories and the ground rules. Keep the criteria's statuses
-   in `verify.toml`, under `[status]`, so the Brief shows them as agreed. Until
-   the user approves the Brief, the page shows it waiting on them; once they
-   do, give `brief.toml` `approved`, the day they did, and the Brief is Done.
+   checked, the repositories and the ground rules. Until the user approves the
+   Brief, the page shows it waiting on them; once they do, give `brief.toml`
+   `approved`, the day they did, and the Brief is Done. The approval agrees the
+   success criteria, which take no status before it. After it, each has its
+   status in `verify.toml`, under `[status]`: `blocked`, Not met yet, waiting
+   on its checks, in `waits` until Verify writes them and in its `needs` once
+   it has; `done`, Met, once they pass; or `dropped`, with why.
 4. Render it, as below. Fix every problem, and fix each warning or tell the user
    why it stands. Show: the line the render prints, and each warning left.
 5. Publish it with `/publish-project`.
@@ -114,6 +117,8 @@ with how many there are, when:
 - a question in Build is dated before Build started: one asked before the
   Plan's approval is a decision;
 - a decision has no `options`, as one recorded after the fact may not;
+- a success criterion has no status, or is still `open`, once the Brief's
+  approval agreed it;
 - two PRs in one repository are in progress at once: open on GitHub, as
   their `url` says, and not done;
 - an adopted lesson with a `Becomes` field and nothing in Deferred or the Plan

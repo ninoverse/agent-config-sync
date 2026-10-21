@@ -686,6 +686,12 @@ def check_rules(project, phases):
             if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):
                 started = f" on {day(build['start'])}" if build["start"] else ""
                 warn(where, f"{item_id} is a question in Build dated {day(item['on'])}, before Build started{started}: one asked before the Plan's approval is a decision, in the Analysis")
+        # The Brief's approval agrees its success criteria: each is then Not met yet, until its
+        # checks pass, Met or Dropped. One with no status, or still To agree, looks stale.
+        brief = phases.get("brief", {}).get("approved")
+        if brief and item["type"] == "criterion" and status in (None, "open"):
+            what = "has no status" if status is None else "is still `open`, To agree"
+            warn(where, f"{item_id} {what}, though the Brief's approval on {day(brief)} agreed it: it is `blocked`, Not met yet, waiting on its checks")
         # One recorded after the fact may have had no options, so this only warns.
         if item["type"] == "decision" and not item.get("options"):
             warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
