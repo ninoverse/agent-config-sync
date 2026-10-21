@@ -371,6 +371,7 @@ def check_example(tmp):
         expect(owner.startswith('<h3>The owner</h3><ul><li><span class="pill ask">Approve</span> <a href="#plan">the Plan</a></li>'), f"a Plan not approved yet waits on the owner, first: {run.stderr} {owner}")
     expect('href="#plan">the Plan' not in ball, "and once approved, no longer")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
+    expect('<span class="what">Amended in the Plan:</span>' in between(page, 'id="history"', "</section>"), "the agenda says an item was amended in its phase, added or edited")
     expect("feat/readiness-probe" in between(page, 'id="next-session"', "</section>"), "the agenda holds the notes for the next session")
     expect("m-log" not in page and "dot" not in calendar_of(page) and all('id="log"' not in view for view in views), "there is no log: the agenda holds what happened")
     marks = re.findall(r'<li class="(m-[\w-]+)(?: count)?">(.*?)</li>', between(calendar_of(page), 'href="#on-2026-10-06">6</a>', "</td>"))
@@ -631,9 +632,12 @@ def check_since(tmp):
         return
     added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\nfields = [\n  ["Branch", "<code>docs/probes</code>"],\n  ["Done when", "The README names both routes."],\n]\n\n[[section]]\nid = "settings"'
     amended = added.replace('needs = ["EX-2"]', 'needs = ["EX-2"]\namended = { on = 2026-10-09, why = "the README, found silent on the probes" }')
+    later = 'amended = { on = 2026-10-09, why = "the staging run of [[EX-1]]" }\n'
     edited = [
         replace_in(data, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute."),
+        replace_in(data, "plan.toml", 'pull/12"\n', 'pull/12"\n' + later),
         replace_in(data, "plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D2]]", "[[D1]]"]]'),
+        replace_in(data, "plan.toml", 'pull/14"\n', 'pull/14"\n' + later),
         replace_in(data, "plan.toml", '[[section]]\nid = "settings"', amended),
         replace_in(data, "project.toml", "updated = 2026-10-07", "updated = 2026-10-09"),
     ]
@@ -641,9 +645,17 @@ def check_since(tmp):
         return
     run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
     expect(run.returncode == 0, f"a changed copy renders: {run.stderr}")
-    expect("  Plan: EX-1: Done when edited; EX-2: Carries out edited; EX-4 added.\n" in run.stdout, f"edited fields, a list among them, and a new item: {run.stdout}")
+    expect("  Plan: EX-1: Done when, `amended` edited; EX-2: Carries out, `amended` edited; EX-4 added.\n" in run.stdout, f"edited fields, a list among them, and a new item: {run.stdout}")
     expect("  Build: EX-2 To merge → Merged.\n" in run.stdout, f"a status in its type's words: {run.stdout}")
     expect("  project.toml: `handoff` edited.\n" in run.stdout and "read_at" not in run.stdout, f"project.toml's changes, read_at aside: {run.stdout}")
+    unamended = copy_with(tmp, "unamended", EXAMPLE, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute.")
+    if unamended is not None:
+        run = render(unamended, tmp / "unamended-out", "--since", str(EXAMPLE))
+        expect(run.returncode == 1 and "plan.toml: EX-1 is edited since the published data, which had the Plan approved: an edit to it is an amendment, with `amended`, dated and saying why" in run.stderr, f"an item of an approved phase edited without `amended` stops the render: {run.stderr}")
+    kept = copy_with(tmp, "kept", EXAMPLE, "plan.toml", 'kind = "patch"\nneeds = ["Q1"]', 'kind = "patch"\nurl = "https://github.com/example/example-service/pull/15"\nneeds = ["Q1"]')
+    if kept is not None and replace_in(kept, "plan.toml", 'pull/14"\n', 'pull/14"\nask = "Test"\n') and replace_in(kept, "analysis.toml", 'chosen = "a"\nfields = [["Reasons", "One port', 'chosen = "a"\nstands = "Kept as it is."\nfields = [["Reasons", "One port'):
+        run = render(kept, tmp / "kept-out", "--since", str(EXAMPLE))
+        expect(run.returncode == 0, f"but not its `url`, set when its PR opens, its `ask`, or `stands`, which aren't what was approved: {run.stderr}")
     unmarked = copy_with(tmp, "unmarked", EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', added)
     if unmarked is not None:
         run = render(unmarked, tmp / "unmarked-out", "--since", str(EXAMPLE))

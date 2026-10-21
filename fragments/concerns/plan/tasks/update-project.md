@@ -21,7 +21,8 @@ The project, and what changed: $ARGUMENTS
    - a status takes `on`, the day, and its `result`, `why` or `waits`;
    - an item that no longer belongs is `dropped`, with `why`, never deleted;
    - an item added to the Brief, the Research, the Analysis or the Plan once
-     it is done, or approved, is `amended`, with the day and why;
+     it is done, or approved, or edited there, is `amended`, with the day and
+     why;
    - new work in Build or Verify, once done, reopens it, with `reopened`;
    - a decision taken has its `chosen` option, and `on`;
    - an item set aside is `deferred`, with what it waits on, or `to-move`,

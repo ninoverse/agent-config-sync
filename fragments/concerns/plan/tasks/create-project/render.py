@@ -1342,7 +1342,7 @@ def built_html(kind, section, where):
 
 
 def amendments_html(ids):
-    """The items amended into a phase, grouped by the day and the reason they came in,
+    """The items amended in a phase, added or edited, grouped by the day and the reason,
     oldest first: each group its day as a chip, its reason, then its items."""
     groups = {}
     for item_id in ids:
@@ -1356,7 +1356,7 @@ def amendments_html(ids):
 
 def closing(key, data):
     """What ends a phase, after its sections: its approval, or, for a done phase without
-    one that has taken amendments, its end; then the items amended into it since, by day
+    one that has taken amendments, its end; then the items amended in it since, by day
     and reason. Its title and anchor, for the phase's contents, and its section."""
     amended = [item["id"] for item in ITEMS.values() if item["phase"] == key and item["amended"]]
     state = STATES.get(key, {})
@@ -1416,7 +1416,7 @@ def dated(project, phases):
         if item.get("on") and item.get("status") in ITEM_STATUS:
             found.append((item["on"], f"s-{item['status']}", f"[[{item_id}]] {label_of(item)}", item_id, label_of(item).lower(), item_id))
         if item["amended"] and item["amended"]["on"]:
-            found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended into the {PHASE_NAME[item['phase']]}", f"{item_id} amended", "amended", item_id))
+            found.append((item["amended"]["on"], "amended", f"[[{item_id}]] amended in the {PHASE_NAME[item['phase']]}", f"{item_id} amended", "amended", item_id))
     # A phase's dates, each said once: one that starts and ends the same day is one
     # mark, and an end on the day of its approval is the approval. An early start says
     # why, and a phase that reopened keeps the day it ended, and the day it reopened.
@@ -1501,7 +1501,7 @@ def agenda_day(entries):
             lines.append(f'<li class="m-{cls}">{text}</li>')
             continue
         item = ITEMS[ref]
-        what = f"Amended into the {PHASE_NAME[item['phase']]}" if cls == "amended" else label_of(item)
+        what = f"Amended in the {PHASE_NAME[item['phase']]}" if cls == "amended" else label_of(item)
         groups.setdefault((cls, what), []).append(f"[[{ref}]]")
     lines += [f'<li class="m-{cls}"><span class="what">{what}:</span>{list_html(refs)}</li>' for (cls, what), refs in groups.items()]
     return "".join(lines)
@@ -1767,13 +1767,23 @@ def changes_since(data_dir, published):
     """What changed since the data was last published, in words, for the user: each
     phase's changes, then project.toml's. An item that is gone is a problem, since an
     item is never deleted, but dropped, with why; so is one added to a phase that was
-    done, or approved, without saying it is an amendment."""
+    done, or approved, or edited there, without saying it is an amendment."""
     old, new = raw(published, "the published"), raw(data_dir, "the new")
     (old_items, old_sections), (new_items, new_sections) = snapshot(old), snapshot(new)
     found = {key: [] for key, _ in PHASES}
 
     def note(key, text):
         found[key].append(text)
+
+    def finished(key):
+        """Whether the published data had a phase that takes amendments approved, or done."""
+        was = old.get("project", {}).get("phases", {}).get(key, {}).get("status")
+        return ("approved" if old.get(key, {}).get("approved") else "done" if was == "done" else None) if key in AMENDS else None
+
+    def agreed(written):
+        """What was agreed of an item, leaving out what changes with its state: its `url`,
+        set once its PR opens, its `ask`, its `to`, its `chosen` option, `stands` and `amended`."""
+        return {field: value for field, value in written.items() if field not in ("url", "ask", "to", "chosen", "stands", "amended")}
 
     for item_id in dict.fromkeys(list(new_items) + list(old_items)):
         before, after = old_items.get(item_id), new_items.get(item_id)
@@ -1786,11 +1796,13 @@ def changes_since(data_dir, published):
             status = after["state"].get("status")
             note(after["phase"], f"{item_id} added, {said(after, after['state'])}" if status in ITEM_STATUS else f"{item_id} added")
             key = after["phase"]
-            was = old.get("project", {}).get("phases", {}).get(key, {}).get("status")
-            finished = "approved" if old.get(key, {}).get("approved") else "done" if was == "done" else None
-            if key in AMENDS and finished and "amended" not in after["written"]:
-                problem(f"{key}.toml", f"{item_id} is new since the published data, which had the {PHASE_NAME[key]} {finished}: an item added to it is an amendment, with `amended`, dated and saying why")
+            if finished(key) and "amended" not in after["written"]:
+                problem(f"{key}.toml", f"{item_id} is new since the published data, which had the {PHASE_NAME[key]} {finished(key)}: an item added to it is an amendment, with `amended`, dated and saying why")
             continue
+        # So is an edit to what was agreed, unless it comes with an amendment of its own.
+        key = after["phase"]
+        if finished(key) and agreed(before["written"]) != agreed(after["written"]) and before["written"].get("amended") == after["written"].get("amended"):
+            problem(f"{key}.toml", f"{item_id} is edited since the published data, which had the {PHASE_NAME[key]} {finished(key)}: an edit to it is an amendment, with `amended`, dated and saying why")
         words, was = edits(before["written"], after["written"]), before["state"]
         # A state that is gone was kept where it was; one that is new or changed, where it is.
         # An item is listed once in a phase: its status, in the words each version gave it,

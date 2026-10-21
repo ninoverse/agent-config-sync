@@ -130,7 +130,9 @@ what has changed in each phase since, statuses in their type's words. It
 writes nothing when an item is gone, since an item is never deleted, but
 `dropped`, with `why`; or when an item is new in the Brief, the Research, the
 Analysis or the Plan, which the published data had done, or approved, and
-doesn't say it is an amendment, with `amended`.
+doesn't say it is an amendment, with `amended`; or is edited there, in what
+was agreed, without an `amended` of its own. What was agreed leaves out what
+changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
 
 ## The data
 
@@ -184,9 +186,10 @@ doesn't say it is an amendment, with `amended`.
   - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
     one each by its key: a decision's choices, shown as a list that marks the
     recommended one until one is chosen, and then only the chosen one;
-  - `amended`, as `{ on = <date>, why = "..." }`, when it was added after its
-    phase's approval, or after its end in a phase without one, which lists it
-    at its end under that day and `why`, and whose tab then reads Amended;
+  - `amended`, as `{ on = <date>, why = "..." }`, when it was added, or
+    edited, after its phase's approval, or after its end in a phase without
+    one, which lists it at its end under that day and `why`, and whose tab
+    then reads Amended;
   - `repo`, the board row it goes in;
   - `ask`, when what the user does while it is Open isn't what its type says,
     which its chip and the calendar then say instead: a PR with `ask = "Test"`
