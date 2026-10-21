@@ -6,8 +6,10 @@ when: Running a project in phases
 
 A project that takes more than one PR, or more than one repository, runs in
 phases, and one page tracks it: the project page, which `/create-project`
-builds. Each phase starts with a discussion with the user, and nothing is
-written before they answer.
+builds. Each phase starts with a discussion with the user about what it will
+hold. The agent then writes what it finds as it finds it; what is the user's
+to settle, such as a decision or an approval, waits on their answer, and the
+page shows it waiting.
 
 A skill runs each step of a project, in numbered steps that say what to show
 the user: `/create-project` starts it, `/update-project` records what changes,

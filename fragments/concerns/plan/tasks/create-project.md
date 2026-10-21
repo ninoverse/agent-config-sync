@@ -30,7 +30,7 @@ The project: $ARGUMENTS
    one split from another, sets each phase's status: one not needed says why,
    and one that starts before those it follows are done says why, in `early`.
    The starter's comments, and *The data* below, say what each field holds.
-3. Write the Brief with the user, discussing it before anything is written: the
+3. Write the Brief from a discussion with the user of what it will hold: the
    problem, the objective, the scope, the success criteria, each with how it is
    checked, the repositories and the ground rules. Until the user approves the
    Brief, the page shows it waiting on them; once they do, give `brief.toml`
