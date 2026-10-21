@@ -1754,15 +1754,18 @@ def changes_since(data_dir, published):
             problem(f"{before['phase']}.toml", f"{item_id} is gone since the published data: an item is never deleted, but given the status `dropped`, with `why`")
             continue
         if before is None:
-            note(after["phase"], f"{item_id} added")
+            # A new item is listed once, with the status it starts at.
+            status = after["state"].get("status")
+            note(after["phase"], f"{item_id} added, {said(after, after['state'])}" if status in ITEM_STATUS else f"{item_id} added")
             key = after["phase"]
             was = old.get("project", {}).get("phases", {}).get(key, {}).get("status")
             finished = "approved" if old.get(key, {}).get("approved") else "done" if was == "done" else None
             if key in AMENDS and finished and "amended" not in after["written"]:
                 problem(f"{key}.toml", f"{item_id} is new since the published data, which had the {PHASE_NAME[key]} {finished}: an item added to it is an amendment, with `amended`, dated and saying why")
-        elif before["written"] != after["written"]:
+            continue
+        if before["written"] != after["written"]:
             note(after["phase"], f"{item_id}: {', '.join(edits(before['written'], after['written']))} edited")
-        was = before["state"] if before else {}
+        was = before["state"]
         if was == after["state"]:
             continue
         # A state that is gone was kept where it was; one that is new or changed, where it is.

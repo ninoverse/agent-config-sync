@@ -629,7 +629,7 @@ def check_since(tmp):
     live = copy_with(tmp, "live", EXAMPLE, "build.toml", '[[section.item]]\nid = "Q1"', asked + '\n[[section.item]]\nid = "Q1"')
     if live is not None:
         run = render(live, tmp / "live-out", "--since", str(EXAMPLE))
-        expect(run.returncode == 0 and "  Build: Q2 added;" in run.stdout, f"Build takes new work without `amended`: {run.stderr}")
+        expect(run.returncode == 0 and "  Build: Q2 added, To answer.\n" in run.stdout, f"Build takes new work without `amended`, and lists it once, with its status: {run.stdout}")
 
     r2 = '\n\n[[section.item]]\nid = "R2"\ntitle = "What the platform does with a probe"\nfields = [\n  ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],\n  ["Raises", "[[D2]]"],\n]\n'
     deleted = copy_with(tmp, "deleted", EXAMPLE, "research.toml", r2, "\n")
