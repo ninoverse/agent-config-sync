@@ -1790,17 +1790,24 @@ def changes_since(data_dir, published):
             if key in AMENDS and finished and "amended" not in after["written"]:
                 problem(f"{key}.toml", f"{item_id} is new since the published data, which had the {PHASE_NAME[key]} {finished}: an item added to it is an amendment, with `amended`, dated and saying why")
             continue
-        if before["written"] != after["written"]:
-            note(after["phase"], f"{item_id}: {', '.join(edits(before['written'], after['written']))} edited")
-        was = before["state"]
-        if was == after["state"]:
-            continue
+        words, was = edits(before["written"], after["written"]), before["state"]
         # A state that is gone was kept where it was; one that is new or changed, where it is.
+        # An item is listed once in a phase: its status, in the words each version gave it,
+        # then what else was edited.
         key = after["kept"] or before["kept"]
-        if was.get("status") != after["state"].get("status"):
-            note(key, f"{item_id} {said(after, was)} → {said(after, after['state'])}")
-        else:
-            note(key, f"{item_id}: {', '.join(edits(was, after['state']))} edited")
+        moved = f"{item_id} {said(before, was)} → {said(after, after['state'])}" if was.get("status") != after["state"].get("status") else ""
+        state = [] if moved or was == after["state"] else edits(was, after["state"])
+        if key == after["phase"]:
+            words += state
+        elif state:
+            note(key, f"{item_id}: {', '.join(state)} edited")
+        if moved and key == after["phase"]:
+            note(key, f"{moved}, {', '.join(words)} edited" if words else moved)
+            continue
+        if words:
+            note(after["phase"], f"{item_id}: {', '.join(words)} edited")
+        if moved:
+            note(key, moved)
 
     for (key, section_id), after in new_sections.items():
         before = old_sections.get((key, section_id))

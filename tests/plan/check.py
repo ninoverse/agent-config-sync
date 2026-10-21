@@ -354,6 +354,8 @@ def check_example(tmp):
         expect('<span class="st st-open">To test</span>' in board and "To merge" not in board, f"an Open item with an `ask` says it on its chip, rather than its type's word: {board[:600]}")
         expect('<span class="word"> to test</span>' in day7 and "to merge" not in day7, f"and the calendar counts it so: {day7}")
         expect("  the owner: Test EX-2 Readiness probe; Deploy EX-3 Ten seconds in production; deferred until they say: 1.\n" in run.stdout and "  Plan: EX-2: `ask` edited; EX-3: `ask` edited.\n  Build: EX-3 Ready → To deploy.\n" in run.stdout, f"and so does what the render prints: {run.stdout}")
+        run = render(EXAMPLE, tmp / "tested-out", "--since", str(testing))
+        expect("  Build: EX-3 To deploy → Ready.\n" in run.stdout, f"a status left is named in the words it had then: {run.stdout}")
     waiting = copy_with(tmp, "waiting", EXAMPLE, "verify.toml", 'needs = ["EX-2"]\nstatus = "blocked"', 'needs = ["EX-1", "EX-2"]\nstatus = "blocked"')
     if waiting is not None and replace_in(waiting, "plan.toml", 'needs = ["Q1"]\n', 'needs = ["Q1", "EX-2"]\n') and replace_in(waiting, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "blocked"'):
         run = render(waiting, tmp / "waiting-out", "--inline")
@@ -650,6 +652,14 @@ def check_since(tmp):
     if live is not None:
         run = render(live, tmp / "live-out", "--since", str(EXAMPLE))
         expect(run.returncode == 0 and "  Build: Q2 added, To answer.\n" in run.stdout, f"Build takes new work without `amended`, and lists it once, with its status: {run.stdout}")
+    answered = copy_with(tmp, "answered", EXAMPLE, "build.toml", 'status = "done"\non = 2026-10-07\nfields = [\n  ["Question", "Staging', 'status = "done"\non = 2026-10-08\nfields = [\n  ["Question", "In staging')
+    if answered is not None:
+        run = render(answered, tmp / "answered-out", "--since", str(EXAMPLE))
+        expect("  Build: Q1: Question, `on` edited.\n" in run.stdout, f"an item edited in what it says and in its state is listed once: {run.stdout}")
+    unanswered = copy_with(tmp, "unanswered", EXAMPLE, "build.toml", 'status = "done"\non = 2026-10-07\nfields = [\n  ["Question", "Staging', 'status = "open"\non = 2026-10-08\nfields = [\n  ["Question", "In staging')
+    if unanswered is not None:
+        run = render(unanswered, tmp / "unanswered-out", "--since", str(EXAMPLE))
+        expect("  Build: Q1 Answered → To answer, Question edited.\n" in run.stdout, f"and so is one whose status changed, its status first: {run.stdout}")
 
     r2 = '\n\n[[section.item]]\nid = "R2"\ntitle = "What the platform does with a probe"\nfields = [\n  ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],\n  ["Raises", "[[D2]]"],\n]\n'
     deleted = copy_with(tmp, "deleted", EXAMPLE, "research.toml", r2, "\n")
