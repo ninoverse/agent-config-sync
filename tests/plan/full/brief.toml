@@ -1,5 +1,7 @@
 # The Brief: only its success criterion, which Build needs written before it starts.
 
+approved = 2026-09-01
+
 [[section]]
 id = "criteria"
 title = "Success criteria"

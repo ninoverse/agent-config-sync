@@ -60,6 +60,8 @@ LIVE = ("build", "verify")
 # The phases before them, which never reopen: an item added to one once it is done, or
 # approved, is an amendment.
 AMENDS = ("brief", "research", "analysis", "plan")
+# The phases the owner approves, each with the phase that starts only once they have.
+APPROVES = {"brief": "research", "plan": "build"}
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -655,11 +657,14 @@ def check_rules(project, phases):
     statuses = project["status"]
     build = statuses["build"]
     approved = phases.get("plan", {}).get("approved")
-    # Build starts only once the owner has approved the Plan, so a Done Plan has the day.
-    if statuses["plan"]["status"] == "done" and not approved:
-        problem("plan.toml", "the Plan is done, but not approved: give it `approved`, the day the owner approved it")
-    if approved and build["start"] and build["start"] < approved and not build["early"]:
-        problem("project.toml [phases.build]", f"Build starts on {day(build['start'])}, before the Plan's approval on {day(approved)}: say why, in `early`")
+    # The Research starts only once the owner has approved the Brief, and Build only once
+    # they have approved the Plan, so a Done Brief or Plan has the day.
+    for key, after in APPROVES.items():
+        day_approved, then = phases.get(key, {}).get("approved"), statuses[after]
+        if statuses[key]["status"] == "done" and not day_approved:
+            problem(f"{key}.toml", f"the {PHASE_NAME[key]} is done, but not approved: give it `approved`, the day the owner approved it")
+        if day_approved and then["start"] and then["start"] < day_approved and not then["early"]:
+            problem(f"project.toml [phases.{after}]", f"{PHASE_NAME[after]} starts on {day(then['start'])}, before the {PHASE_NAME[key]}'s approval on {day(day_approved)}: say why, in `early`")
     # Criteria written after the work record it rather than steer it.
     if build["status"] in ("now", "done") and not any(item["type"] == "criterion" and item.get("status") != "dropped" for item in ITEMS.values()):
         problem("brief.toml", "Build has started, but the Brief has no success criterion: write them before the work, so they steer it")
@@ -1547,10 +1552,11 @@ def calendar_view(project, phases):
         return f'<div class="col"><h3>{title}</h3><ul>{body}</ul>{more}</div>'
 
     owner_rows = [f'<li><span class="pill ask">{esc(ask_of(ITEMS[i]))}</span> [[{i}]]</li>' for i in owner]
-    # A Plan written and not approved yet waits on the owner before anything else, though it isn't an item.
-    plan = phases.get("plan", {})
-    if project["status"]["plan"]["status"] == "now" and plan.get("section") and not plan.get("approved"):
-        owner_rows.insert(0, '<li><span class="pill ask">Approve</span> <a href="#plan">the Plan</a></li>')
+    # A Brief or a Plan written and not approved yet waits on the owner before anything else,
+    # though it isn't an item.
+    for key in reversed(APPROVES):
+        if project["status"][key]["status"] == "now" and phases.get(key, {}).get("section") and not phases[key].get("approved"):
+            owner_rows.insert(0, f'<li><span class="pill ask">Approve</span> <a href="#{key}">the {PHASE_NAME[key]}</a></li>')
     agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
     # The next three dates, each a link to its day in the agenda, which has them all.
     date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word, ref in ahead[:3]]

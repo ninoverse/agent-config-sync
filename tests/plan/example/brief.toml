@@ -1,5 +1,8 @@
 # Brief: what the project is for, how it will be judged, and the ground rules
-# the user set for working on it. The next session reads this first.
+# the user set for working on it. The next session reads this first. It is
+# done once the user approves it, on the day `approved` gives.
+
+approved = 2026-10-01
 
 [[section]]
 id = "the-project"

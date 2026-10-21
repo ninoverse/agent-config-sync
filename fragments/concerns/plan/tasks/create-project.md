@@ -33,7 +33,9 @@ The project: $ARGUMENTS
 3. Write the Brief with the user, discussing it before anything is written: the
    problem, the objective, the scope, the success criteria, each with how it is
    checked, the repositories and the ground rules. Keep the criteria's statuses
-   in `verify.toml`, under `[status]`, so the Brief shows them as agreed.
+   in `verify.toml`, under `[status]`, so the Brief shows them as agreed. Until
+   the user approves the Brief, the page shows it waiting on them; once they
+   do, give `brief.toml` `approved`, the day they did, and the Brief is Done.
 4. Render it, as below. Fix every problem, and fix each warning or tell the user
    why it stands. Show: the line the render prints, and each warning left.
 5. Publish it with `/publish-project`.
@@ -78,8 +80,9 @@ It writes nothing, and names the file and the item, when:
   needed doesn't say why, or has a `<phase>.toml`: its tab doesn't open, so
   nothing in it would show;
 - a phase starts before those it follows are done, or before the day they
-  end, or Build before the Plan's approval, without `early` saying why; the
-  Plan is done without `approved`; a phase ends before one it runs beside,
+  end, the Research before the Brief's approval, or Build before the Plan's,
+  without `early` saying why; the Brief or the Plan is done without
+  `approved`; a phase ends before one it runs beside,
   such as Reuse before Build; or is Build or Verify, and done while it holds
   an unfinished item, which reopens it;
 - a decision isn't taken, or deferred, once the Plan is approved, unless it
@@ -152,8 +155,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   or, in the Retrospective, one of the parts it builds from the other phases,
   below.
   A section that carries on the one before it can go without a `title`, and
-  `--since` then names it by that section's. A phase the user approves, such
-  as the Plan, has `approved`, the day they did. A section that shows a table,
+  `--since` then names it by that section's. A phase the user approves, the
+  Brief and the Plan, has `approved`, the day they did. A section that shows a table,
   such as a `table`, `repos` or `board`, takes `min_width`, the width in
   pixels below which it scrolls sideways rather than squeeze its columns.
 - An `items` section has a `type`, which sets the words its statuses take:

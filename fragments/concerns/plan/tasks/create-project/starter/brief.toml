@@ -1,6 +1,7 @@
 # Brief: what the project is for, how it will be judged, and the ground rules
 # the user set for working on it. Discuss it with the user before writing it.
-# The next session reads it first.
+# The next session reads it first. Once the user approves it, add
+# `approved = <the day>` here, above the sections, and the Brief is Done.
 
 [[section]]
 id = "the-project"

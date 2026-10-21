@@ -68,6 +68,7 @@ def check_starter(tmp):
     run = render(STARTER, tmp / "starter")
     expect(run.returncode == 0 and "warning:" not in run.stderr, f"the starter renders without a warning: {run.stderr}")
     expect("opening on Brief; loaded when picked: phases/guides.html" in run.stdout, f"and opens on its Brief, the only phase it has: {run.stdout}")
+    expect("  the owner: Approve the Brief.\n" in run.stdout, f"which waits on the owner's approval, as a Plan does: {run.stdout}")
 
 
 def check_example(tmp):
@@ -595,6 +596,8 @@ BROKEN = [
     (EXAMPLE, "plan.toml", 'url = "https://github.com/example/example-service/pull/12"', 'url = "github.com/example/example-service/pull/12"', "`url` is an https:// address"),
     (FULL, "build.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
+    (EXAMPLE, "brief.toml", "approved = 2026-10-01\n", "", "brief.toml: the Brief is done, but not approved: give it `approved`"),
+    (EXAMPLE, "brief.toml", "approved = 2026-10-01", "approved = 2026-10-02", "Research starts on 1 Oct, before the Brief's approval on 2 Oct: say why, in `early`"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
     (EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"', "D2 isn't taken, but the Plan was approved on 3 Oct"),
     (EXAMPLE, "deferred.toml", 'id = "T2"', 'id = "D9"', "D9 is a `deferred` item, whose numbers start with T, such as T1"),
