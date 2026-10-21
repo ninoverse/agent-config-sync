@@ -13,14 +13,28 @@ The project: $ARGUMENTS
 ## Steps
 
 1. Read the data as last published into a directory of its own: for a page
-   published as a claude.ai artifact, each `src/<file>` beside it, read by path
-   with the Artifact tool; otherwise the copy kept at the last publish. Edit a
-   copy.
-2. Read the notes for the next session, under `[handoff]`, then the Brief,
-   before anything else: its ground rules hold until the user changes them.
-3. Read each PR in flight again, from GitHub, set `read_at`, and render with
-   `--since`, given the data as published: what changed is what happened while
-   no session ran. Fix what stops the render.
+   published as a claude.ai artifact, list its files with the Artifact tool,
+   and read each `src/<file>` by path; otherwise, the copy kept at the last
+   publish. Edit a copy of it, since `--since` compares with the data as read.
+2. Read the notes for the next session, under `[handoff]` in `project.toml`,
+   then the Brief, `brief.toml`, before the other phases: its ground rules hold
+   until the user changes them.
+3. Read the state again, from GitHub: each PR item with a `url` that isn't
+   `done` or `dropped`, and, for one without a `url`, whether a PR has opened
+   from its `Branch`. A PR merged is `done`, `on` its merge day, with its
+   `result`; one closed without a merge is the user's call, `dropped` or
+   replaced; one still open is `open` once it waits only on the user, else
+   `ready` or `blocked`. Set `read_at` to now, in UTC, and render with
+   `--since`, given the data as published:
+
+   ```bash
+   python3 .agents/create-project/render.py <data directory> <out directory> \
+     --since <published directory>
+   ```
+
+   What it lists is what happened while no session ran. Fix every problem,
+   and fix each warning or tell the user why it stands. Show: each PR read,
+   and its state.
 4. Tell the user where the project stands: the phase in progress and who holds
    the ball, as the render prints them, and what is in flight and what comes
    next, as the notes say; then what changed since the last publish. Show: that

@@ -16,7 +16,8 @@ The page to publish: $ARGUMENTS
 
 1. Read the state again, right before publishing: `render.py` never reaches
    GitHub. For each PR item with a `url` that isn't `done` or `dropped`, read
-   the PR with the GitHub tools you have:
+   the PR with the GitHub tools you have, and, for one without a `url`, look
+   for a PR opened from its `Branch`:
    - merged: `done`, `on` its merge day, with its `result`, what it released
      and what its *Done when* showed;
    - closed without a merge: ask the user whether it is `dropped`, with `why`,
