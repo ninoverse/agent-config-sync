@@ -33,7 +33,8 @@ closes it, and `/resume-project` picks it up in a new session.
   data; Reuse is the phase most often not needed. A tab opens
   only once its phase has something to show, so the tab of a phase not needed,
   or not written yet, doesn't open. Build and Verify can both be Now: Verify
-  starts with the first merge. A phase that is Now shows on its tab how many
+  starts with the first merge, or with the first test of a branch before its
+  PR opens, whichever comes first. A phase that is Now shows on its tab how many
   of its items are done, and Deferred's tab how many items wait.
 - The phases run in order: each starts once the one before it is Done or Not
   needed, but Verify and Reuse, which start once Build has. One that starts
