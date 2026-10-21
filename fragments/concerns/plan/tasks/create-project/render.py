@@ -62,6 +62,9 @@ LIVE = ("build", "verify")
 AMENDS = ("brief", "research", "analysis", "plan")
 # The phases the owner approves, each with the phase that starts only once they have.
 APPROVES = {"brief": "research", "plan": "build"}
+# The phases the agent writes with the owner, each starting with a discussion once the one
+# before it is done: until it has something to show, the agent holds it.
+WRITTEN = ("research", "analysis", "plan")
 PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -1564,6 +1567,14 @@ def calendar_view(project, phases):
         if project["status"][key]["status"] == "now" and phases.get(key, {}).get("section") and not phases[key].get("approved"):
             owner_rows.insert(0, f'<li><span class="pill ask">Approve</span> <a href="#{key}">the {PHASE_NAME[key]}</a></li>')
     agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
+    # Between two phases, the next waits on the agent: to start it, then to write it.
+    for key in WRITTEN:
+        state, before = project["status"][key]["status"], FOLLOWS[key][0]
+        while project["status"][before]["status"] == "not-needed" and before in FOLLOWS:
+            before = FOLLOWS[before][0]
+        if state in ("to-come", "now") and not phases.get(key, {}).get("section") and project["status"][before]["status"] == "done":
+            verb = "Start" if state == "to-come" else "Write"
+            agent_rows.insert(0, f'<li><span class="pill st-ready">{verb}</span> the {PHASE_NAME[key]}</li>')
     # The next three dates, each a link to its day in the agenda, which has them all.
     date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word, ref in ahead[:3]]
     more = f'<p class="more"><a href="#coming-up">{len(ahead) - 3} more in the agenda</a></p>' if len(ahead) > 3 else ""

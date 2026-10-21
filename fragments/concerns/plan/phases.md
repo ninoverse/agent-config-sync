@@ -159,10 +159,12 @@ from the lesson.
   possessive.
 - Under the calendar, the page says who holds the ball: the owner, the user
   who decides, merges and changes settings, for the Brief and the Plan until
-  they approve them, and for every Open item, with how many are deferred until they say; the
-  agent, for every Ready one; or a date coming up, with an automated run
-  marked as such. The Agenda holds every date the
-  project has, ahead and past, and the notes for the next session. All of it
+  they approve them, and for every Open item, with how many are deferred
+  until they say; the agent, for every Ready one, and for the next phase,
+  to start and then to write, from the day the one before it is Done; or a
+  date coming up, with an automated run marked as such. The Agenda holds
+  every date the project has, ahead and past, and the notes for the next
+  session. All of it
   is built from the statuses: never repeat a status in prose, which goes stale
   the next time it changes. Say each fact once: a field doesn't repeat a chip,
   such as a PR's kind, nor a card another card.

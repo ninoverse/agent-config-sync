@@ -69,6 +69,13 @@ def check_starter(tmp):
     expect(run.returncode == 0 and "warning:" not in run.stderr, f"the starter renders without a warning: {run.stderr}")
     expect("opening on Brief; loaded when picked: phases/guides.html" in run.stdout, f"and opens on its Brief, the only phase it has: {run.stdout}")
     expect("  the owner: Approve the Brief.\n" in run.stdout, f"which waits on the owner's approval, as a Plan does: {run.stdout}")
+    approved = copy_with(tmp, "approved", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
+    if approved is not None and replace_in(approved, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
+        run = render(approved, tmp / "approved-out")
+        expect("  the owner: nothing to do.\n  the agent: Start the Research.\n" in run.stdout, f"once it is approved, the agent starts the next phase: {run.stdout}")
+        if replace_in(approved, "project.toml", "end = 2026-01-02\n", "end = 2026-01-02\n\n[phases.research]\nstatus = \"now\"\nstart = 2026-01-02\n"):
+            run = render(approved, tmp / "approved-out")
+            expect("  the agent: Write the Research.\n" in run.stdout, f"and writes it once it has started, until it has something to show: {run.stdout}")
 
 
 def check_example(tmp):
