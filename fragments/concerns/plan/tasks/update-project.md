@@ -24,6 +24,9 @@ The project, and what changed: $ARGUMENTS
      it is done, or approved, or edited there, is `amended`, with the day and
      why;
    - new work in Build or Verify, once done, reopens it, with `reopened`;
+   - a decision, or a question, is written in full, with its options and the
+     one recommended, before the user is asked to take it: they read it on
+     the page, and the chat only says it is there;
    - a decision taken has its `chosen` option, and `on`;
    - an item set aside is `deferred`, with what it waits on, or `to-move`,
      naming the project that takes it.

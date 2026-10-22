@@ -77,8 +77,9 @@ closes it, and `/resume-project` picks it up in a new session.
 - **Analysis**: the decisions, and nothing else. A question about what to
   build is one of them, taken before the Plan's approval unless the user
   defers it, saying what it waits on. Each lists its options, with the
-  reasons for the one recommended. Until the user answers, the page marks
-  that one; after, only the one chosen, with the date. Its card lists the PRs
+  reasons for the one recommended, and is put to the user on the page, in
+  full: the chat only says it is there. Until the user answers, the page
+  marks the one recommended; after, only the one chosen, with the date. Its card lists the PRs
   and settings that carry it out. One list is the default; only when the
   decisions are many do they come in batches, one section each, answered
   together, which the page lists at the top. The evidence behind them, such
