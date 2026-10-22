@@ -558,6 +558,9 @@ UNLINKED = [
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to <a href=\\"https://example.com/old#q1\\">the old project\'s Q1</a>" }'),
 ]
 
+# A task in the example's Plan, amended in: work that isn't a PR.
+TASK = '[[section]]\nid = "tasks"\ntitle = "Tasks"\nkind = "items"\ntype = "task"\n\n[[section.item]]\nid = "W1"\ntitle = "Walk the platform team through the probes"\nshort = "Probe walkthrough"\nneeds = ["EX-1"]\nask = "Attend"\namended = { on = 2026-10-07, why = "the platform team asked" }\nfields = [["Done when", "The platform team runs the probes on a service of their own."]]\n\n[[section]]\nid = "risks"'
+
 # Each broken copy: the project it copies, the file, the text replaced, its
 # replacement, and the message.
 BROKEN = [
@@ -610,6 +613,8 @@ BROKEN = [
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
     (EXAMPLE, "brief.toml", "approved = 2026-10-01\n", "", "brief.toml: the Brief is done, but not approved: give it `approved`"),
     (EXAMPLE, "research.toml", "approved = 2026-10-02\n", "", "research.toml: the Research is done, but not approved: give it `approved`"),
+    (EXAMPLE, "plan.toml", '[[section]]\nid = "risks"', TASK.replace('fields = [["Done when", "The platform team runs the probes on a service of their own."]]', 'fields = [["Where", "Their weekly call."]]'), "W1 is a task without a Done when field"),
+    (EXAMPLE, "plan.toml", '[[section]]\nid = "risks"', TASK.replace('id = "W1"', 'id = "T9"'), "T9 is a `task` item, whose numbers start with W"),
     (EXAMPLE, "research.toml", "approved = 2026-10-02", "approved = 2026-10-03", "Analysis starts on 2 Oct, before the Research's approval on 3 Oct: say why, in `early`"),
     (EXAMPLE, "brief.toml", "approved = 2026-10-01", "approved = 2026-10-02", "Research starts on 1 Oct, before the Brief's approval on 2 Oct: say why, in `early`"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
@@ -724,6 +729,21 @@ def check_stale(tmp):
         expect(shown in views, f"stale case {index} opens its {len(warned)} warnings from beside the Agenda and the Guides: {views[-300:]}")
 
 
+
+def check_task(tmp):
+    """Work that isn't a PR, such as a review, is a task: in the Plan, on the board, done
+    without a merge, and waiting on the owner with its `ask`."""
+    data = copy_with(tmp, "task", EXAMPLE, "plan.toml", '[[section]]\nid = "risks"', TASK)
+    if data is None or not replace_in(data, "build.toml", 'types = ["pr", "setting"]', 'types = ["pr", "setting", "task"]') or not replace_in(data, "build.toml", "[status.RK1]", '[status.W1]\nstatus = "open"\non = 2026-10-07\n\n[status.RK1]'):
+        return
+    run = render(data, tmp / "task-out", "--inline")
+    page = (tmp / "task-out" / "index.html").read_text() if run.returncode == 0 else ""
+    expect(run.returncode == 0 and "warning:" not in run.stderr, f"a task renders without a warning: {run.stderr}")
+    expect('<a class="chip s-open" href="#w1"><b>W1</b><span>Probe walkthrough</span><span class="w"><span class="st st-open">To attend</span>' in between(page, '<table class="board"', "</table>"), f"it takes its place on the board, in its `ask`'s words: {between(page, '<table class=\"board\"', '</table>')[-900:]}")
+    expect("Attend W1 Probe walkthrough" in run.stdout, f"and waits on the owner with it: {run.stdout}")
+    expect('Task <span class="letters">W1</span>' in page, "and the Guides' table of statuses names the type, with its letter")
+
+
 def check_standing(tmp):
     """A warning the owner chose to keep says why, on its item: the render prints it apart,
     and the page's Warnings list it under its own heading, with the why."""
@@ -771,6 +791,7 @@ def main():
         check_since(tmp)
         check_stale(tmp)
         check_standing(tmp)
+        check_task(tmp)
         check_unlinked(tmp)
         check_broken(tmp)
     for what in failed:

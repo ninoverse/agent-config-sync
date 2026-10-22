@@ -74,7 +74,7 @@ PARKED = ("deferred", "to-move")
 # The types of item that can come true: a risk that does is no longer a risk.
 HAPPENS = ("risk",)
 # The types of item that carry out a decision.
-CARRY_OUT = ("pr", "setting")
+CARRY_OUT = ("pr", "setting", "task")
 KINDS = {"major": "Major", "minor": "Minor", "patch": "Patch", "owner": "Owner"}
 # What a status reads as for each type of item, and what the user does while one is open;
 # for some, what its `needs` read as on its card, and on the cards of what it needs.
@@ -86,6 +86,8 @@ TYPES = {
     "question": {"labels": {"open": "To answer", "done": "Answered", "dropped": "Withdrawn"}, "ask": "Answer"},
     "pr": {"labels": {"open": "To merge", "done": "Merged", "dropped": "Closed"}, "ask": "Merge"},
     "setting": {"labels": {"open": "To set", "done": "Set", "dropped": "Not needed"}, "ask": "Set"},
+    # Work that isn't a PR, such as a review: done without a merge.
+    "task": {"labels": {"open": "To review", "done": "Done", "dropped": "Dropped"}, "ask": "Review"},
     "risk": {"labels": {"open": "To accept", "blocked": "Open", "done": "Closed", "dropped": "Accepted"}, "ask": "Accept", "waits": "closes with", "needs": "Closes with", "needed_by": "Closes"},
     "check": {"labels": {"open": "To check", "blocked": "Waiting", "done": "Passed", "dropped": "Skipped"}, "ask": "Check"},
     "lesson": {"labels": {"open": "To review", "done": "Adopted", "dropped": "Not adopted"}, "ask": "Review"},
@@ -100,6 +102,7 @@ TYPE_NAMES = {
     "question": ("Question", "Q1"),
     "pr": ("PR", "AC-1"),
     "setting": ("Setting", "S1"),
+    "task": ("Task", "W1"),
     "risk": ("Risk", "RK1"),
     "check": ("Check", "C1"),
     "lesson": ("Lesson", "L1"),
@@ -113,7 +116,7 @@ PHASE_TYPES = {
     "brief": ("criterion", "rule"),
     "research": ("piece",),
     "analysis": ("decision",),
-    "plan": ("pr", "setting", "risk"),
+    "plan": ("pr", "setting", "task", "risk"),
     "build": ("question",),
     "verify": ("check",),
     "reuse": (),
@@ -121,7 +124,7 @@ PHASE_TYPES = {
     "deferred": ("deferred", "question"),
 }
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
-# the Plan its PRs, settings and risks, Build its board, results and questions,
+# the Plan its PRs, settings, tasks and risks, Build its board, results and questions,
 # Verify its checks and where the success criteria stand, and Reuse its pieces, each
 # with how to take it; and where what they leave out goes.
 PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "build": ("board", "results", "items"), "verify": ("items", "results"), "reuse": ("defs",)}
@@ -715,6 +718,8 @@ def check_rules(project, phases):
             on_github = GITHUB.fullmatch(item.get("url") or "")
             if on_github and status in UNFINISHED:
                 running.setdefault(on_github.group(1), []).append(item_id)
+        if item["type"] == "task" and "Done when" not in labels:
+            problem(where, f"{item_id} is a task without a Done when field: the owner approves each task with it, and Verify checks it")
     # One PR at a time in each repository. Two at once can be the owner's choice, so this only warns.
     for repo, ids in running.items():
         if len(ids) > 1:

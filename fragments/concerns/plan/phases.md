@@ -87,15 +87,16 @@ closes it, and `/resume-project` picks it up in a new session.
 - **Plan**: its cards and nothing else, which the page lists at the top. The
   PRs as approved, one at a time in each repository, each with its
   branch, what it needs first, what its merge releases, as its kind, and *Done
-  when*: what proves it works. The settings only the user can change. The risk
-  register: each risk, written before what it describes can happen, and the
+  when*: what proves it works. The settings only the user can change. The
+  tasks: work that isn't a PR, such as a review, each with its *Done when*, and
+  done without a merge. The risk register: each risk, written before what it describes can happen, and the
   step that closes it. The Plan stays as approved: an item added or edited
   after the approval is an amendment, dated and saying why, and the Plan ends
   with its approval: the day, and its amendments by day and why. The Plan is
   Done once the owner approves it, and Build starts only after that.
-- **Build**: the live state. A board of the PRs and settings in waves, built
-  from what each needs; each PR's *Result* once it merges; and the questions
-  the work raises, and nothing else: one asked before the Plan's approval is
+- **Build**: the live state. A board of the PRs, settings and tasks in waves,
+  built from what each needs; each item's *Result* once it lands; and the
+  questions the work raises, and nothing else: one asked before the Plan's approval is
   a decision. What happened is in the Agenda, so Build keeps no log of its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
   success criteria, Met or Not met yet, and nothing else. A check of a branch,
@@ -134,11 +135,12 @@ from the lesson.
 
 - Numbers run for the whole project and are never reused: G for ground rules,
   SC for success criteria, R for research pieces, D for decisions, Q for
-  questions, S for settings, RK for risks, C for checks, L for lessons, T for
-  deferred work, and a prefix for each repository's PRs, such as AC-1.
+  questions, S for settings, W for tasks, RK for risks, C for checks, L for
+  lessons, T for deferred work, and a prefix for each repository's PRs, such
+  as AC-1.
 - Each item lives in its phase: ground rules and success criteria in the
   Brief, research pieces in the Research, decisions in the Analysis, PRs,
-  settings and risks in the Plan, questions in Build, checks in Verify,
+  settings, tasks and risks in the Plan, questions in Build, checks in Verify,
   lessons in the Retrospective, and deferred work and questions in Deferred.
 - An item is Done; Open, when it waits on the user, such as a PR to merge, a
   decision to take or a setting to change; Ready, when everything it needs is
