@@ -762,6 +762,19 @@ def check_standing(tmp):
     expect("<h3>Standing, by the owner's choice</h3>" in sheet and "Recorded after the fact, with only what was decided." in sheet and "<h3><code>analysis.toml</code></h3>" not in sheet, f"the sheet lists it under its own heading, with the why: {sheet[-900:]}")
 
 
+def check_result(tmp):
+    """An item that keeps its own status shows its `result` on its card, as a decision
+    taken says what came of it."""
+    result = "The platform's settings point both probes at port 8080."
+    data = copy_with(tmp, "result", EXAMPLE, "analysis.toml", 'chosen = "a"\nfields = [["Reasons", "One port', f'chosen = "a"\nresult = "{result}"\nfields = [["Reasons", "One port')
+    if data is None:
+        return
+    run = render(data, tmp / "result-out", "--inline")
+    page = (tmp / "result-out" / "index.html").read_text() if run.returncode == 0 else ""
+    card = between(page, 'id="d1"', "</article>")
+    expect(f"<dt>Result</dt><dd>{result}</dd>" in card, f"a decision's result shows on its card: {card[-600:]}")
+
+
 def check_renamed(tmp):
     """Data from before Build was renamed Execution stops the render, saying so."""
     data = tmp / "renamed"
@@ -802,6 +815,7 @@ def main():
         check_stale(tmp)
         check_standing(tmp)
         check_task(tmp)
+        check_result(tmp)
         check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)

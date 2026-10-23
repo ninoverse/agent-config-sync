@@ -947,6 +947,8 @@ def card(item):
     rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in fields if not is_chip(field[1])]
     if shown and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
+    if own and item.get("result"):
+        rows.append(("Result", item["result"]))
     if item["needs"]:
         rows.append((TYPES.get(item["type"], {}).get("needs", "Needs"), refs_ul(item["needs"])))
     if item["amended"]:
