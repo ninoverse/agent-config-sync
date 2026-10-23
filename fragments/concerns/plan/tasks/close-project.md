@@ -28,4 +28,5 @@ The project: $ARGUMENTS
    in Deferred until it ships. Its story is only for a project shown outside it.
 5. Update the notes for the next session: the project is complete, where its
    work went, and what still waits.
-6. Publish with `/publish-project`. The page now opens on Deferred.
+6. Publish with `/publish-project`. The page now opens on Deferred, or on the
+   Retrospective when nothing waits.

@@ -1673,13 +1673,17 @@ def site_footer(aids, line):
 
 
 def opening_phase(statuses, shown):
-    """The phase in progress, or else the next to come, or else the first: of those
-    with something to show."""
-    for wanted in ("now", "to-come"):
-        for key in shown:
-            if statuses[key]["status"] == wanted:
-                return key
-    return next(iter(shown))
+    """The phase in progress, or else the last one done, until the next starts, or else
+    the first: of those with something to show. Deferred holds what waits beside the
+    phases, so it opens first only once the Retrospective is done, the project closed."""
+    if statuses["retrospective"]["status"] == "done" and "deferred" in shown:
+        return "deferred"
+    phases = [key for key in shown if key != "deferred"] or list(shown)
+    for key in phases:
+        if statuses[key]["status"] == "now":
+            return key
+    done = [key for key in phases if statuses[key]["status"] == "done"]
+    return done[-1] if done else phases[0]
 
 
 # ------------------------------------------------------------------ the guides

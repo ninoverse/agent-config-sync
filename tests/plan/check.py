@@ -73,6 +73,10 @@ def check_starter(tmp):
     if approved is not None and replace_in(approved, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
         run = render(approved, tmp / "approved-out")
         expect("  the owner: nothing to do.\n  the agent: Start the Research.\n" in run.stdout, f"once it is approved, the agent starts the next phase: {run.stdout}")
+        (approved / "deferred.toml").write_text('[[section]]\nid = "work"\ntitle = "Deferred work"\nkind = "items"\ntype = "deferred"\n\n[[section.item]]\nid = "T1"\ntitle = "Some later work"\nstatus = "blocked"\nwaits = "a release"\nfields = [["Goes to", "The Plan."]]\n')
+        if replace_in(approved, "project.toml", "\n[handoff]", '\n[phases.deferred]\nstatus = "now"\n\n[handoff]'):
+            run = render(approved, tmp / "approved-out")
+            expect("opening on Brief;" in run.stdout, f"until it starts, the page opens on the phase just done, not on Deferred: {run.stdout}")
         if replace_in(approved, "project.toml", "end = 2026-01-02\n", "end = 2026-01-02\n\n[phases.research]\nstatus = \"now\"\nstart = 2026-01-02\n"):
             run = render(approved, tmp / "approved-out")
             expect("  the agent: Write the Research.\n" in run.stdout, f"and writes it once it has started, until it has something to show: {run.stdout}")
@@ -526,6 +530,10 @@ def check_full(tmp):
         expect(render(linked, tmp / "linked-page").returncode == 0, "on the project page, a link by hand to MX-1 has its target")
         run = render(linked, tmp / "linked-alone", "--retrospective")
         expect(run.returncode == 1 and 'a link to "#mx-1"' in run.stderr, f"alone, it has none, and the render says so: {run.stderr}")
+    closed = copy_with(tmp, "closed", FULL, "project.toml", '[phases.retrospective]\nstatus = "now"\n', '[phases.retrospective]\nstatus = "done"\nend = 2026-10-09\n')
+    if closed is not None and replace_in(closed, "retrospective.toml", 'short = "Names first"\nstatus = "open"\n', 'short = "Names first"\nstatus = "done"\non = 2026-10-09\n'):
+        run = render(closed, tmp / "closed-out")
+        expect("opening on Deferred;" in run.stdout, f"once the project is closed, its page opens on what still waits: {run.stdout}")
 
 
 # Each stale copy of the example: the file, the text replaced, its replacement,
