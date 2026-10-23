@@ -1,4 +1,4 @@
-# Build: the live state. [status.<id>] sets the status of an item kept in
+# Execution: the live state. [status.<id>] sets the status of an item kept in
 # another phase: done, open (waiting on the user), ready, blocked (with `waits`
 # or the item's `needs`) or dropped (with `why`); `on`, the day it got there;
 # and a `result` once it lands.

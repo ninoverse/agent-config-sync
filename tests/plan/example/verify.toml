@@ -1,5 +1,5 @@
 # Verify: what proves the merged work does what it should, in the world, and
-# the Brief's success criteria. Build ends at the last merge; Verify at the
+# the Brief's success criteria. Execution ends at the last merge; Verify at the
 # last check. A check's title says how it is checked: what it proves is the
 # Done when of the PR it needs, and the criterion it verifies. A check of a
 # branch, run before its PR merges, is one the PR needs instead.

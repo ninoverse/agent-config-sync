@@ -24,7 +24,7 @@ closes it, and `/resume-project` picks it up in a new session.
   starts, and kept.
 - Nine phases, each a view the indicator at the top of the page switches to,
   in two groups. The first six run in this order, numbered: Brief, Research,
-  Analysis, Plan, Build, Verify. The other three, unnumbered, are what the
+  Analysis, Plan, Execution, Verify. The other three, unnumbered, are what the
   project leaves: Reuse, the Retrospective and Deferred. The page opens on the
   phase in progress. Above the indicator, on every view, are the calendar and
   who holds the ball. Two views aren't phases, and open over the page from its
@@ -34,17 +34,17 @@ closes it, and `/resume-project` picks it up in a new session.
   taken amendments reads Amended. Not needed says why in one sentence, in the
   data; Reuse is the phase most often not needed. A tab opens
   only once its phase has something to show, so the tab of a phase not needed,
-  or not written yet, doesn't open. Build and Verify can both be Now: Verify
+  or not written yet, doesn't open. Execution and Verify can both be Now: Verify
   starts with the first merge, or with the first test of a branch before its
   PR opens, whichever comes first. A phase that is Now shows on its tab how many
   of its items are done, and Deferred's tab how many items wait.
 - The phases run in order: each starts once the one before it is Done or Not
-  needed, but Verify and Reuse, which start once Build has. One that starts
+  needed, but Verify and Reuse, which start once Execution has. One that starts
   early says why, and the Agenda shows it on the day it started. A phase that
-  runs beside others ends only after them, never early: Verify after Build,
-  Reuse after both, and the Retrospective after every other. Build and Verify
-  reopen when new work comes in, and keep the day each ended and the day it
-  reopened. The phases before them never reopen: an item added to one after
+  runs beside others ends only after them, never early: Verify after Execution,
+  Reuse after both, and the Retrospective after every other. Execution and
+  Verify reopen when new work comes in, and keep the day each ended and the day
+  it reopened. The phases before them never reopen: an item added to one after
   it is Done, or approved, or edited there, is an amendment, dated and saying
   why, which the phase lists at its end.
 - The page shows the current state, and the Agenda what happened, by day.
@@ -68,44 +68,45 @@ closes it, and `/resume-project` picks it up in a new session.
   with what the project does with it (changes it, reads it, or creates it), and
   the ground rules: how the user wants the project run, such as who merges and
   which branches need asking. A ground rule holds until the user changes it.
-  The success criteria are written before Build starts, so they steer the
+  The success criteria are written before Execution starts, so they steer the
   work rather than record it. The Brief is Done once the owner approves it,
   which agrees its success criteria, and the Research starts only after that.
 - **Research**: what exists, one numbered piece at a time, and what each piece
   raises. It is Done once the owner approves it, since they may know what it
   misses, and the Analysis starts only after that.
-- **Analysis**: the decisions, and nothing else. A question about what to
-  build is one of them, taken before the Plan's approval unless the user
-  defers it, saying what it waits on. Each lists its options, with the
-  reasons for the one recommended, and is put to the user on the page, in
-  full: the chat only says it is there. Until the user answers, the page
-  marks the one recommended; after, only the one chosen, with the date. Its card lists the PRs
-  and settings that carry it out. One list is the default; only when the
-  decisions are many do they come in batches, one section each, answered
-  together, which the page lists at the top. The evidence behind them, such
-  as a comparison or a measurement, goes in the Research, and the decisions
-  link to it.
+- **Analysis**: the decisions, and nothing else. A question about what to build
+  is one of them, taken before the Plan's approval unless the user defers it,
+  saying what it waits on. Each lists its options, with the reasons for the one
+  recommended, and is put to the user on the page, in full: the chat only says
+  it is there. Until the user answers, the page marks the one recommended;
+  after, only the one chosen, with the date. Its card lists the PRs and
+  settings that carry it out. One list is the default; only when the decisions
+  are many do they come in batches, one section each, answered together, which
+  the page lists at the top. The evidence behind them, such as a comparison or
+  a measurement, goes in the Research, and the decisions link to it.
 - **Plan**: its cards and nothing else, which the page lists at the top. The
-  PRs as approved, one at a time in each repository, each with its
-  branch, what it needs first, what its merge releases, as its kind, and *Done
-  when*: what proves it works. The settings only the user can change. The
-  tasks: work that isn't a PR, such as a review, each with its *Done when*, and
-  done without a merge. The risk register: each risk, written before what it describes can happen, and the
-  step that closes it. The Plan stays as approved: an item added or edited
-  after the approval is an amendment, dated and saying why, and the Plan ends
-  with its approval: the day, and its amendments by day and why. The Plan is
-  Done once the owner approves it, and Build starts only after that.
-- **Build**: the live state. A board of the PRs, settings and tasks in waves,
-  built from what each needs; each item's *Result* once it lands; and the
-  questions the work raises, and nothing else: one asked before the Plan's approval is
-  a decision. What happened is in the Agenda, so Build keeps no log of its own.
+  PRs as approved, one at a time in each repository, each with its branch, what
+  it needs first, what its merge releases, as its kind, and *Done when*: what
+  proves it works. The settings only the user can change. The tasks: work that
+  isn't a PR, such as a review, each with its *Done when*, and done without a
+  merge. The risk register: each risk, written before what it describes can
+  happen, and the step that closes it. The Plan stays as approved: an item
+  added or edited after the approval is an amendment, dated and saying why, and
+  the Plan ends with its approval: the day, and its amendments by day and why.
+  The Plan is Done once the owner approves it, and Execution starts only after
+  that.
+- **Execution**: the live state. A board of the PRs, settings and tasks in
+  waves, built from what each needs; each item's *Result* once it lands; and
+  the questions the work raises, and nothing else: one asked before the Plan's
+  approval is a decision. What happened is in the Agenda, so Execution keeps no
+  log of its own.
 - **Verify**: each PR's *Done when*, checked where it runs, and the Brief's
   success criteria, Met or Not met yet, and nothing else. A check of a branch,
   run before its PR merges, such as the owner's test of it, is one the PR
   needs, and can run at once; a check of what a merge did, such as its release,
   needs the PR. A check's title says how it is checked: what it proves is
   already on the PR it needs, or that needs it, and the criterion it verifies.
-  Build ends with the last merge, Verify with the last check.
+  Execution ends with its last item done, Verify with its last check.
 - **Reuse**: what another project can take from this one, such as a template, a
   shared rule, a shared workflow, or a page to link instead, and nothing else:
   each piece a card, saying what it is, how to take it, and the items that
@@ -139,9 +140,9 @@ from the lesson.
   questions, S for settings, W for tasks, RK for risks, C for checks, L for
   lessons, T for deferred work, and a prefix for each repository's PRs, such
   as AC-1.
-- Each item lives in its phase: ground rules and success criteria in the
-  Brief, research pieces in the Research, decisions in the Analysis, PRs,
-  settings, tasks and risks in the Plan, questions in Build, checks in Verify,
+- Each item lives in its phase: ground rules and success criteria in the Brief,
+  research pieces in the Research, decisions in the Analysis, PRs, settings,
+  tasks and risks in the Plan, questions in Execution, checks in Verify,
   lessons in the Retrospective, and deferred work and questions in Deferred.
 - An item is Done; Open, when it waits on the user, such as a PR to merge, a
   decision to take or a setting to change; Ready, when everything it needs is
@@ -163,16 +164,16 @@ from the lesson.
   reader shouldn't have to look D12 up. Since the summary follows the number,
   put the name after its noun, as in "the merge of HMI-8", never in a
   possessive.
-- Under the calendar, the page says who holds the ball: the owner, the user
-  who decides, merges and changes settings, for the Brief, the Research and
-  the Plan until they approve them, and for every Open item, with how many
-  are deferred until they say; the agent, for every Ready one, and for the
-  next phase, to start and then to write, from the day the one before it is
-  Done; or a date coming up, with an automated run marked as such. The
-  Agenda holds every date the project has, ahead and past, and the notes for
-  the next session. All of it is built from the statuses: never repeat a status in prose, which goes stale
-  the next time it changes. Say each fact once: a field doesn't repeat a chip,
-  such as a PR's kind, nor a card another card.
+- Under the calendar, the page says who holds the ball: the owner, the user who
+  decides, merges and changes settings, for the Brief, the Research and the
+  Plan until they approve them, and for every Open item, with how many are
+  deferred until they say; the agent, for every Ready one, and for the next
+  phase, to start and then to write, from the day the one before it is Done; or
+  a date coming up, with an automated run marked as such. The Agenda holds
+  every date the project has, ahead and past, and the notes for the next
+  session. All of it is built from the statuses: never repeat a status in
+  prose, which goes stale the next time it changes. Say each fact once: a field
+  doesn't repeat a chip, such as a PR's kind, nor a card another card.
 - One glossary per project: the terms coined for it, and the terms borrowed. It
   sits in Guides, after the guide to using the page.
 

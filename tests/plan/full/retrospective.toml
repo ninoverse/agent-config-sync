@@ -36,7 +36,7 @@ title = "How it went"
 kind = "timeline"
 
 [section.lines]
-build = "One PR, merged on its second review."
+execution = "One PR, merged on its second review."
 
 [[section]]
 id = "roads"

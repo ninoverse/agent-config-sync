@@ -84,13 +84,13 @@ It writes nothing, and names the file and the item, when:
   nothing in it would show;
 - a phase starts before those it follows are done, or before the day they
   end, the Research before the Brief's approval, the Analysis before the
-  Research's, or Build before the Plan's, without `early` saying why; the
+  Research's, or Execution before the Plan's, without `early` saying why; the
   Brief, the Research or the Plan is done, with something written, without
   `approved`; a phase ends before one it runs beside, such as Reuse before
-  Build; or is Build or Verify, and done while it holds
+  Execution; or is Execution or Verify, and done while it holds
   an unfinished item, which reopens it;
 - a decision isn't taken, or deferred, once the Plan is approved, unless it
-  was amended in on the day of the approval or after; or Build has started
+  was amended in on the day of the approval or after; or Execution has started
   while the Brief has no success criterion, but dropped ones;
 - a PR's card has no `Branch` field, or no `Done when`, or a task's no `Done
   when`: the owner approves each with them, and Verify checks what its *Done
@@ -99,9 +99,10 @@ It writes nothing, and names the file and the item, when:
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
 - an item is in a phase that doesn't hold its type, the Analysis or the Plan
-  has a section other than `items`, Build one other than a `board`, `results`
-  or `items`, Verify one other than `items` or `results`, or Reuse one other
-  than `defs`; or a phase other than the Retrospective has a part it builds;
+  has a section other than `items`, Execution one other than a `board`,
+  `results` or `items`, Verify one other than `items` or `results`, or Reuse
+  one other than `defs`; or a phase other than the Retrospective has a part it
+  builds;
 - a section shows nothing but its title, such as a card section with no
   cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;
@@ -116,8 +117,8 @@ with how many there are, when:
   `short`, which can't hold a link, and a link written by hand;
 - a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short
   title's;
-- a question in Build is dated before Build started: one asked before the
-  Plan's approval is a decision;
+- a question in Execution is dated before Execution started: one asked before
+  the Plan's approval is a decision;
 - a decision has no `options`, as one recorded after the fact may not;
 - a success criterion has no status, or is still `open`, once the Brief's
   approval agreed it;
@@ -211,9 +212,9 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   `part`.
 - A `[status.<id>]` table sets the `status`, `on`, `waits`, `why` and `result`
   of an item kept in another phase. The Plan's items keep theirs this way in
-  `build.toml`, and the Brief's success criteria theirs in `verify.toml`, so the
-  earlier phase shows them as agreed, or To agree until the user agrees them,
-  and the later one where they stand.
+  `execution.toml`, and the Brief's success criteria theirs in `verify.toml`,
+  so the earlier phase shows them as agreed, or To agree until the user agrees
+  them, and the later one where they stand.
 - A `board` with `auto = true` builds its waves from `needs`, over the item
   `types` it names, and its rows from each item's `repo`, or `rows_default`;
   `waves` subtitles each wave. Without `auto`, it takes `columns`, as

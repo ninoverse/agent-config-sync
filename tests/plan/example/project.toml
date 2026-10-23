@@ -5,7 +5,7 @@
 #
 # Text is HTML, written as the page shows it, and [[D1]] anywhere in it links
 # to item D1 with its short title. Dates are TOML dates, such as 2026-10-07.
-# This example is a small project in its Build phase; copy the directory to
+# This example is a small project in its Execution phase; copy the directory to
 # start a real one.
 
 # The page's title is <repo>-<objective>: the main repository, then the
@@ -39,7 +39,7 @@ end = 2026-10-02
 status = "done"
 end = 2026-10-03
 
-[phases.build]
+[phases.execution]
 status = "now"
 start = 2026-10-05
 

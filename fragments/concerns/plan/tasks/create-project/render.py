@@ -39,29 +39,31 @@ PHASES = [
     ("research", "Research"),
     ("analysis", "Analysis"),
     ("plan", "Plan"),
-    ("build", "Build"),
+    ("execution", "Execution"),
     ("verify", "Verify"),
     ("reuse", "Reuse"),
     ("retrospective", "Retrospective"),
     ("deferred", "Deferred"),
 ]
 PHASE_NAME = dict(PHASES)
+# The phases renamed before the kit shipped, by their old key: the old name and the new key.
+RENAMED = {"build": ("Build", "execution")}
 # What the project leaves, after the six phases and unnumbered, since they don't run in
 # their order: what another project can take, the story of this one, and what waits.
 LEAVES = ("reuse", "retrospective", "deferred")
 # The phases' order. A phase starts once those it follows are done, or not needed, but
-# Verify and Reuse, which start once Build has; one that starts early says why. A phase
+# Verify and Reuse, which start once Execution has; one that starts early says why. A phase
 # that runs beside others ends only after them, and never early.
-FOLLOWS = {"research": ("brief",), "analysis": ("research",), "plan": ("analysis",), "build": ("plan",), "retrospective": ("build", "verify")}
-STARTS_WITH = {"verify": "build", "reuse": "build"}
-ENDS_AFTER = {"verify": ("build",), "reuse": ("build", "verify"), "retrospective": ("brief", "research", "analysis", "plan", "build", "verify", "reuse")}
+FOLLOWS = {"research": ("brief",), "analysis": ("research",), "plan": ("analysis",), "execution": ("plan",), "retrospective": ("execution", "verify")}
+STARTS_WITH = {"verify": "execution", "reuse": "execution"}
+ENDS_AFTER = {"verify": ("execution",), "reuse": ("execution", "verify"), "retrospective": ("brief", "research", "analysis", "plan", "execution", "verify", "reuse")}
 # The phases that keep the statuses of live work, which reopen when new work comes in.
-LIVE = ("build", "verify")
+LIVE = ("execution", "verify")
 # The phases before them, which never reopen: an item added to one once it is done, or
 # approved, is an amendment.
 AMENDS = ("brief", "research", "analysis", "plan")
 # The phases the owner approves, each with the phase that starts only once they have.
-APPROVES = {"brief": "research", "research": "analysis", "plan": "build"}
+APPROVES = {"brief": "research", "research": "analysis", "plan": "execution"}
 # The phases the agent writes with the owner, each starting with a discussion once the one
 # before it is done: until it has something to show, the agent holds it.
 WRITTEN = ("research", "analysis", "plan")
@@ -117,21 +119,21 @@ PHASE_TYPES = {
     "research": ("piece",),
     "analysis": ("decision",),
     "plan": ("pr", "setting", "task", "risk"),
-    "build": ("question",),
+    "execution": ("question",),
     "verify": ("check",),
     "reuse": (),
     "retrospective": ("lesson",),
     "deferred": ("deferred", "question"),
 }
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
-# the Plan its PRs, settings, tasks and risks, Build its board, results and questions,
+# the Plan its PRs, settings, tasks and risks, Execution its board, results and questions,
 # Verify its checks and where the success criteria stand, and Reuse its pieces, each
 # with how to take it; and where what they leave out goes.
-PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "build": ("board", "results", "items"), "verify": ("items", "results"), "reuse": ("defs",)}
+PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "execution": ("board", "results", "items"), "verify": ("items", "results"), "reuse": ("defs",)}
 ELSEWHERE = {
     "analysis": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
     "plan": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
-    "build": "what happened is in the Agenda, and what came of an item is its Result",
+    "execution": "what happened is in the Agenda, and what came of an item is its Result",
     "verify": "what happened is in the Agenda, and what a check showed is in its card",
     "reuse": "what happened is in the Agenda, and how a piece was built is in the items its entry links",
 }
@@ -284,7 +286,10 @@ def read_project(data_dir):
     phases = project.get("phases", {})
     for key in phases:
         if key not in PHASE_NAME:
-            problem("project.toml", f"[phases.{key}] is not a phase; the phases are {', '.join(PHASE_NAME)}")
+            if key in RENAMED:
+                problem("project.toml", f"[phases.{key}] is {RENAMED[key][0]}, which is now {PHASE_NAME[RENAMED[key][1]]}: name it [phases.{RENAMED[key][1]}]")
+            else:
+                problem("project.toml", f"[phases.{key}] is not a phase; the phases are {', '.join(PHASE_NAME)}")
     project["status"] = {}
     for key, _ in PHASES:
         entry = phases.get(key, {})
@@ -372,6 +377,9 @@ def check_order(statuses):
 
 def read_phases(data_dir, statuses):
     data = {}
+    for old, (name, key) in RENAMED.items():
+        if (data_dir / f"{old}.toml").is_file():
+            problem(f"{old}.toml", f"{name} is now {PHASE_NAME[key]}: rename the file {key}.toml")
     for key, name in PHASES:
         path = data_dir / f"{key}.toml"
         if path.is_file() and statuses[key]["status"] == "not-needed":
@@ -661,10 +669,10 @@ def check_rules(project, phases):
     """What the method holds the data to, beyond its shape: a problem where the data
     shows a rule broken, and a warning where it can only suggest one."""
     statuses = project["status"]
-    build = statuses["build"]
+    execution = statuses["execution"]
     approved = phases.get("plan", {}).get("approved")
     # The Research starts only once the owner has approved the Brief, the Analysis once they
-    # have approved the Research, and Build once they have approved the Plan, so each of
+    # have approved the Research, and Execution once they have approved the Plan, so each of
     # those that is Done, with something written, has the day.
     for key, after in APPROVES.items():
         day_approved, then = phases.get(key, {}).get("approved"), statuses[after]
@@ -673,8 +681,8 @@ def check_rules(project, phases):
         if day_approved and then["start"] and then["start"] < day_approved and not then["early"]:
             problem(f"project.toml [phases.{after}]", f"{PHASE_NAME[after]} starts on {day(then['start'])}, before the {PHASE_NAME[key]}'s approval on {day(day_approved)}: say why, in `early`")
     # Criteria written after the work record it rather than steer it.
-    if build["status"] in ("now", "done") and not any(item["type"] == "criterion" and item.get("status") != "dropped" for item in ITEMS.values()):
-        problem("brief.toml", "Build has started, but the Brief has no success criterion: write them before the work, so they steer it")
+    if execution["status"] in ("now", "done") and not any(item["type"] == "criterion" and item.get("status") != "dropped" for item in ITEMS.values()):
+        problem("brief.toml", "Execution has started, but the Brief has no success criterion: write them before the work, so they steer it")
     running = {}  # the PRs in progress, by repository
     for item_id, item in ITEMS.items():
         where, status = item["where"], item.get("status")
@@ -688,11 +696,11 @@ def check_rules(project, phases):
         later = item["amended"] and item["amended"]["on"] and approved and item["amended"]["on"] >= approved
         if approved and item["type"] == "decision" and status in UNFINISHED | {None} and not later:
             problem(where, f"{item_id} isn't taken, but the Plan was approved on {day(approved)}: take it, or defer it, saying what it waits on")
-        # Build's questions are the ones its work raises: one dated earlier was most likely a decision.
-        if item["type"] == "question" and item["phase"] == "build" and item["on"]:
-            if build["status"] == "to-come" or (build["start"] and item["on"] < build["start"]):
-                started = f" on {day(build['start'])}" if build["start"] else ""
-                warn(where, f"{item_id} is a question in Build dated {day(item['on'])}, before Build started{started}: one asked before the Plan's approval is a decision, in the Analysis")
+        # Execution's questions are the ones its work raises: one dated earlier was most likely a decision.
+        if item["type"] == "question" and item["phase"] == "execution" and item["on"]:
+            if execution["status"] == "to-come" or (execution["start"] and item["on"] < execution["start"]):
+                started = f" on {day(execution['start'])}" if execution["start"] else ""
+                warn(where, f"{item_id} is a question in Execution dated {day(item['on'])}, before Execution started{started}: one asked before the Plan's approval is a decision, in the Analysis")
         # The Brief's approval agrees its success criteria: each is then Not met yet, until its
         # checks pass, Met or Dropped. One with no status, or still To agree, looks stale.
         brief = phases.get("brief", {}).get("approved")

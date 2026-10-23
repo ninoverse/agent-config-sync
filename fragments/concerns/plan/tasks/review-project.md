@@ -29,7 +29,7 @@ The project: $ARGUMENTS
      with a *Done when* a check can prove? Does each success criterion have a
      check, and each check the PR it needs, or that needs it? Is each risk
      one that hasn't happened, with the step that closes it?
-   - Build and Verify: does each status match what GitHub says, and each
+   - Execution and Verify: does each status match what GitHub says, and each
      result what the PR did?
    - Deferred: does each item say what it waits on, and where it goes then?
 4. Read it as a newcomer: could a session that never saw the project carry it

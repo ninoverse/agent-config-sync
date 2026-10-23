@@ -25,9 +25,9 @@ term = "Out of scope"
 text = "What it leaves alone, and where that goes instead."
 
 # Success criteria, each saying what is measured, and how it is checked.
-# Written before Build, so they steer the work. They take no status until the
-# user approves the Brief, which agrees them; then verify.toml keeps each one's,
-# Not met yet until its checks pass, and its `needs` names those checks.
+# Written before Execution, so they steer the work. They take no status until
+# the user approves the Brief, which agrees them; then verify.toml keeps each
+# one's, Not met yet until its checks pass, and its `needs` names its checks.
 [[section]]
 id = "criteria"
 title = "Success criteria"

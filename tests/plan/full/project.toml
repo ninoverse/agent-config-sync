@@ -21,7 +21,7 @@ status = "done"
 [phases.plan]
 status = "done"
 
-[phases.build]
+[phases.execution]
 status = "done"
 
 [phases.verify]

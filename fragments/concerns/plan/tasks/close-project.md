@@ -19,10 +19,10 @@ The project: $ARGUMENTS
 2. Settle every unfinished item: `done`; `dropped`, with `why`; `deferred`,
    with what it waits on; or `to-move`, naming the project that takes it. An
    item set aside no longer holds its phase open.
-3. End each phase on its real day: Build with its last merge, Verify with its
-   last check, and Reuse and the Retrospective the day the project closes,
-   never before the phases they run beside. Deferred stays Now while it lists
-   what waits.
+3. End each phase on its real day: Execution with its last item done, Verify
+   with its last check, and Reuse and the Retrospective the day the project
+   closes, never before the phases they run beside. Deferred stays Now while it
+   lists what waits.
 4. Write the Retrospective's lessons with the user, unless they say it isn't
    needed, which the page then says, with why. An adopted lesson's change waits
    in Deferred until it ships. Its story is only for a project shown outside it.

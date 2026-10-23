@@ -14,9 +14,9 @@ concern gets the kit in `.agents/create-project/`, where every skill of the
 concern reaches it.
 
 The kit's smoke test is `tests/plan/check.py`, with `tests/plan/example/`, a
-project in its Build phase, and `tests/plan/full/`, a project that uses every
-section kind the example leaves out. Neither ships. CI runs it on Python 3.11,
-the kit's floor, through `project-page-smoke.yml`.
+project in its Execution phase, and `tests/plan/full/`, a project that uses
+every section kind the example leaves out. Neither ships. CI runs it on Python
+3.11, the kit's floor, through `project-page-smoke.yml`.
 
 ## Checks
 

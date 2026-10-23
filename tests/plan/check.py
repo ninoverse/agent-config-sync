@@ -1,7 +1,7 @@
 """python3 tests/plan/check.py, from the repository root.
 
 Runs the project-page renderer the plan concern ships against the starter it
-ships, against example/, a project in its Build phase, in both modes, against
+ships, against example/, a project in its Execution phase, in both modes, against
 full/, which uses every section kind the example leaves out, against an edited
 copy compared with the example as if published, against stale copies of the
 example, copies naming an item where no link can, and broken copies. A stale
@@ -88,7 +88,7 @@ def check_example(tmp):
     if run.returncode:
         return
     expect("warning:" not in run.stderr, f"the example renders without a warning: {run.stderr}")
-    standing = "\nNow: Build, 3 of 6 done; Verify, 2 of 4 done; Deferred, 2 waiting.\nWho holds the ball:\n  the owner: Merge EX-2 Readiness probe; deferred until they say: 1.\n  the agent: EX-3 Ten seconds in production.\n  a date: Mon 12 Oct, Renovate's weekly run Automated; Wed 14 Oct, Production deploys freeze until the 21st.\n"
+    standing = "\nNow: Execution, 3 of 6 done; Verify, 2 of 4 done; Deferred, 2 waiting.\nWho holds the ball:\n  the owner: Merge EX-2 Readiness probe; deferred until they say: 1.\n  the agent: EX-3 Ten seconds in production.\n  a date: Mon 12 Oct, Renovate's weekly run Automated; Wed 14 Oct, Production deploys freeze until the 21st.\n"
     expect(standing in run.stdout, f"the render prints where the project stands, as the page's header says it: {run.stdout}")
     page = (out / "index.html").read_text()
     phase = {p.stem: p.read_text() for p in (out / "phases").iterdir()}
@@ -99,7 +99,7 @@ def check_example(tmp):
     indicator = between(page, '<nav class="phases" aria-labelledby="phases-title">', "</nav>")
     leaves = between(page, '<nav class="phases leaves" aria-labelledby="leaves-title">', "</nav>")
     tabs, left = re.findall(r'data-phase="(\w+)"', indicator), re.findall(r'data-phase="(\w+)"', leaves)
-    expect(indicator.count("<li>") == 6 and tabs == ["brief", "research", "analysis", "plan", "build", "verify"], f"the indicator holds the six phases, each a link: {tabs}")
+    expect(indicator.count("<li>") == 6 and tabs == ["brief", "research", "analysis", "plan", "execution", "verify"], f"the indicator holds the six phases, each a link: {tabs}")
     expect(leaves.count("<li>") == 3 and left == ["deferred"] and '<span class="n">' not in leaves, f"then, unnumbered, the three that are what the project leaves, each a link but those with nothing to show: {left}")
     expect('<h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title">' in page and '<h2 id="leaves-title">What it leaves</h2>' in page, "the two groups have a title each, Phases and What it leaves")
     unwritten = '<li><span class="off t-to-come"><span class="name">Retrospective</span><span class="state">To come</span></span></li>'
@@ -125,11 +125,11 @@ def check_example(tmp):
     expect('<span class="chip s-open">' in guides and '<a class="chip' not in guides, "its sample chips are drawn as the board draws them, but aren't links")
     expect('<span class="chip s-deferred">' in guides and '<span class="mine">Your go</span>' in guides, "one of them is set aside, until the owner says")
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
-    expect('data-open="build"' in page, "the page opens on the phase in progress")
+    expect('data-open="execution"' in page, "the page opens on the phase in progress")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
-    expect(counts == {"build": "3/6", "verify": "2/4"}, f"each phase in progress counts its items done, and only those: {counts}")
+    expect(counts == {"execution": "3/6", "verify": "2/4"}, f"each phase in progress counts its items done, and only those: {counts}")
     views = [page] + list(phase.values())
-    expect('<section class="phase" id="build" data-phase="build">\n<h2 class="vh">Build</h2>\n<section class="block" id="board">' in page, "a phase's view starts with its first section, its name only for screen readers")
+    expect('<section class="phase" id="execution" data-phase="execution">\n<h2 class="vh">Execution</h2>\n<section class="block" id="board">' in page, "a phase's view starts with its first section, its name only for screen readers")
     shown = [between(page, '<main id="phases"', "</main>")] + [text for key, text in phase.items() if key != "guides"]
     expect(all('class="lede"' not in view and 'class="intro"' not in view for view in shown) and 'class="lede"' not in phase["guides"], "no view has a description of itself, nor a section a line saying what it holds")
     expect(all("phase-head" not in view and "1 Oct – 2 Oct" not in view for view in views), "the tab shows a phase's name and state, and the calendar its dates, so its view doesn't repeat them")
@@ -147,7 +147,7 @@ def check_example(tmp):
     for chip in re.findall(r'<a class="chip.*?</a>', page):
         expect("<a " not in chip[2:], f"a chip holds no link of its own: {chip[:80]}")
 
-    expect('class="st ' not in phase["plan"], "the plan shows its items as approved, without the build's statuses")
+    expect('class="st ' not in phase["plan"], "the plan shows its items as approved, without Execution's statuses")
     expect('<a class="ref" href="#ex-1"><b>EX-1</b> Liveness probe</a>' in phase["plan"], "[[EX-1]] links with its short title")
     approved = '<span class="n"></span><p class="says">Approved.</p></div>\n    <div class="item-tags"><span class="pill day">3 Oct</span></div>\n    <dl><dt>Amended since</dt><dd><ul class="amendments"><li><span class="pill day">7 Oct</span> the answer to <a class="ref" href="#q1"><b>Q1</b> The probe\'s timeout in production</a>:<ul class="list"><li><a class="ref" href="#ex-3"><b>EX-3</b> Ten seconds in production</a></li></ul></li></ul></dd></dl>'
     expect(approved in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so, with when and why, and the plan's approval lists it under that day and why")
@@ -209,11 +209,11 @@ def check_example(tmp):
         analysis = tmp / "two-batches-out" / "phases" / "analysis.html"
         contents = between(analysis.read_text(), 'id="analysis-contents"', "</nav>") if analysis.exists() else ""
         expect('<li><a href="#decisions">Batch A</a></li><li><a href="#batch-b">Batch B</a></li>' in contents, f"the Analysis opens with a list of its sections, built from them: {run.stderr} {contents}")
-    raised = copy_with(tmp, "raised-later", EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"\namended = { on = 2026-10-07, why = "the cache, found in Build" }')
+    raised = copy_with(tmp, "raised-later", EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"\namended = { on = 2026-10-07, why = "the cache, found in Execution" }')
     if raised is not None and replace_in(raised, "analysis.toml", 'recommended = "a"\nchosen = "a"\nfields = [["Reasons", "The service answers', 'recommended = "a"\nfields = [["Reasons", "The service answers'):
         run = render(raised, tmp / "raised-later-out")
         expect(run.returncode == 0, f"a decision amended in after the Plan's approval can wait on the owner: {run.stderr}")
-    waiting = copy_with(tmp, "nothing-yet", EXAMPLE, "build.toml", 'title = "Results"\nkind = "results"\n', 'title = "Results"\nkind = "results"\nids = ["EX-2"]\n')
+    waiting = copy_with(tmp, "nothing-yet", EXAMPLE, "execution.toml", 'title = "Results"\nkind = "results"\n', 'title = "Results"\nkind = "results"\nids = ["EX-2"]\n')
     if waiting is not None:
         run = render(waiting, tmp / "nothing-yet-out")
         index = tmp / "nothing-yet-out" / "index.html"
@@ -247,12 +247,12 @@ def check_example(tmp):
         expect(run.returncode == 0 and tab in index.read_text() and not (tmp / "statuses-only-out" / "phases" / "verify.html").exists(), f"a phase whose file holds only statuses has nothing to show: its tab doesn't open: {run.stderr}")
 
     expect('<div class="scroll" data-start' not in page, "a board whose first column has work left opens at its start")
-    shipped = copy_with(tmp, "shipped", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "done"\non = 2026-10-07\nresult = "Released 1.4.1."')
+    shipped = copy_with(tmp, "shipped", EXAMPLE, "execution.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "done"\non = 2026-10-07\nresult = "Released 1.4.1."')
     if shipped is not None:
         render(shipped, tmp / "shipped-out")
         board = (tmp / "shipped-out" / "index.html").read_text()
         expect('<div class="scroll" data-start="2">' in board, "once its first column is done, a board opens at the next, which has work left")
-    parked = copy_with(tmp, "parked-first", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the freeze to end"')
+    parked = copy_with(tmp, "parked-first", EXAMPLE, "execution.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the freeze to end"')
     if parked is not None:
         render(parked, tmp / "parked-first-out")
         board = (tmp / "parked-first-out" / "index.html").read_text()
@@ -266,28 +266,28 @@ def check_example(tmp):
         (reused / "reuse.toml").write_text('[[section]]\nid = "log"\ntitle = "The log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n')
         run = render(reused, tmp / "reused-log-out")
         expect(run.returncode == 1 and "Reuse holds only defs sections" in run.stderr, f"and nothing else: {run.stderr}")
-    parked = copy_with(tmp, "parked", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the next release train"')
+    parked = copy_with(tmp, "parked", EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "deferred"\non = 2026-10-07\nwaits = "the next release train"')
     if parked is not None:
         run = render(parked, tmp / "parked-out")
         work = between((tmp / "parked-out" / "phases" / "deferred.html").read_text(), 'id="work"', "</section>") if run.returncode == 0 else ""
         expect('<span class="n">EX-2</span>' in work and 'st-deferred">Deferred · 7 Oct</span><span class="waits">waits on the next release train</span>' in work, f"Deferred lists what another phase deferred, with what it waits on: {run.stderr} {work[-600:]}")
-        build_tab = between((tmp / "parked-out" / "index.html").read_text(), 'data-phase="build"', "</a>") if run.returncode == 0 else ""
+        build_tab = between((tmp / "parked-out" / "index.html").read_text(), 'data-phase="execution"', "</a>") if run.returncode == 0 else ""
         expect('<span class="count" title="3 of 5 done, not counting dropped or set-aside items">3/5</span>' in build_tab, f"and a deferred item no longer counts in its phase: {build_tab}")
     early = copy_with(tmp, "early", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"', '[phases.plan]\nstatus = "now"')
     if early is not None:
         run = render(early, tmp / "early-out")
-        expect(run.returncode == 1 and "Build has started, but Plan isn't done: say why it starts early, in `early`" in run.stderr, f"a phase starts once the one it follows is done: {run.stderr}")
-        if replace_in(early, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "now"\nearly = "the fix the outage needed, before the plan\'s approval"'):
+        expect(run.returncode == 1 and "Execution has started, but Plan isn't done: say why it starts early, in `early`" in run.stderr, f"a phase starts once the one it follows is done: {run.stderr}")
+        if replace_in(early, "project.toml", '[phases.execution]\nstatus = "now"', '[phases.execution]\nstatus = "now"\nearly = "the fix the outage needed, before the plan\'s approval"'):
             run = render(early, tmp / "early-out")
             started = between((tmp / "early-out" / "index.html").read_text(), 'id="on-2026-10-05"', "</li>") if run.returncode == 0 else ""
-            expect("Build starts early: the fix the outage needed, before the plan's approval" in started, f"or early, saying why, which the agenda shows: {run.stderr} {started}")
-    reopened = copy_with(tmp, "reopened", EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "now"\nreopened = [{ ended = 2026-10-06, on = 2026-10-07 }]')
+            expect("Execution starts early: the fix the outage needed, before the plan's approval" in started, f"or early, saying why, which the agenda shows: {run.stderr} {started}")
+    reopened = copy_with(tmp, "reopened", EXAMPLE, "project.toml", '[phases.execution]\nstatus = "now"', '[phases.execution]\nstatus = "now"\nreopened = [{ ended = 2026-10-06, on = 2026-10-07 }]')
     if reopened is not None:
         run = render(reopened, tmp / "reopened-out")
         agenda = (tmp / "reopened-out" / "index.html").read_text() if run.returncode == 0 else ""
         ended, again = between(agenda, 'id="on-2026-10-06"', "</ul>"), between(agenda, 'id="on-2026-10-07"', "</ul>")
-        expect("Build ends" in ended and "Build reopens" in again, f"a phase that reopened keeps the day it ended, and the day it reopened: {run.stderr} {ended[:300]} {again[:300]}")
-    moved = copy_with(tmp, "moved", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "moved"\non = 2026-10-08\nto = "https://example.com/health-v2#ex-1"')
+        expect("Execution ends" in ended and "Execution reopens" in again, f"a phase that reopened keeps the day it ended, and the day it reopened: {run.stderr} {ended[:300]} {again[:300]}")
+    moved = copy_with(tmp, "moved", EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', '[status.EX-2]\nstatus = "moved"\non = 2026-10-08\nto = "https://example.com/health-v2#ex-1"')
     if moved is not None and replace_in(moved, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nfrom = "https://example.com/health-v1#hc-1"\n'):
         run = render(moved, tmp / "moved-out")
         moved_build = (tmp / "moved-out" / "index.html").read_text() if run.returncode == 0 else ""
@@ -298,7 +298,7 @@ def check_example(tmp):
         expect('href="https://example.com/health-v1#hc-1" target="_blank" rel="noopener">Its old page</a>' in moved_plan, "and an item moved in links back to where it came from")
         expect('<span class="n">EX-2</span>' not in moved_deferred, "a moved item is done with here, so Deferred doesn't list it")
     came_true = '[status.RK1]\nstatus = "happened"\non = 2026-10-07\nresult = "It did, under load: [[Q1]] took it over."'
-    happened = copy_with(tmp, "happened", EXAMPLE, "build.toml", '[status.RK1]\nstatus = "blocked"', came_true)
+    happened = copy_with(tmp, "happened", EXAMPLE, "execution.toml", '[status.RK1]\nstatus = "blocked"', came_true)
     if happened is not None:
         run = render(happened, tmp / "happened-out")
         build = tmp / "happened-out" / "index.html"
@@ -322,8 +322,8 @@ def check_example(tmp):
     expect('Waiting</span><span class="waits">waits on the metrics stack</span></span></summary>' in t1 and "<dt>Waits on</dt>" not in t1, f"a blocked card says what it waits on beside its chip, folded, and not again under it: {t1[:400]}")
     t2 = between(phase["deferred"], 'id="t2"', "</article>")
     expect('<span class="pill st-deferred">Deferred</span><span class="pill ask">Your go</span></span></summary>' in t2 and "waits on" not in t2, f"an item deferred until the owner says shows it as theirs, beside its chip: {t2[:400]}")
-    yours = copy_with(tmp, "yours", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "deferred"\nwaits = "owner"')
-    if yours is not None and replace_in(yours, "build.toml", 'id = "Q1"\ntitle = "The probe\'s timeout in production"\nstatus = "done"', 'id = "Q1"\ntitle = "The probe\'s timeout in production"\nstatus = "deferred"\nwaits = "owner"'):
+    yours = copy_with(tmp, "yours", EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "deferred"\nwaits = "owner"')
+    if yours is not None and replace_in(yours, "execution.toml", 'id = "Q1"\ntitle = "The probe\'s timeout in production"\nstatus = "done"', 'id = "Q1"\ntitle = "The probe\'s timeout in production"\nstatus = "deferred"\nwaits = "owner"'):
         run = render(yours, tmp / "yours-out")
         build = (tmp / "yours-out" / "index.html").read_text() if run.returncode == 0 else ""
         chip = between(build, '<a class="chip s-deferred" href="#ex-2">', "</a>")
@@ -359,7 +359,7 @@ def check_example(tmp):
     expect("<th>Waits on the owner</th>" in phase["guides"] and "<th>The owner's part</th>" in phase["guides"], "the guide's statuses table names the owner, not you")
     expect('<span class="pill k-owner">Owner</span>' in phase["plan"], "an item only the owner can do reads Owner")
     expect('class="more"' not in between(ball, "<h3>A date</h3>", "</div>"), "with three dates or fewer ahead, nothing points to more")
-    asked = copy_with(tmp, "asked", EXAMPLE, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"')
+    asked = copy_with(tmp, "asked", EXAMPLE, "execution.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"')
     if asked is not None:
         render(asked, tmp / "asked-out")
         index = tmp / "asked-out" / "index.html"
@@ -367,24 +367,24 @@ def check_example(tmp):
         lines = re.findall(r'<li><span class="pill ask">Merge</span> <a class="ref" href="#(ex-\d)">', owner)
         expect(lines == ["ex-2", "ex-3"], f"each of the owner's items has a line of its own, with what to do: {owner}")
     testing = copy_with(tmp, "testing", EXAMPLE, "plan.toml", 'short = "Readiness probe"\n', 'short = "Readiness probe"\nask = "Test"\n')
-    if testing is not None and replace_in(testing, "plan.toml", 'short = "Ten seconds in production"\n', 'short = "Ten seconds in production"\nask = "Deploy"\n') and replace_in(testing, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"'):
+    if testing is not None and replace_in(testing, "plan.toml", 'short = "Ten seconds in production"\n', 'short = "Ten seconds in production"\nask = "Deploy"\n') and replace_in(testing, "execution.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "open"'):
         run = render(testing, tmp / "testing-out", "--since", str(EXAMPLE))
         index = (tmp / "testing-out" / "index.html").read_text() if run.returncode == 0 else ""
         board = between(index, '<table class="board"', "</table>")
         day7 = between(calendar_of(index), 'href="#on-2026-10-07">7</a>', "</td>")
         expect('<span class="st st-open">To test</span>' in board and "To merge" not in board, f"an Open item with an `ask` says it on its chip, rather than its type's word: {board[:600]}")
         expect('<span class="word"> to test</span>' in day7 and "to merge" not in day7, f"and the calendar counts it so: {day7}")
-        expect("  the owner: Test EX-2 Readiness probe; Deploy EX-3 Ten seconds in production; deferred until they say: 1.\n" in run.stdout and "  Plan: EX-2: `ask` edited; EX-3: `ask` edited.\n  Build: EX-3 Ready → To deploy.\n" in run.stdout, f"and so does what the render prints: {run.stdout}")
+        expect("  the owner: Test EX-2 Readiness probe; Deploy EX-3 Ten seconds in production; deferred until they say: 1.\n" in run.stdout and "  Plan: EX-2: `ask` edited; EX-3: `ask` edited.\n  Execution: EX-3 Ready → To deploy.\n" in run.stdout, f"and so does what the render prints: {run.stdout}")
         run = render(EXAMPLE, tmp / "tested-out", "--since", str(testing))
-        expect("  Build: EX-3 To deploy → Ready.\n" in run.stdout, f"a status left is named in the words it had then: {run.stdout}")
+        expect("  Execution: EX-3 To deploy → Ready.\n" in run.stdout, f"a status left is named in the words it had then: {run.stdout}")
     waiting = copy_with(tmp, "waiting", EXAMPLE, "verify.toml", 'needs = ["EX-2"]\nstatus = "blocked"', 'needs = ["EX-1", "EX-2"]\nstatus = "blocked"')
-    if waiting is not None and replace_in(waiting, "plan.toml", 'needs = ["Q1"]\n', 'needs = ["Q1", "EX-2"]\n') and replace_in(waiting, "build.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "blocked"'):
+    if waiting is not None and replace_in(waiting, "plan.toml", 'needs = ["Q1"]\n', 'needs = ["Q1", "EX-2"]\n') and replace_in(waiting, "execution.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "blocked"'):
         run = render(waiting, tmp / "waiting-out", "--inline")
         index = (tmp / "waiting-out" / "index.html").read_text() if run.returncode == 0 else ""
         board, c2 = between(index, '<table class="board"', "</table>"), between(index, 'id="c2"', "</article>")
         expect('waits on EX-2 Readiness probe</span>' in board and "waits on Q1" not in board, f"a Blocked chip on the board names only what it still waits on, not what is done: {run.stderr} {board[-700:]}")
         expect('<span class="waits">waits on EX-2 Readiness probe</span>' in c2 and "waits on EX-1" not in c2, f"and so does its card, which still lists all it needs: {c2}")
-    approving = copy_with(tmp, "approving", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"\nend = 2026-10-03\n\n[phases.build]\nstatus = "now"\nstart = 2026-10-05\n\n[phases.verify]\nstatus = "now"\nstart = 2026-10-06', '[phases.plan]\nstatus = "now"\n\n[phases.build]\nstatus = "to-come"\n\n[phases.verify]\nstatus = "to-come"')
+    approving = copy_with(tmp, "approving", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"\nend = 2026-10-03\n\n[phases.execution]\nstatus = "now"\nstart = 2026-10-05\n\n[phases.verify]\nstatus = "now"\nstart = 2026-10-06', '[phases.plan]\nstatus = "now"\n\n[phases.execution]\nstatus = "to-come"\n\n[phases.verify]\nstatus = "to-come"')
     if approving is not None and replace_in(approving, "plan.toml", "approved = 2026-10-03\n", ""):
         run = render(approving, tmp / "approving-out")
         index = tmp / "approving-out" / "index.html"
@@ -404,7 +404,7 @@ def check_example(tmp):
     expect('<p class="eyebrow">Project page</p>' in page, "the line above the title doesn't repeat the repository, which starts the title")
     expect("table.cal .m-s-blocked {" in page and "table.cal .m-event { background: transparent" in page, "in the calendar, a blocked mark has its own colour, and an event is outlined")
     merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-06\nresult = "Released 1.5.0."'
-    crowded = copy_with(tmp, "crowded", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
+    crowded = copy_with(tmp, "crowded", EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
     if crowded is not None:
         render(crowded, tmp / "crowded-out")
         index = tmp / "crowded-out" / "index.html"
@@ -469,7 +469,7 @@ def check_full(tmp):
     built = {sid: between(page, f'id="{sid}"', "</section>") for sid in ("how-it-went", "roads", "risks-closed", "what-it-took", "next", "decision-log")}
     found = between(page, 'id="found"', "</section>")
     expect("<h4>A scrape that timed out</h4>" in found and "<dt>Observed</dt><dd>A slow night took twenty.</dd>" in found, f"a definition with fields is a card of its own, titled by its term: {found[:400]}")
-    expect("<td>Build</td><td></td><td>One PR, merged on its second review.</td>" in built["how-it-went"] and "<td>Reuse</td><td>Not needed</td><td>Nothing here is worth copying.</td>" in built["how-it-went"], f"the Retrospective builds how the phases went, each with its line, or why it wasn't needed: {built['how-it-went'][:600]}")
+    expect("<td>Execution</td><td></td><td>One PR, merged on its second review.</td>" in built["how-it-went"] and "<td>Reuse</td><td>Not needed</td><td>Nothing here is worth copying.</td>" in built["how-it-went"], f"the Retrospective builds how the phases went, each with its line, or why it wasn't needed: {built['how-it-went'][:600]}")
     expect('<span class="n">MX-2</span>' in built["roads"] and '<span class="n">L3</span>' in built["roads"] and "The first one covers it." in built["roads"], "and every road not taken, from every phase, with why")
     expect('<span class="n">RK1</span>' in built["risks-closed"] and 'st-done">Closed · 6 Oct<' in built["risks-closed"] and "They are hashed before export." in built["risks-closed"], "and how each risk ended")
     expect("<dt>Time</dt><dd>38 days, from 1 Sep to 8 Oct</dd>" in built["what-it-took"] and "<dt>PRs</dt><dd>1 merged: 1 MX; 1 closed unmerged</dd>" in built["what-it-took"] and "<dt>Running costs</dt>" in built["what-it-took"], f"and what it took, what the data counts first: {built['what-it-took']}")
@@ -489,7 +489,7 @@ def check_full(tmp):
     counted = [("1", "PR merged"), ("1", "release"), ("1", "decision taken"), ("1", "lesson adopted"), ("38", "days, start to finish"), ("15 s", "between scrapes")]
     expect(figures == counted, f"the figures the data can count come first, then those written out: {figures}")
     expect("The first 5 counted from the project's data on 8 October 2026." in page, "the note says which figures were counted, and when")
-    build = (out / "phases" / "build.html").read_text()
+    build = (out / "phases" / "execution.html").read_text()
     expect(board_cells(build) == ["example-service", ["MX-1"], ["MX-2"]], f"a board can name its columns and rows: {board_cells(build)}")
     order = re.findall(r'<span class="n">(.*?)</span>', between(build, 'id="results"', "</section>"))
     expect(order == ["RK1", "MX-1"], f"results follow `ids`, leaving out what the board shows without a result: {order}")
@@ -532,17 +532,17 @@ def check_full(tmp):
 # and the warning it must print. The page is still written.
 STALE = [
     ("plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]"]]', "D2 is a decision taken, but no PR or setting names it or needs it"),
-    ("build.toml", 'on = 2026-10-06\nresult = "Released 1.4.0.', 'on = 2026-10-06\nnote = "Released 1.4.0.', "EX-1 is a merged PR without a `result`"),
-    ("build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "done"', "C2 is `blocked`, but everything it needs is done"),
+    ("execution.toml", 'on = 2026-10-06\nresult = "Released 1.4.0.', 'on = 2026-10-06\nnote = "Released 1.4.0.', "EX-1 is a merged PR without a `result`"),
+    ("execution.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "done"', "C2 is `blocked`, but everything it needs is done"),
     ("deferred.toml", 'waits = "the metrics stack"', 'waits = "[[EX-1]]"', "T1 waits on EX-1, which is done"),
-    ("build.toml", 'production"\nstatus = "done"', 'production"\nstatus = "open"', "EX-3 is `ready`, but needs Q1, which isn't done"),
+    ("execution.toml", 'production"\nstatus = "done"', 'production"\nstatus = "open"', "EX-3 is `ready`, but needs Q1, which isn't done"),
     ("analysis.toml", 'recommended = "a"\nchosen = "a"', 'recommended = "a"', "D1 is `done`, but none of its options is `chosen`"),
     ("plan.toml", "amended = { on = 2026-10-07", "amended = { on = 2026-10-02", "EX-3 is amended on 2 Oct, before its phase was approved"),
     ("analysis.toml", 'id = "D2"\ntitle = "What readiness waits for"\n', 'id = "D2"\ntitle = "What readiness waits for"\namended = { on = 2026-10-01, why = "the cache" }\n', "D2 is amended on 1 Oct, before its phase ended on 2 Oct"),
     ("project.toml", "read_at = 2026-10-07T18:00:00", "read_at = 2026-10-06T18:00:00", "`read_at` is older than the newest status, of 7 Oct"),
     ("project.toml", "updated = 2026-10-07", "updated = 2026-10-06", "the notes for the next session date from 6 Oct, before the last change"),
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "[[Q1]]\'s answer" }', "plan.toml item EX-3: [[Q1]]'s reads as \"Q1 The probe's timeout in production's\": put the link after its noun"),
-    ("build.toml", 'production"\nstatus = "done"\non = 2026-10-07', 'production"\nstatus = "done"\non = 2026-10-04', "Q1 is a question in Build dated 4 Oct, before Build started on 5 Oct"),
+    ("execution.toml", 'production"\nstatus = "done"\non = 2026-10-07', 'production"\nstatus = "done"\non = 2026-10-04', "Q1 is a question in Execution dated 4 Oct, before Execution started on 5 Oct"),
     ("analysis.toml", 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\n', "", "D2 is a decision without `options`"),
     ("plan.toml", 'kind = "patch"\nneeds = ["Q1"]', 'kind = "patch"\nurl = "https://github.com/example/example-service/pull/15"\nneeds = ["Q1"]', "EX-2 and EX-3 are in progress at once in example/example-service"),
     ("plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }', "plan.toml item EX-3: Q1 is named by its number alone: write [[Q1]]"),
@@ -565,13 +565,13 @@ TASK = '[[section]]\nid = "tasks"\ntitle = "Tasks"\nkind = "items"\ntype = "task
 # replacement, and the message.
 BROKEN = [
     (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "roads"\ntitle = "Roads not taken"\nkind = "roads"\n\n[[section]]\nid = "pieces"', "a `roads` section is built for the Retrospective"),
-    (EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "done"', "Build is done, but EX-2 is still `open`: new work reopens it"),
-    (EXAMPLE, "project.toml", '[phases.verify]\nstatus = "now"', '[phases.verify]\nstatus = "done"', "Verify is done, but Build isn't: it ends only after it"),
-    (EXAMPLE, "project.toml", 'status = "now"\nstart = 2026-10-05', 'status = "now"\nstart = 2026-10-02', "Build starts on 2 Oct, before Plan ends on 3 Oct: say why, in `early`"),
-    (EXAMPLE, "project.toml", '[phases.build]\nstatus = "now"', '[phases.build]\nstatus = "now"\nreopened = [{ on = 2026-10-06 }]', "each of `reopened` is { ended = <date>, on = <date> }"),
+    (EXAMPLE, "project.toml", '[phases.execution]\nstatus = "now"', '[phases.execution]\nstatus = "done"', "Execution is done, but EX-2 is still `open`: new work reopens it"),
+    (EXAMPLE, "project.toml", '[phases.verify]\nstatus = "now"', '[phases.verify]\nstatus = "done"', "Verify is done, but Execution isn't: it ends only after it"),
+    (EXAMPLE, "project.toml", 'status = "now"\nstart = 2026-10-05', 'status = "now"\nstart = 2026-10-02', "Execution starts on 2 Oct, before Plan ends on 3 Oct: say why, in `early`"),
+    (EXAMPLE, "project.toml", '[phases.execution]\nstatus = "now"', '[phases.execution]\nstatus = "now"\nreopened = [{ on = 2026-10-06 }]', "each of `reopened` is { ended = <date>, on = <date> }"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "queues"\nkind = "prose"\nbody = "<p>One at a time.</p>"\n\n[[section]]\nid = "settings"', "Plan holds only items sections"),
     (EXAMPLE, "analysis.toml", '[[section]]\nid = "decisions"', '[[section]]\nid = "why"\nkind = "prose"\nbody = "<p>Why these.</p>"\n\n[[section]]\nid = "decisions"', "Analysis holds only items sections"),
-    (EXAMPLE, "build.toml", '[[section]]\nid = "questions"', '[[section]]\nid = "log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n\n[[section]]\nid = "questions"', "Build holds only board, results and items sections: what happened is in the Agenda"),
+    (EXAMPLE, "execution.toml", '[[section]]\nid = "questions"', '[[section]]\nid = "log"\nkind = "prose"\nbody = "<p>What happened.</p>"\n\n[[section]]\nid = "questions"', "Execution holds only board, results and items sections: what happened is in the Agenda"),
     (EXAMPLE, "verify.toml", '[[section]]\nid = "checks"', '[[section]]\nid = "on-the-way"\nkind = "prose"\nbody = "<p>What this run couldn\'t settle.</p>"\n\n[[section]]\nid = "checks"', "Verify holds only items and results sections"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "settings"', '[[section]]\nid = "more-prs"\ntitle = "More PRs"\nkind = "items"\ntype = "pr"\n\n[[section]]\nid = "settings"', "plan.toml section more-prs: it shows nothing but its title"),
     (EXAMPLE, "research.toml", '[[section]]\nid = "pieces"', '[[section]]\nid = "note"\ntitle = "A note"\nkind = "prose"\nbody = "<p></p>"\n\n[[section]]\nid = "pieces"', "research.toml section note: it shows nothing but its title"),
@@ -582,12 +582,12 @@ BROKEN = [
     (EXAMPLE, "research.toml", '"[[D1]]"', '"[[D9]]"', "[[D9]] names no item"),
     (EXAMPLE, "research.toml", '"[[D1]]"', '"<a href=\\"#d1\\">[[D1]]</a>"', "a link inside a link"),
     (EXAMPLE, "research.toml", 'type = "piece"', 'type = "pieces"', "`type` is one of"),
-    (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
+    (EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "waiting"', "status `waiting` is not one of"),
     (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"\n', "", "a blocked item says what it waits on"),
     (EXAMPLE, "deferred.toml", 'waits = "the metrics stack"', 'waits = "owner"', "an item that waits on the owner is `open`"),
-    (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "to-move"', "an item to be moved names the project that takes it, in `to`"),
-    (EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "moved"\nto = "the next project"', "a moved item links its card on the other project's page"),
-    (EXAMPLE, "build.toml", '[status.EX-1]\nstatus = "done"', '[status.EX-1]\nstatus = "deferred"', "a deferred item says what it waits on"),
+    (EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "to-move"', "an item to be moved names the project that takes it, in `to`"),
+    (EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"', '[status.EX-2]\nstatus = "moved"\nto = "the next project"', "a moved item links its card on the other project's page"),
+    (EXAMPLE, "execution.toml", '[status.EX-1]\nstatus = "done"', '[status.EX-1]\nstatus = "deferred"', "a deferred item says what it waits on"),
     (FULL, "plan.toml", 'status = "dropped"\nwhy = "The first one covers it."', 'status = "happened"\nresult = "Two were needed."', "only a risk happens"),
     (FULL, "plan.toml", 'status = "done"\non = 2026-10-06\nresult = "They are hashed before export."', 'status = "happened"\non = 2026-10-06', "a risk that happened names, in `result`"),
     (EXAMPLE, "project.toml", 'why = "Two routes', 'what = "Two routes', "a phase that is not needed says why"),
@@ -597,7 +597,7 @@ BROKEN = [
     (EXAMPLE, "research.toml", "<code>/api</code>", "<code>/api", "is never closed"),
     (EXAMPLE, "project.toml", 'objective = "health-checks"', 'objective = "Health Checks"', "kebab-case"),
     (EXAMPLE, "deferred.toml", 'id = "work"', 'id = "work', "not valid TOML"),
-    (EXAMPLE, "build.toml", "[status.EX-3]", "[status.EX-9]", "no item has this id"),
+    (EXAMPLE, "execution.toml", "[status.EX-3]", "[status.EX-9]", "no item has this id"),
     (EXAMPLE, "project.toml", "[phases.reuse]", "[phases.templating]", "[phases.templating] is not a phase"),
     (EXAMPLE, "project.toml", "read_at = 2026-10-07T18:00:00", 'read_at = "7 October"', "`read_at` is when the state was read"),
     (EXAMPLE, "project.toml", "date = 2026-10-12\n", "", "an event has a `date`"),
@@ -609,22 +609,23 @@ BROKEN = [
     (EXAMPLE, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nneeds = ["EX-2"]\n', "`needs` loops: EX-1 → EX-2 → EX-1"),
     (EXAMPLE, "plan.toml", ', why = "the answer to [[Q1]]" }', " }", "`amended` is"),
     (EXAMPLE, "plan.toml", 'url = "https://github.com/example/example-service/pull/12"', 'url = "github.com/example/example-service/pull/12"', "`url` is an https:// address"),
-    (FULL, "build.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
+    (FULL, "execution.toml", 'cells = [["MX-1"], ["MX-2"]]', 'cells = [["MX-1"], ["MX-9"]]', "the board names MX-9"),
     (EXAMPLE, "plan.toml", "approved = 2026-10-03\n", "", "plan.toml: the Plan is done, but not approved: give it `approved`"),
     (EXAMPLE, "brief.toml", "approved = 2026-10-01\n", "", "brief.toml: the Brief is done, but not approved: give it `approved`"),
     (EXAMPLE, "research.toml", "approved = 2026-10-02\n", "", "research.toml: the Research is done, but not approved: give it `approved`"),
+    (EXAMPLE, "project.toml", "[phases.execution]", "[phases.build]", "project.toml: [phases.build] is Build, which is now Execution: name it [phases.execution]"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "risks"', TASK.replace('fields = [["Done when", "The platform team runs the probes on a service of their own."]]', 'fields = [["Where", "Their weekly call."]]'), "W1 is a task without a Done when field"),
     (EXAMPLE, "plan.toml", '[[section]]\nid = "risks"', TASK.replace('id = "W1"', 'id = "T9"'), "T9 is a `task` item, whose numbers start with W"),
     (EXAMPLE, "research.toml", "approved = 2026-10-02", "approved = 2026-10-03", "Analysis starts on 2 Oct, before the Research's approval on 3 Oct: say why, in `early`"),
     (EXAMPLE, "brief.toml", "approved = 2026-10-01", "approved = 2026-10-02", "Research starts on 1 Oct, before the Brief's approval on 2 Oct: say why, in `early`"),
-    (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Build starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
+    (EXAMPLE, "plan.toml", "approved = 2026-10-03", "approved = 2026-10-06", "Execution starts on 5 Oct, before the Plan's approval on 6 Oct: say why, in `early`"),
     (EXAMPLE, "analysis.toml", 'waits for"\nstatus = "done"\non = 2026-10-02', 'waits for"\nstatus = "open"', "D2 isn't taken, but the Plan was approved on 3 Oct"),
     (EXAMPLE, "deferred.toml", 'id = "T2"', 'id = "D9"', "D9 is a `deferred` item, whose numbers start with T, such as T1"),
     (EXAMPLE, "deferred.toml", 'id = "T2"', 'id = "t2"', "t2 is a `deferred` item, whose numbers start with T, such as T1"),
     (FULL, "plan.toml", 'id = "MX-2"', 'id = "D-2"', "D-2 is a PR, whose number starts with its repository's prefix, such as AC-1"),
     (EXAMPLE, "plan.toml", '  ["Branch", "<code>fix/readiness-timeout</code>"],\n', "", "EX-3 is a PR without a Branch field: the owner approves each PR with its branch"),
     (EXAMPLE, "plan.toml", '  ["Done when", "A slow night in production takes no process out of service."],\n', "", "EX-3 is a PR without a Done when field"),
-    (EXAMPLE, "verify.toml", '[status.SC1]\nstatus = "done"\non = 2026-10-06\n\n[status.SC2]\nstatus = "blocked"', '[status.SC1]\nstatus = "dropped"\nwhy = "Restarts are the platform\'s."\n\n[status.SC2]\nstatus = "dropped"\nwhy = "Traffic is too."', "brief.toml: Build has started, but the Brief has no success criterion"),
+    (EXAMPLE, "verify.toml", '[status.SC1]\nstatus = "done"\non = 2026-10-06\n\n[status.SC2]\nstatus = "blocked"', '[status.SC1]\nstatus = "dropped"\nwhy = "Restarts are the platform\'s."\n\n[status.SC2]\nstatus = "dropped"\nwhy = "Traffic is too."', "brief.toml: Execution has started, but the Brief has no success criterion"),
 ]
 
 
@@ -659,7 +660,7 @@ def check_since(tmp):
     expect(render(EXAMPLE, tmp / "since-none", "--since", str(tmp / "nowhere")).returncode == 2, "--since names a directory that exists")
 
     merged = '[status.EX-2]\nstatus = "done"\non = 2026-10-09\nresult = "Released 1.5.0."'
-    data = copy_with(tmp, "since", EXAMPLE, "build.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
+    data = copy_with(tmp, "since", EXAMPLE, "execution.toml", '[status.EX-2]\nstatus = "open"\non = 2026-10-07', merged)
     if data is None:
         return
     added = '[[section.item]]\nid = "EX-4"\ntitle = "<code>docs: the probes in the README</code>"\nkind = "patch"\nneeds = ["EX-2"]\nfields = [\n  ["Branch", "<code>docs/probes</code>"],\n  ["Done when", "The README names both routes."],\n]\n\n[[section]]\nid = "settings"'
@@ -678,7 +679,7 @@ def check_since(tmp):
     run = render(data, tmp / "since-out", "--since", str(EXAMPLE))
     expect(run.returncode == 0, f"a changed copy renders: {run.stderr}")
     expect("  Plan: EX-1: Done when, `amended` edited; EX-2: Carries out, `amended` edited; EX-4 added.\n" in run.stdout, f"edited fields, a list among them, and a new item: {run.stdout}")
-    expect("  Build: EX-2 To merge → Merged.\n" in run.stdout, f"a status in its type's words: {run.stdout}")
+    expect("  Execution: EX-2 To merge → Merged.\n" in run.stdout, f"a status in its type's words: {run.stdout}")
     expect("  project.toml: `handoff` edited.\n" in run.stdout and "read_at" not in run.stdout, f"project.toml's changes, read_at aside: {run.stdout}")
     unamended = copy_with(tmp, "unamended", EXAMPLE, "plan.toml", "stops answering is restarted.", "stops answering is restarted within a minute.")
     if unamended is not None:
@@ -693,18 +694,18 @@ def check_since(tmp):
         run = render(unmarked, tmp / "unmarked-out", "--since", str(EXAMPLE))
         expect(run.returncode == 1 and "plan.toml: EX-4 is new since the published data, which had the Plan approved: an item added to it is an amendment" in run.stderr, f"an item added to an approved phase without `amended` stops the render: {run.stderr}")
     asked = '[[section.item]]\nid = "Q2"\ntitle = "The probe\'s path behind the proxy"\nstatus = "open"\n'
-    live = copy_with(tmp, "live", EXAMPLE, "build.toml", '[[section.item]]\nid = "Q1"', asked + '\n[[section.item]]\nid = "Q1"')
+    live = copy_with(tmp, "live", EXAMPLE, "execution.toml", '[[section.item]]\nid = "Q1"', asked + '\n[[section.item]]\nid = "Q1"')
     if live is not None:
         run = render(live, tmp / "live-out", "--since", str(EXAMPLE))
-        expect(run.returncode == 0 and "  Build: Q2 added, To answer.\n" in run.stdout, f"Build takes new work without `amended`, and lists it once, with its status: {run.stdout}")
-    answered = copy_with(tmp, "answered", EXAMPLE, "build.toml", 'status = "done"\non = 2026-10-07\nfields = [\n  ["Question", "Staging', 'status = "done"\non = 2026-10-08\nfields = [\n  ["Question", "In staging')
+        expect(run.returncode == 0 and "  Execution: Q2 added, To answer.\n" in run.stdout, f"Execution takes new work without `amended`, and lists it once, with its status: {run.stdout}")
+    answered = copy_with(tmp, "answered", EXAMPLE, "execution.toml", 'status = "done"\non = 2026-10-07\nfields = [\n  ["Question", "Staging', 'status = "done"\non = 2026-10-08\nfields = [\n  ["Question", "In staging')
     if answered is not None:
         run = render(answered, tmp / "answered-out", "--since", str(EXAMPLE))
-        expect("  Build: Q1: Question, `on` edited.\n" in run.stdout, f"an item edited in what it says and in its state is listed once: {run.stdout}")
-    unanswered = copy_with(tmp, "unanswered", EXAMPLE, "build.toml", 'status = "done"\non = 2026-10-07\nfields = [\n  ["Question", "Staging', 'status = "open"\non = 2026-10-08\nfields = [\n  ["Question", "In staging')
+        expect("  Execution: Q1: Question, `on` edited.\n" in run.stdout, f"an item edited in what it says and in its state is listed once: {run.stdout}")
+    unanswered = copy_with(tmp, "unanswered", EXAMPLE, "execution.toml", 'status = "done"\non = 2026-10-07\nfields = [\n  ["Question", "Staging', 'status = "open"\non = 2026-10-08\nfields = [\n  ["Question", "In staging')
     if unanswered is not None:
         run = render(unanswered, tmp / "unanswered-out", "--since", str(EXAMPLE))
-        expect("  Build: Q1 Answered → To answer, Question edited.\n" in run.stdout, f"and so is one whose status changed, its status first: {run.stdout}")
+        expect("  Execution: Q1 Answered → To answer, Question edited.\n" in run.stdout, f"and so is one whose status changed, its status first: {run.stdout}")
 
     r2 = '\n\n[[section.item]]\nid = "R2"\ntitle = "What the platform does with a probe"\nfields = [\n  ["Today", "It restarts a process whose liveness probe fails three times in a row, and sends it traffic only while its readiness probe passes."],\n  ["Raises", "[[D2]]"],\n]\n'
     deleted = copy_with(tmp, "deleted", EXAMPLE, "research.toml", r2, "\n")
@@ -734,7 +735,7 @@ def check_task(tmp):
     """Work that isn't a PR, such as a review, is a task: in the Plan, on the board, done
     without a merge, and waiting on the owner with its `ask`."""
     data = copy_with(tmp, "task", EXAMPLE, "plan.toml", '[[section]]\nid = "risks"', TASK)
-    if data is None or not replace_in(data, "build.toml", 'types = ["pr", "setting"]', 'types = ["pr", "setting", "task"]') or not replace_in(data, "build.toml", "[status.RK1]", '[status.W1]\nstatus = "open"\non = 2026-10-07\n\n[status.RK1]'):
+    if data is None or not replace_in(data, "execution.toml", 'types = ["pr", "setting"]', 'types = ["pr", "setting", "task"]') or not replace_in(data, "execution.toml", "[status.RK1]", '[status.W1]\nstatus = "open"\non = 2026-10-07\n\n[status.RK1]'):
         return
     run = render(data, tmp / "task-out", "--inline")
     page = (tmp / "task-out" / "index.html").read_text() if run.returncode == 0 else ""
@@ -759,6 +760,15 @@ def check_standing(tmp):
     views, sheet = between(page, '<nav class="views"', "</nav>"), between(page, 'aria-labelledby="warnings-title"', "</dialog>")
     expect('<span>Warnings</span> <b class="n-warn">1</b>' in views, f"the Warnings button still counts it: {views[-200:]}")
     expect("<h3>Standing, by the owner's choice</h3>" in sheet and "Recorded after the fact, with only what was decided." in sheet and "<h3><code>analysis.toml</code></h3>" not in sheet, f"the sheet lists it under its own heading, with the why: {sheet[-900:]}")
+
+
+def check_renamed(tmp):
+    """Data from before Build was renamed Execution stops the render, saying so."""
+    data = tmp / "renamed"
+    shutil.copytree(EXAMPLE, data)
+    (data / "execution.toml").rename(data / "build.toml")
+    run = render(data, tmp / "renamed-out")
+    expect(run.returncode == 1 and "build.toml: Build is now Execution: rename the file execution.toml" in run.stderr, f"a build.toml left from before stops the render, saying what it is now: {run.stderr}")
 
 
 def check_unlinked(tmp):
@@ -792,6 +802,7 @@ def main():
         check_stale(tmp)
         check_standing(tmp)
         check_task(tmp)
+        check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)
     for what in failed:

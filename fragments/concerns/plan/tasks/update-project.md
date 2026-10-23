@@ -23,7 +23,7 @@ The project, and what changed: $ARGUMENTS
    - an item added to the Brief, the Research, the Analysis or the Plan once
      it is done, or approved, or edited there, is `amended`, with the day and
      why;
-   - new work in Build or Verify, once done, reopens it, with `reopened`;
+   - new work in Execution or Verify, once done, reopens it, with `reopened`;
    - a decision, or a question, is written in full, with its options and the
      one recommended, before the user is asked to take it: they read it on
      the page, and the chat only says it is there;
