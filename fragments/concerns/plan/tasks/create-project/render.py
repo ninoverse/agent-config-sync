@@ -688,6 +688,7 @@ def check_wording(project, phases):
                 walk(inner, where)
 
     for key, data in phases.items():
+        walk(data.get("draft", []), f"{key}.toml draft")
         for section in data.get("section", []):
             for item in section.get("item", []):
                 walk(item, f"{key}.toml item {item.get('id', '(no id)')}")

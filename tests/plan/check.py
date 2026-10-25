@@ -844,6 +844,11 @@ def check_draft(tmp):
             run = render(broken, tmp / f"{name}-out")
             message = f"project.toml [phases.{key}]: {'the Brief' if key == 'brief' else 'Execution'} has no draft: only the Research, the Analysis, the Plan, Reuse and the Retrospective start with one"
             expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
+    bare = tmp / "draft-bare"
+    shutil.copytree(data, bare)
+    if replace_in(bare, "research.toml", '"The pieces it will hold, by title."', '"The pieces it will hold, by title, for SC1."'):
+        run = render(bare, tmp / "draft-bare-out")
+        expect("warning: research.toml draft: SC1 is named by its number alone" in run.stderr, f"a draft names its items with their links, as any text does: {run.stderr}")
     missing = tmp / "draft-missing"
     shutil.copytree(data, missing)
     (missing / "research.toml").unlink()
