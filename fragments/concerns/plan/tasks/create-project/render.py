@@ -404,17 +404,18 @@ def read_phases(data_dir, statuses):
             if loaded is not None:
                 data[key] = loaded
                 loaded["approved"] = as_date(loaded.get("approved"), f"{key}.toml", "approved")
-    # A phase in Draft holds its draft alone, until the owner accepts it; then the draft goes.
+    # A phase in Draft holds its draft alone, until the owner accepts it; then the draft can
+    # stay, as the phase's summary.
     for key, _ in PHASES:
         state, draft = statuses[key]["status"], data.get(key, {}).get("draft")
         if state == "draft" and draft is None:
             problem(f"project.toml [phases.{key}]", f"{the(key)} is in Draft: write its draft, in `draft` in {key}.toml")
-        elif draft is not None and state != "draft":
-            problem(f"{key}.toml", f"{the(key)} holds a `draft`, but isn't in Draft: once the owner accepts it, the phase is Now, with `accepted`, and the draft goes")
+        elif draft is not None and state != "draft" and not statuses[key]["accepted"]:
+            problem(f"{key}.toml", f"{the(key)} holds a `draft`, but isn't in Draft, and has no `accepted`: give the phase the day the owner accepted it, or put it back in Draft")
         elif draft is not None:
             if not is_draft(draft):
                 problem(f"{key}.toml", "`draft` is a list, each a paragraph or a list of points")
-            if data[key].get("section"):
+            if state == "draft" and data[key].get("section"):
                 problem(f"{key}.toml", f"{the(key)} is in Draft, so it holds its draft alone: write its sections once the owner accepts it")
     return data
 
@@ -1443,16 +1444,23 @@ def render_phase(key, data, data_dir, head=True):
     sections; then its sections, and what closes it: its approval, or its amendments.
     Nothing, for a phase whose file shows neither, such as one holding only statuses."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
+    # A draft is the phase's view until the owner accepts it; kept after, it is the summary
+    # the phase opens with.
+    summary = ""
     if "draft" in data:
         blocks = data["draft"] if is_draft(data["draft"]) else []
         body = "\n".join(f"<p>{block}</p>" if isinstance(block, str) else list_html(block) for block in blocks)
-        note = f'<p class="note">What {the(key)} will hold. The agent writes it in full once the owner accepts it.</p>'
-        parts.append(f'<section class="block draft" id="{key}-draft">\n  <h3>The draft</h3>\n{note}\n{body}\n</section>')
-        return expand_refs("\n".join(parts), f"{key}.toml")
+        if STATES[key]["status"] == "draft":
+            note = f'<p class="note">What {the(key)} will hold. The agent writes it in full once the owner accepts it.</p>'
+            parts.append(f'<section class="block draft" id="{key}-draft">\n  <h3>The draft</h3>\n{note}\n{body}\n</section>')
+            return expand_refs("\n".join(parts), f"{key}.toml")
+        accepted = f" on {day(STATES[key]['accepted'])}" if STATES[key]["accepted"] else ""
+        summary = f'<section class="block draft" id="{key}-summary">\n  <h3>Summary</h3>\n<p class="note">The draft the owner accepted{accepted}.</p>\n{body}\n</section>'
+        parts.append(summary)
     rendered = [(section, render_section(section, key, data, data_dir)) for section in data.get("section", [])]
     shown = [section for section, html in rendered if html]
     ending = closing(key, data)
-    if not shown and not ending:
+    if not shown and not ending and not summary:
         return ""
     if key in CONTENTS and len(shown) > 1:
         links = "".join(f'<li><a href="#{section["id"]}">{section.get("title") or section["id"]}</a></li>' for section in shown)

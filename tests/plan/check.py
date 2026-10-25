@@ -805,17 +805,25 @@ def check_draft(tmp):
     expect('class="t-draft"' in between(page, '<nav class="phases"', "</nav>") and '<span class="state">Draft</span>' in between(page, '<nav class="phases"', "</nav>"), "its tab reads Draft")
     view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
     expect('id="research-draft"' in view and "<p>The pieces it will hold, by title.</p>" in view and "<li>Its probes today</li>" in view, f"its view holds the draft, one block of text: {view[-600:]}")
-    # Once the owner accepts it, the phase is Now, the agent writes it, and the draft goes.
+    # Once the owner accepts it, the phase is Now, and the agent writes it; the draft can stay,
+    # as the phase's summary, at the top of its view.
     accepted = tmp / "draft-accepted"
     shutil.copytree(data, accepted)
     if replace_in(accepted, "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\naccepted = 2026-01-03\n'):
-        (accepted / "research.toml").unlink()
         run = render(accepted, tmp / "draft-accepted-out", "--inline")
         page = (tmp / "draft-accepted-out" / "index.html").read_text() if run.returncode == 0 else ""
+        expect(run.returncode == 0 and "warning:" not in run.stderr, f"a draft accepted renders without a warning: {run.stderr}")
         expect("  the agent: Write the Research.\n" in run.stdout, f"once accepted, the agent writes it: {run.stdout}")
         expect("Research's draft accepted" in between(page, 'id="agenda"', "</dialog>"), "and the Agenda lists the day the draft was accepted")
+        view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
+        expect('id="research-summary"' in view and "<h3>Summary</h3>" in view and "<p>The pieces it will hold, by title.</p>" in view and 'id="research-draft"' not in view, f"the draft kept is the phase's summary: {view[-600:]}")
+        (accepted / "research.toml").write_text((accepted / "research.toml").read_text() + '\n[[section]]\nid = "pieces"\ntitle = "What exists"\nkind = "items"\ntype = "piece"\n\n[[section.item]]\nid = "R1"\ntitle = "A piece"\nfields = [["Raises", "Nothing yet."]]\n')
+        run = render(accepted, tmp / "draft-written-out", "--inline")
+        page = (tmp / "draft-written-out" / "index.html").read_text() if run.returncode == 0 else ""
+        view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
+        expect(run.returncode == 0 and view.find('id="research-summary"') < view.find('id="pieces"') and 'id="r1"' in view, f"and leads the phase once it is written: {run.stderr}{view[:600]}")
     for name, file, old, new, message in [
-        ("draft-kept", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\naccepted = 2026-01-03\n', "research.toml: the Research holds a `draft`, but isn't in Draft: once the owner accepts it, the phase is Now, with `accepted`, and the draft goes"),
+        ("draft-unaccepted", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\n', "research.toml: the Research holds a `draft`, but isn't in Draft, and has no `accepted`: give the phase the day the owner accepted it, or put it back in Draft"),
         ("draft-accepted-still", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "draft"\nstart = 2026-01-02\naccepted = 2026-01-03\n', "project.toml [phases.research]: the Research's draft is `accepted`, so the phase is Now"),
         ("draft-written", "research.toml", '"Its probes today"],\n]\n', '"Its probes today"],\n]\n\n[[section]]\nid = "pieces"\ntitle = "What exists"\nkind = "items"\ntype = "piece"\n\n[[section.item]]\nid = "R1"\ntitle = "A piece"\nfields = [["Raises", "Nothing yet."]]\n', "research.toml: the Research is in Draft, so it holds its draft alone: write its sections once the owner accepts it"),
         ("draft-shape", "research.toml", '  ["The service as it runs", "Its probes today"],\n', "  [1, 2],\n", "research.toml: `draft` is a list, each a paragraph or a list of points"),

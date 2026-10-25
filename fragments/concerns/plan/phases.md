@@ -35,9 +35,10 @@ closes it, and `/resume-project` picks it up in a new session.
   its top right: the Agenda, and the Guides, which say how to use the page, its
   phases and chips included, and hold the glossary.
 - A phase is Done, Now, Draft, To come or Not needed, and a Done phase that
-  has taken amendments reads Amended. Draft holds the draft alone, which goes
-  once the user accepts it, the day the Agenda then lists. Not needed says why
-  in one sentence, in the data; Reuse is the phase most often not needed. A
+  has taken amendments reads Amended. Draft holds the draft alone. Once the
+  user accepts it, the day the Agenda then lists, the Plan keeps its draft, as
+  the summary its view opens with, and another phase drops it. Not needed says
+  why in one sentence, in the data; Reuse is the phase most often not needed. A
   tab opens only once its phase has something to show, so the tab of a phase
   not needed, or not written yet, doesn't open. Execution and Verify can both
   be Now: Verify starts with the first merge, or with the first test of a
