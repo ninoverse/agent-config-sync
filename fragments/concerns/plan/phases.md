@@ -61,12 +61,13 @@ closes it, and `/resume-project` picks it up in a new session.
 - The page says when its state was read. Read it again right before each
   publish, each PR from GitHub: a status read earlier is stale by then.
 - Rendering warns about what looks stale, such as a Done phase that still holds
-  an unfinished item, a decision taken that no PR carries out or with no option
-  chosen, a merged PR without its result, or an item Blocked on work that is
-  done. Fix each before publishing, or tell the user why it stands; once they
-  agree, the data says why on its item, so no session asks again. The page
-  lists the warnings in its Warnings, a third view at its top right, which
-  shows only when there are some, with how many, those that stand apart.
+  an unfinished item, a decision taken that nothing in the Plan carries out or
+  with no option chosen, a merged PR without its result, or an item Blocked on
+  work that is done. Fix each before publishing, or tell the user why it
+  stands; once they agree, the data says why on its item, so no session asks
+  again. The page lists the warnings in its Warnings, a third view at its top
+  right, which shows only when there are some, with how many, those that stand
+  apart.
 
 ## The phases
 
@@ -86,8 +87,8 @@ closes it, and `/resume-project` picks it up in a new session.
   saying what it waits on. Each lists its options, with the reasons for the one
   recommended, and is put to the user on the page, in full: the chat only says
   it is there. Until the user answers, the page marks the one recommended;
-  after, only the one chosen, with the date. Its card lists the PRs and
-  settings that carry it out. One list is the default; only when the decisions
+  after, only the one chosen, with the date. Its card lists the PRs, settings
+  and tasks that carry it out. One list is the default; only when the decisions
   are many do they come in batches, one section each, answered together, which
   the page lists at the top. The evidence behind them, such as a comparison or
   a measurement, goes in the Research, and the decisions link to it.

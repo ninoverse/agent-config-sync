@@ -627,7 +627,7 @@ def check_states(project, phases):
                 warn(where, f"{PHASE_NAME[item['status_from']]} is done, but {item_id} is still `{status}`")
         if item["type"] == "decision" and status == "done" and has_prs:
             if not any(ITEMS[other]["type"] in CARRY_OUT for other in item["needed_by"] + item["mentioned_in"]):
-                warn(where, f"{item_id} is a decision taken, but no PR or setting names it or needs it")
+                warn(where, f"{item_id} is a decision taken, but no PR, setting or task names it or needs it")
         if item["type"] == "pr" and status == "done" and not item.get("result"):
             warn(where, f"{item_id} is a merged PR without a `result`")
         needs = [need for need in item["needs"] if need in ITEMS]
