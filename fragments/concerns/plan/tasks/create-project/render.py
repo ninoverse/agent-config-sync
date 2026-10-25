@@ -404,12 +404,14 @@ def read_phases(data_dir, statuses):
             if loaded is not None:
                 data[key] = loaded
                 loaded["approved"] = as_date(loaded.get("approved"), f"{key}.toml", "approved")
-    # A phase in Draft holds its draft alone, until the owner accepts it; then the draft can
-    # stay, as the phase's summary.
+    # A phase in Draft holds its draft alone, until the owner accepts it; then the draft
+    # stays, as the phase's summary.
     for key, _ in PHASES:
         state, draft = statuses[key]["status"], data.get(key, {}).get("draft")
         if state == "draft" and draft is None:
             problem(f"project.toml [phases.{key}]", f"{the(key)} is in Draft: write its draft, in `draft` in {key}.toml")
+        elif draft is None and statuses[key]["accepted"]:
+            problem(f"project.toml [phases.{key}]", f"{the(key)}'s draft was accepted on {day(statuses[key]['accepted'])}, and stays, as the summary its view opens with: keep it, in `draft` in {key}.toml")
         elif draft is not None and state != "draft" and not statuses[key]["accepted"]:
             problem(f"{key}.toml", f"{the(key)} holds a `draft`, but isn't in Draft, and has no `accepted`: give the phase the day the owner accepted it, or put it back in Draft")
         elif draft is not None:
@@ -1445,8 +1447,8 @@ def render_phase(key, data, data_dir, head=True):
     sections; then its sections, and what closes it: its approval, or its amendments.
     Nothing, for a phase whose file shows neither, such as one holding only statuses."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
-    # A draft is the phase's view until the owner accepts it; kept after, it is the summary
-    # the phase opens with.
+    # A draft is the phase's view until the owner accepts it; then it is the summary the
+    # phase opens with.
     summary = ""
     if "draft" in data:
         blocks = data["draft"] if is_draft(data["draft"]) else []

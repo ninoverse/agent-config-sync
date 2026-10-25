@@ -36,15 +36,14 @@ closes it, and `/resume-project` picks it up in a new session.
   phases and chips included, and hold the glossary.
 - A phase is Done, Now, Draft, To come or Not needed, and a Done phase that
   has taken amendments reads Amended. Draft holds the draft alone. Once the
-  user accepts it, the day the Agenda then lists, the Plan keeps its draft, as
-  the summary its view opens with, and another phase drops it. Not needed says
-  why in one sentence, in the data; Reuse is the phase most often not needed. A
-  tab opens only once its phase has something to show, so the tab of a phase
-  not needed, or not written yet, doesn't open. Execution and Verify can both
-  be Now: Verify starts with the first merge, or with the first test of a
-  branch before its PR opens, whichever comes first. A phase that is Now shows
-  on its tab how many of its items are done, and Deferred's tab how many items
-  wait.
+  user accepts it, the day the Agenda then lists, the phase keeps its draft, as
+  the summary its view opens with. Not needed says why in one sentence, in the
+  data; Reuse is the phase most often not needed. A tab opens only once its
+  phase has something to show, so the tab of a phase not needed, or not
+  written yet, doesn't open. Execution and Verify can both be Now: Verify
+  starts with the first merge, or with the first test of a branch before its
+  PR opens, whichever comes first. A phase that is Now shows on its tab how
+  many of its items are done, and Deferred's tab how many items wait.
 - The phases run in order: each starts once the one before it is Done or Not
   needed, but Verify and Reuse, which start once Execution has. One that starts
   early says why, and the Agenda shows it on the day it started. A phase that

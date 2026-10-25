@@ -844,6 +844,13 @@ def check_draft(tmp):
             run = render(broken, tmp / f"{name}-out")
             message = f"project.toml [phases.{key}]: {'the Brief' if key == 'brief' else 'Execution'} has no draft: only the Research, the Analysis, the Plan, Reuse and the Retrospective start with one"
             expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
+    dropped = tmp / "draft-dropped"
+    shutil.copytree(data, dropped)
+    if replace_in(dropped, "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\naccepted = 2026-01-03\n'):
+        (dropped / "research.toml").unlink()
+        run = render(dropped, tmp / "draft-dropped-out")
+        message = "project.toml [phases.research]: the Research's draft was accepted on 3 Jan, and stays, as the summary its view opens with: keep it, in `draft` in research.toml"
+        expect(run.returncode == 1 and message in run.stderr, f"a draft accepted stays: {run.stderr.strip()}")
     bare = tmp / "draft-bare"
     shutil.copytree(data, bare)
     if replace_in(bare, "research.toml", '"The pieces it will hold, by title."', '"The pieces it will hold, by title, for SC1."'):

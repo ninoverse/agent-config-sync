@@ -84,7 +84,7 @@ It writes nothing, and names the file and the item, when:
   nothing in it would show;
 - a phase is in Draft that starts with none, such as the Brief, or without its
   `draft`, or with sections beside it, or with `accepted`; or one holds a
-  `draft` while neither in Draft nor `accepted`;
+  `draft` while neither in Draft nor `accepted`, or is `accepted` without it;
 - a phase starts before those it follows are done, or before the day they
   end, the Research before the Brief's approval, the Analysis before the
   Research's, or Execution before the Plan's, without `early` saying why; the
@@ -166,8 +166,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`;
   or, in the Retrospective, one of the parts it builds from the other phases,
   below; or its `draft`, a list, each a paragraph or a list of points: alone
-  while the phase is `draft`, and then, kept once `accepted`, the summary its
-  view opens with.
+  while the phase is `draft`, and then, once `accepted`, the summary its view
+  opens with.
   A section that carries on the one before it can go without a `title`, and
   `--since` then names it by that section's. A phase the user approves, the
   Brief, the Research and the Plan, has `approved`, the day they did. A
