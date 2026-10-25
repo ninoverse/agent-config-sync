@@ -14,9 +14,10 @@ The project: $ARGUMENTS
 ## Steps
 
 1. Review it from outside the session that wrote it, where you can: a new
-   session, or a sub-agent given only the data directory and *Project phases*,
-   with none of the discussion behind them. What the author knows but didn't
-   write is what the page's readers miss too.
+   session, or a sub-agent given only the data directory, *Project phases* and
+   *Building the project page*, with the repositories the project works on to
+   read, and none of the discussion behind them. What the author knows but
+   didn't write is what the page's readers miss too.
 2. Render it, as *Building the project page* says. Show: each problem and each
    warning.
 3. Read each phase against *Project phases*:
