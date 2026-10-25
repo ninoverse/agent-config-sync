@@ -82,6 +82,9 @@ It writes nothing, and names the file and the item, when:
   Moved one doesn't link its card there in `to`; or a phase that is Not
   needed doesn't say why, or has a `<phase>.toml`: its tab doesn't open, so
   nothing in it would show;
+- a phase is in Draft that starts with none, such as the Brief, or without its
+  `draft`, or with sections beside it, or with `accepted`; or one holds a
+  `draft` while not in Draft;
 - a phase starts before those it follows are done, or before the day they
   end, the Research before the Brief's approval, the Analysis before the
   Research's, or Execution before the Plan's, without `early` saying why; the
@@ -150,8 +153,9 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
 - `project.toml`: `repo` and `objective`, which make the title; `summary`;
   `read_at`, a date and time in UTC; a `[phases.<phase>]` table for each phase,
   with its `status`, its `why` when it is `not-needed`, and optionally its
-  `start` and `end`, `early`, why it started before those it follows were
-  done, and `reopened`, as `[{ ended = <date>, on = <date> }]`, each time it
+  `start` and `end`, `accepted`, the day the user accepted its draft, `early`,
+  why it started before those it follows were done, and `reopened`, as
+  `[{ ended = <date>, on = <date> }]`, each time it
   ended and later reopened; `[[event]]`s, the dates that aren't items, such
   as a scheduled run or a freeze, with `automated = true` on a run that starts
   on its own, which the page marks Automated; `[handoff]`, the notes for the
@@ -161,7 +165,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
   `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`;
   or, in the Retrospective, one of the parts it builds from the other phases,
-  below.
+  below; or, while the phase is `draft`, its `draft` alone, a list, each a
+  paragraph or a list of points.
   A section that carries on the one before it can go without a `title`, and
   `--since` then names it by that section's. A phase the user approves, the
   Brief, the Research and the Plan, has `approved`, the day they did. A

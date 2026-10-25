@@ -64,10 +64,13 @@ LIVE = ("execution", "verify")
 AMENDS = ("brief", "research", "analysis", "plan")
 # The phases the owner approves, each with the phase that starts only once they have.
 APPROVES = {"brief": "research", "research": "analysis", "plan": "execution"}
-# The phases the agent writes with the owner, each starting with a discussion once the one
+# The phases the agent writes with the owner, each starting with its draft once the one
 # before it is done: until it has something to show, the agent holds it.
 WRITTEN = ("research", "analysis", "plan")
-PHASE_STATUS = {"done": "Done", "now": "Now", "to-come": "To come", "not-needed": "Not needed"}
+# The phases written from a discussion, which start in Draft: what the phase will hold, on
+# its tab, which the owner accepts before the agent writes it in full.
+DRAFTED = ("research", "analysis", "plan", "reuse", "retrospective")
+PHASE_STATUS = {"done": "Done", "now": "Now", "draft": "Draft", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
 # Set aside: out of its phase's way until a trigger comes, or until another project takes
@@ -300,6 +303,11 @@ def read_project(data_dir):
             status = "to-come"
         if status == "not-needed" and not entry.get("why"):
             problem(where, "a phase that is not needed says why, in `why`")
+        if status == "draft" and key not in DRAFTED:
+            problem(where, f"{the(key)} has no draft: only {', '.join(the(other) for other in DRAFTED[:-1])} and {the(DRAFTED[-1])} start with one")
+        accepted = as_date(entry.get("accepted"), where, "accepted")
+        if accepted and status == "draft":
+            problem(where, f"{the(key)}'s draft is `accepted`, so the phase is Now")
         if not isinstance(entry.get("early", ""), str):
             problem(where, "`early` says why the phase starts before those it follows are done")
         reopened = []
@@ -317,6 +325,7 @@ def read_project(data_dir):
             "end": as_date(entry.get("end"), where, "end"),
             "early": entry.get("early", "") if isinstance(entry.get("early", ""), str) else "",
             "reopened": reopened,
+            "accepted": accepted,
         }
     check_order(project["status"])
     STATES.update(project["status"])
@@ -347,11 +356,16 @@ def names(keys):
     return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
 
 
+def the(key):
+    """A phase's name as a sentence takes it: the Brief, but Execution."""
+    return f"the {PHASE_NAME[key]}" if key in ("brief", "research", "analysis", "plan", "retrospective") else PHASE_NAME[key]
+
+
 def check_order(statuses):
     """The phases' order, in their states and their dates: a phase starts once those it
     follows are done, or with `early` saying why, and ends only after those it runs beside."""
     finished = {key for key, state in statuses.items() if state["status"] in ("done", "not-needed")}
-    started = {key for key, state in statuses.items() if state["status"] in ("now", "done")}
+    started = {key for key, state in statuses.items() if state["status"] in ("draft", "now", "done")}
     for key, name in PHASES:
         state, where = statuses[key], f"project.toml [phases.{key}]"
         if key in started and not state["early"]:
@@ -390,7 +404,24 @@ def read_phases(data_dir, statuses):
             if loaded is not None:
                 data[key] = loaded
                 loaded["approved"] = as_date(loaded.get("approved"), f"{key}.toml", "approved")
+    # A phase in Draft holds its draft alone, until the owner accepts it; then the draft goes.
+    for key, _ in PHASES:
+        state, draft = statuses[key]["status"], data.get(key, {}).get("draft")
+        if state == "draft" and draft is None:
+            problem(f"project.toml [phases.{key}]", f"{the(key)} is in Draft: write its draft, in `draft` in {key}.toml")
+        elif draft is not None and state != "draft":
+            problem(f"{key}.toml", f"{the(key)} holds a `draft`, but isn't in Draft: once the owner accepts it, the phase is Now, with `accepted`, and the draft goes")
+        elif draft is not None:
+            if not is_draft(draft):
+                problem(f"{key}.toml", "`draft` is a list, each a paragraph or a list of points")
+            if data[key].get("section"):
+                problem(f"{key}.toml", f"{the(key)} is in Draft, so it holds its draft alone: write its sections once the owner accepts it")
     return data
+
+
+def is_draft(value):
+    """A draft as written: a list, each a paragraph, or a list of points."""
+    return isinstance(value, list) and bool(value) and all(isinstance(block, str) or (isinstance(block, list) and block and all(isinstance(point, str) for point in block)) for block in value)
 
 
 def is_pair(value):
@@ -1412,6 +1443,12 @@ def render_phase(key, data, data_dir, head=True):
     sections; then its sections, and what closes it: its approval, or its amendments.
     Nothing, for a phase whose file shows neither, such as one holding only statuses."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
+    if "draft" in data:
+        blocks = data["draft"] if is_draft(data["draft"]) else []
+        body = "\n".join(f"<p>{block}</p>" if isinstance(block, str) else list_html(block) for block in blocks)
+        note = f'<p class="note">What {the(key)} will hold. The agent writes it in full once the owner accepts it.</p>'
+        parts.append(f'<section class="block draft" id="{key}-draft">\n  <h3>The draft</h3>\n{note}\n{body}\n</section>')
+        return expand_refs("\n".join(parts), f"{key}.toml")
     rendered = [(section, render_section(section, key, data, data_dir)) for section in data.get("section", [])]
     shown = [section for section, html in rendered if html]
     ending = closing(key, data)
@@ -1457,6 +1494,8 @@ def dated(project, phases):
         for ended, on in state["reopened"]:
             found.append((ended, "phase", f"{name} ends", f"{name} ends", None, None))
             found.append((on, "phase", f"{name} reopens", f"{name} reopens", None, None))
+        if state["accepted"]:
+            found.append((state["accepted"], "phase", f"{name}'s draft accepted", f"{name}'s draft accepted", None, None))
         if start and start == end:
             found.append((start, "phase", f"{name}, one day{',' + early if early else ''}", f"{name}, one day", None, None))
             continue
@@ -1582,14 +1621,19 @@ def calendar_view(project, phases):
     for key in reversed(APPROVES):
         if project["status"][key]["status"] == "now" and phases.get(key, {}).get("section") and not phases[key].get("approved"):
             owner_rows.insert(0, f'<li><span class="pill ask">Approve</span> <a href="#{key}">the {PHASE_NAME[key]}</a></li>')
+    # So does a draft, until they accept it.
+    for key in reversed(DRAFTED):
+        if project["status"][key]["status"] == "draft":
+            owner_rows.insert(0, f'<li><span class="pill ask">Accept</span> <a href="#{key}-draft">{the(key)}\'s draft</a></li>')
     agent_rows = [f"<li>[[{i}]]</li>" for i in agent]
-    # Between two phases, the next waits on the agent: to start it, then to write it.
+    # Between two phases, the next waits on the agent: to draft it, then, once the owner
+    # accepts the draft, to write it.
     for key in WRITTEN:
         state, before = project["status"][key]["status"], FOLLOWS[key][0]
         while project["status"][before]["status"] == "not-needed" and before in FOLLOWS:
             before = FOLLOWS[before][0]
         if state in ("to-come", "now") and not phases.get(key, {}).get("section") and project["status"][before]["status"] == "done":
-            verb = "Start" if state == "to-come" else "Write"
+            verb = "Draft" if state == "to-come" else "Write"
             agent_rows.insert(0, f'<li><span class="pill st-ready">{verb}</span> the {PHASE_NAME[key]}</li>')
     # The next three dates, each a link to its day in the agenda, which has them all.
     date_rows = [f'<li class="dated"><a class="when" href="#on-{date.isoformat()}"><time>{weekday(date)}</time></a> <span>{text}</span></li>' for date, cls, text, label, word, ref in ahead[:3]]
@@ -1680,7 +1724,7 @@ def opening_phase(statuses, shown):
         return "deferred"
     phases = [key for key in shown if key != "deferred"] or list(shown)
     for key in phases:
-        if statuses[key]["status"] == "now":
+        if statuses[key]["status"] in ("now", "draft"):
             return key
     done = [key for key in phases if statuses[key]["status"] == "done"]
     return done[-1] if done else phases[0]
@@ -2011,10 +2055,12 @@ def phases_now(project):
     """The phases in progress, for the terminal, as their tabs count them."""
     counts, now = progress(), []
     for key, name in PHASES:
-        if project["status"][key]["status"] != "now":
+        if project["status"][key]["status"] not in ("now", "draft"):
             continue
         if key == "deferred":
             now.append(f"{name}, {waiting_count()} waiting")
+        elif project["status"][key]["status"] == "draft":
+            now.append(f"{name}, in Draft")
         elif key in counts:
             now.append(f"{name}, {counts[key][0]} of {counts[key][1]} done")
         else:

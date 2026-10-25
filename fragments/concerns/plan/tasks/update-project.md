@@ -28,6 +28,11 @@ The project, and what changed: $ARGUMENTS
      one recommended, before the user is asked to take it: they read it on
      the page, and the chat only says it is there;
    - a decision taken has its `chosen` option, and `on`;
+   - a phase that starts with a draft, the Research, the Analysis, the Plan,
+     Reuse or the Retrospective, is `draft`, its `draft` in its own file, a
+     list of paragraphs and lists of points, and the chat only says it is
+     there; once the user accepts it, the phase is `now`, with `accepted`, the
+     day, and the draft goes, since what the agent then writes says the same;
    - an item set aside is `deferred`, with what it waits on, or `to-move`,
      naming the project that takes it.
 

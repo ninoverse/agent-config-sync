@@ -144,6 +144,8 @@
   nav.phases a.t-amended .state { color: var(--ready); }
   nav.phases a.t-now { color: var(--ink); }
   nav.phases a.t-now .state { color: var(--accent); }
+  nav.phases a.t-draft { color: var(--ink); }
+  nav.phases a.t-draft .state { color: var(--open); }
   /* A phase with nothing to show: not needed, or not written yet. */
   nav.phases .off { border-style: dashed; cursor: default; }
   nav.phases a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent-fill); }

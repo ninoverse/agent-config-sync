@@ -7,9 +7,12 @@ when: Running a project in phases
 A project that takes more than one PR, or more than one repository, runs in
 phases, and one page tracks it: the project page, which `/create-project`
 builds. Each phase starts with a discussion with the user about what it will
-hold. The agent then writes what it finds as it finds it; what is the user's
-to settle, such as a decision or an approval, waits on their answer, and the
-page shows it waiting.
+hold. In the Research, the Analysis, the Plan, Reuse and the Retrospective, the
+agent's side of it is the phase's draft, written on its tab as one block of
+text, and the phase is in Draft until the user accepts it, after any change
+they ask for. The agent then writes what it finds as it finds it; what is the
+user's to settle, such as a decision or an approval, waits on their answer,
+and the page shows it waiting.
 
 A skill runs each step of a project, in numbered steps that say what to show
 the user: `/create-project` starts it, `/update-project` records what changes,
@@ -31,14 +34,16 @@ closes it, and `/resume-project` picks it up in a new session.
   and who holds the ball. Two views aren't phases, and open over the page from
   its top right: the Agenda, and the Guides, which say how to use the page, its
   phases and chips included, and hold the glossary.
-- A phase is Done, Now, To come or Not needed, and a Done phase that has
-  taken amendments reads Amended. Not needed says why in one sentence, in the
-  data; Reuse is the phase most often not needed. A tab opens
-  only once its phase has something to show, so the tab of a phase not needed,
-  or not written yet, doesn't open. Execution and Verify can both be Now: Verify
-  starts with the first merge, or with the first test of a branch before its
-  PR opens, whichever comes first. A phase that is Now shows on its tab how many
-  of its items are done, and Deferred's tab how many items wait.
+- A phase is Done, Now, Draft, To come or Not needed, and a Done phase that
+  has taken amendments reads Amended. Draft holds the draft alone, which goes
+  once the user accepts it, the day the Agenda then lists. Not needed says why
+  in one sentence, in the data; Reuse is the phase most often not needed. A
+  tab opens only once its phase has something to show, so the tab of a phase
+  not needed, or not written yet, doesn't open. Execution and Verify can both
+  be Now: Verify starts with the first merge, or with the first test of a
+  branch before its PR opens, whichever comes first. A phase that is Now shows
+  on its tab how many of its items are done, and Deferred's tab how many items
+  wait.
 - The phases run in order: each starts once the one before it is Done or Not
   needed, but Verify and Reuse, which start once Execution has. One that starts
   early says why, and the Agenda shows it on the day it started. A phase that
@@ -167,9 +172,10 @@ from the lesson.
   possessive.
 - Under the calendar, the page says who holds the ball: the owner, the user who
   decides, merges and changes settings, for the Brief, the Research and the
-  Plan until they approve them, and for every Open item, with how many are
-  deferred until they say; the agent, for every Ready one, and for the next
-  phase, to start and then to write, from the day the one before it is Done; or
+  Plan until they approve them, for a draft until they accept it, and for
+  every Open item, with how many are deferred until they say; the agent, for
+  every Ready one, and for the next phase, to draft and then, once its draft
+  is accepted, to write, from the day the one before it is Done; or
   a date coming up, with an automated run marked as such. The Agenda holds
   every date the project has, ahead and past, and the notes for the next
   session. All of it is built from the statuses: never repeat a status in

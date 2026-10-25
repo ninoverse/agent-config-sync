@@ -72,7 +72,7 @@ def check_starter(tmp):
     approved = copy_with(tmp, "approved", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
     if approved is not None and replace_in(approved, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
         run = render(approved, tmp / "approved-out")
-        expect("  the owner: nothing to do.\n  the agent: Start the Research.\n" in run.stdout, f"once it is approved, the agent starts the next phase: {run.stdout}")
+        expect("  the owner: nothing to do.\n  the agent: Draft the Research.\n" in run.stdout, f"once it is approved, the agent drafts the next phase: {run.stdout}")
         (approved / "deferred.toml").write_text('[[section]]\nid = "work"\ntitle = "Deferred work"\nkind = "items"\ntype = "deferred"\n\n[[section.item]]\nid = "T1"\ntitle = "Some later work"\nstatus = "blocked"\nwaits = "a release"\nfields = [["Goes to", "The Plan."]]\n')
         if replace_in(approved, "project.toml", "\n[handoff]", '\n[phases.deferred]\nstatus = "now"\n\n[handoff]'):
             run = render(approved, tmp / "approved-out")
@@ -783,6 +783,65 @@ def check_result(tmp):
     expect(f"<dt>Result</dt><dd>{result}</dd>" in card, f"a decision's result shows on its card: {card[-600:]}")
 
 
+def check_draft(tmp):
+    """A phase written from a discussion starts with a draft: what it will hold, on its tab,
+    which the owner accepts before the agent writes it in full."""
+    data = copy_with(tmp, "draft", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
+    if data is None or not replace_in(data, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
+        return
+    (data / "verify.toml").write_text('[status.SC1]\nstatus = "blocked"\nwaits = "its checks"\n')
+    before = tmp / "draft-before"
+    shutil.copytree(data, before)
+    if not replace_in(data, "project.toml", "end = 2026-01-02\n", 'end = 2026-01-02\n\n[phases.research]\nstatus = "draft"\nstart = 2026-01-02\n'):
+        return
+    (data / "research.toml").write_text('draft = [\n  "The pieces it will hold, by title.",\n  ["The service as it runs", "Its probes today"],\n]\n')
+    run = render(data, tmp / "draft-out", "--inline")
+    page = (tmp / "draft-out" / "index.html").read_text() if run.returncode == 0 else ""
+    expect(run.returncode == 0 and "warning:" not in run.stderr, f"a phase in Draft renders without a warning: {run.stderr}")
+    expect("opening on Research;" in run.stdout and "\nNow: Research, in Draft.\n" in run.stdout, f"the page opens on it, in Draft: {run.stdout}")
+    expect("  the owner: Accept the Research's draft.\n  the agent: nothing ready.\n" in run.stdout, f"and the owner holds the ball, to accept it: {run.stdout}")
+    run = render(data, tmp / "draft-since-out", "--since", str(before))
+    expect("  Research: `draft` edited.\n  project.toml: Research To come → Draft.\n" in run.stdout, f"--since lists the draft, and the phase in Draft: {run.stdout}")
+    expect('class="t-draft"' in between(page, '<nav class="phases"', "</nav>") and '<span class="state">Draft</span>' in between(page, '<nav class="phases"', "</nav>"), "its tab reads Draft")
+    view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
+    expect('id="research-draft"' in view and "<p>The pieces it will hold, by title.</p>" in view and "<li>Its probes today</li>" in view, f"its view holds the draft, one block of text: {view[-600:]}")
+    # Once the owner accepts it, the phase is Now, the agent writes it, and the draft goes.
+    accepted = tmp / "draft-accepted"
+    shutil.copytree(data, accepted)
+    if replace_in(accepted, "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\naccepted = 2026-01-03\n'):
+        (accepted / "research.toml").unlink()
+        run = render(accepted, tmp / "draft-accepted-out", "--inline")
+        page = (tmp / "draft-accepted-out" / "index.html").read_text() if run.returncode == 0 else ""
+        expect("  the agent: Write the Research.\n" in run.stdout, f"once accepted, the agent writes it: {run.stdout}")
+        expect("Research's draft accepted" in between(page, 'id="agenda"', "</dialog>"), "and the Agenda lists the day the draft was accepted")
+    for name, file, old, new, message in [
+        ("draft-kept", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\naccepted = 2026-01-03\n', "research.toml: the Research holds a `draft`, but isn't in Draft: once the owner accepts it, the phase is Now, with `accepted`, and the draft goes"),
+        ("draft-accepted-still", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "draft"\nstart = 2026-01-02\naccepted = 2026-01-03\n', "project.toml [phases.research]: the Research's draft is `accepted`, so the phase is Now"),
+        ("draft-written", "research.toml", '"Its probes today"],\n]\n', '"Its probes today"],\n]\n\n[[section]]\nid = "pieces"\ntitle = "What exists"\nkind = "items"\ntype = "piece"\n\n[[section.item]]\nid = "R1"\ntitle = "A piece"\nfields = [["Raises", "Nothing yet."]]\n', "research.toml: the Research is in Draft, so it holds its draft alone: write its sections once the owner accepts it"),
+        ("draft-shape", "research.toml", '  ["The service as it runs", "Its probes today"],\n', "  [1, 2],\n", "research.toml: `draft` is a list, each a paragraph or a list of points"),
+    ]:
+        broken = tmp / name
+        shutil.copytree(data, broken)
+        if replace_in(broken, file, old, new):
+            run = render(broken, tmp / f"{name}-out")
+            expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
+    for name, key, file in [("draft-brief", "brief", None), ("draft-execution", "execution", "execution.toml")]:
+        broken = tmp / name
+        shutil.copytree(data, broken)
+        if file:
+            (broken / file).write_text('draft = ["What it will hold."]\n')
+        ok = replace_in(broken, "project.toml", 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n', 'status = "draft"\nstart = 2026-01-01\n') if key == "brief" else replace_in(broken, "project.toml", "\n[handoff]", f'\n[phases.{key}]\nstatus = "draft"\n\n[handoff]')
+        if ok:
+            run = render(broken, tmp / f"{name}-out")
+            message = f"project.toml [phases.{key}]: {'the Brief' if key == 'brief' else 'Execution'} has no draft: only the Research, the Analysis, the Plan, Reuse and the Retrospective start with one"
+            expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
+    missing = tmp / "draft-missing"
+    shutil.copytree(data, missing)
+    (missing / "research.toml").unlink()
+    run = render(missing, tmp / "draft-missing-out")
+    expect(run.returncode == 1 and "project.toml [phases.research]: the Research is in Draft: write its draft, in `draft` in research.toml" in run.stderr, f"a phase in Draft without one says so: {run.stderr.strip()}")
+
+
 def check_renamed(tmp):
     """Data from before Build was renamed Execution stops the render, saying so."""
     data = tmp / "renamed"
@@ -824,6 +883,7 @@ def main():
         check_standing(tmp)
         check_task(tmp)
         check_result(tmp)
+        check_draft(tmp)
         check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)
