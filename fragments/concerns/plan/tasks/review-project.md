@@ -24,11 +24,12 @@ The project: $ARGUMENTS
      verified by a check? Does the scope cover the objective, and no more?
    - the Research: does each piece raise something an item takes up?
    - the Analysis: does each decision list its options, with the reasons for
-     the one recommended, and does a PR or a setting carry it out?
+     the one recommended, and does a PR, a setting or a task carry it out?
    - the Plan: does each PR say its branch, what it needs first and its kind,
-     with a *Done when* a check can prove? Does each success criterion have a
-     check, and each check the PR it needs, or that needs it? Is each risk
-     one that hasn't happened, with the step that closes it?
+     with a *Done when* a check can prove, and each task its *Done when*? Does
+     each success criterion have a check, and each check the PR it needs, or
+     that needs it? Is each risk one that hasn't happened, with the step that
+     closes it?
    - Execution and Verify: does each status match what GitHub says, and each
      result what the PR did?
    - Deferred: does each item say what it waits on, and where it goes then?
