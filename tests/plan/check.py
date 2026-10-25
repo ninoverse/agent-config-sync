@@ -130,6 +130,7 @@ def check_example(tmp):
     expect('<span class="chip s-deferred">' in guides and '<span class="mine">Your go</span>' in guides, "one of them is set aside, until the owner says")
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
     expect('data-open="execution"' in page, "the page opens on the phase in progress")
+    expect('<a href="#deferred" data-phase="deferred" class="t-waiting">' in page, "Deferred's tab, with items waiting, reads as what waits on the owner")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
     expect(counts == {"execution": "3/6", "verify": "2/4"}, f"each phase in progress counts its items done, and only those: {counts}")
     views = [page] + list(phase.values())

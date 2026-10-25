@@ -2163,6 +2163,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
             status, state = "amended", "Amended"
         if key == "deferred":
             state = f"{waiting} waiting" if waiting else "Nothing waiting"
+            status = "waiting" if waiting else status
         elif status == "now" and key in counts:
             done, total = counts[key]
             state += f' <span class="count" title="{done} of {total} done, not counting dropped or set-aside items">{done}/{total}</span>'
