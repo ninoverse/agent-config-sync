@@ -747,6 +747,10 @@ def check_rules(project, phases):
             warn(where, f"{item_id} is a decision without `options`: list them, with the reasons for the one recommended")
         fields = dict(field for field in item.get("fields", []) if is_field(field))
         labels = set(fields)
+        # One way worth taking is proposed alone, rather than beside options made up to
+        # have more than one; what it ruled out is then said in a line.
+        if item["type"] == "decision" and isinstance(item.get("options"), list) and len(item["options"]) == 1 and "Why only this" not in labels:
+            warn(where, f"{item_id} is proposed alone: say in `Why only this` what it ruled out, in a line")
         # An adopted lesson's change waits in Deferred until it ships. The data can only show
         # whether something there, or in the Plan, and the lesson name each other, so this only warns.
         if item["type"] == "lesson" and status == "done" and "Becomes" in labels:
@@ -815,11 +819,14 @@ def options_html(item):
     and after that only the choice. The mark is a background, and a hidden word."""
     chosen = item.get("chosen")
     marked, mark = (chosen, "chosen") if chosen else (item.get("recommended"), "recommended")
+    # One option alone is a proposal, which needs no letter.
+    alone = len(item["options"]) == 1
     rows = []
     for key, text in item["options"]:
         tag, note = (f' class="{mark}"', f'<span class="vh"> ({mark})</span>') if key == marked else ("", "")
-        rows.append(f'<li{tag}><span class="key">{esc(key)}</span><span>{text}{note}</span></li>')
-    return f'<ol class="options">{"".join(rows)}</ol>'
+        letter = "" if alone else f'<span class="key">{esc(key)}</span>'
+        rows.append(f'<li{tag}>{letter}<span>{text}{note}</span></li>')
+    return f'<ol class="options{" proposal" if alone else ""}">{"".join(rows)}</ol>'
 
 
 def list_html(entries):

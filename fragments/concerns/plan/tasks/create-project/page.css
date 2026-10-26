@@ -342,6 +342,7 @@
   ol.options li { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: baseline; padding: 8px 12px; border: 1px solid var(--rule); border-radius: var(--corner-md); background: var(--bg); }
   ol.options li.chosen { border-color: var(--accent-fill); background: var(--accent-soft); }
   ol.options li.recommended { border-color: var(--outline); background: var(--ready-soft); }
+  ol.options.proposal li { grid-template-columns: minmax(0, 1fr); }
   ol.options .key, table.decisions .key { font-family: var(--font-mono); font-weight: 700; }
   table.decisions td:last-child { white-space: nowrap; }
   /* The decision log's batches, each a table under its title. */

@@ -863,6 +863,23 @@ def check_draft(tmp):
     expect(run.returncode == 1 and "project.toml [phases.research]: the Research is in Draft: write its draft, in `draft` in research.toml" in run.stderr, f"a phase in Draft without one says so: {run.stderr.strip()}")
 
 
+def check_proposal(tmp):
+    """A decision with one way worth taking is proposed alone, saying why only it, rather
+    than beside options made up to have more than one."""
+    alone = 'options = [\n  ["a", "The database connection."],\n]\nrecommended = "a"\nchosen = "a"\n'
+    data = copy_with(tmp, "proposal", EXAMPLE, "analysis.toml", 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\n', alone)
+    if data is None:
+        return
+    run = render(data, tmp / "proposal-out")
+    expect("warning: analysis.toml item D2: D2 is proposed alone: say in `Why only this` what it ruled out, in a line" in run.stderr, f"a decision proposed alone says why only it: {run.stderr}")
+    if replace_in(data, "analysis.toml", 'fields = [["Reasons", "The service answers from the database when the cache is down, only slower."]]', 'fields = [["Reasons", "The service answers from the database when the cache is down, only slower."], ["Why only this", "Waiting for the cache too would take the service down with it."]]'):
+        run = render(data, tmp / "proposal-out", "--inline")
+        page = (tmp / "proposal-out" / "index.html").read_text() if run.returncode == 0 else ""
+        card = between(page, 'id="d2"', "</article>")
+        expect(run.returncode == 0 and "warning:" not in run.stderr, f"and then renders without a warning: {run.stderr}")
+        expect('<ol class="options proposal">' in card and '<span class="key">' not in card and "The database connection." in card, f"its card shows the proposal, without a letter: {card[-500:]}")
+
+
 def check_renamed(tmp):
     """Data from before Build was renamed Execution stops the render, saying so."""
     data = tmp / "renamed"
@@ -905,6 +922,7 @@ def main():
         check_task(tmp)
         check_result(tmp)
         check_draft(tmp)
+        check_proposal(tmp)
         check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)

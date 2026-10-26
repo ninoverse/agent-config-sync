@@ -122,7 +122,8 @@ with how many there are, when:
   title's;
 - a question in Execution is dated before Execution started: one asked before
   the Plan's approval is a decision;
-- a decision has no `options`, as one recorded after the fact may not;
+- a decision has no `options`, as one recorded after the fact may not, or
+  proposes one alone without `Why only this`;
 - a success criterion has no status, or is still `open`, once the Brief's
   approval agreed it;
 - two PRs in one repository are in progress at once: open on GitHub, as
@@ -204,7 +205,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
     be the checks of its branch, which it waits on before it merges;
   - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
     one each by its key: a decision's choices, shown as a list that marks the
-    recommended one until one is chosen, and then only the chosen one;
+    recommended one until one is chosen, and then only the chosen one; one
+    alone is a proposal, shown without its key, with a `Why only this` field;
   - `amended`, as `{ on = <date>, why = "..." }`, when it was added, or
     edited, after its phase's approval, or after its end in a phase without
     one, which lists it at its end under that day and `why`, and whose tab
