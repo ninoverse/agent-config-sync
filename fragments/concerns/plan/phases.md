@@ -172,7 +172,10 @@ from the lesson.
 - Name an item with its number and its summary, never the number alone: the
   reader shouldn't have to look D12 up. Since the summary follows the number,
   put the name after its noun, as in "the merge of HMI-8", never in a
-  possessive.
+  possessive. In the chat, name it the same way, as a link to its card: the
+  page's address, then `#` and its number in lower case, such as `#d12`. When
+  the user follows more than one project, group what you tell them under the
+  name of each page, since a number means nothing without its page.
 - Under the calendar, the page says who holds the ball: the owner, the user who
   decides, merges and changes settings, for the Brief, the Research and the
   Plan until they approve them, for a draft until they accept it, and for
