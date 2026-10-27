@@ -24,7 +24,9 @@ closes it, and `/resume-project` picks it up in a new session.
 
 - One page per project, named `<main repository>-<objective>`, such as
   `hmi-components-agentcfg-adoption`. The name is settled when the project
-  starts, and kept.
+  starts, and kept, and may repeat, as when a project restarts. The page's
+  title is its name, and, once the project isn't active, its status after it,
+  such as `hmi-components-agentcfg-adoption [archived]`.
 - A project is active, the rest of the time; paused, waiting on something
   outside it; closed, once `/close-project` has run; or archived, stopped
   unfinished, such as when it restarts, linking the page that takes over, if

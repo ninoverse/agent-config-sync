@@ -54,8 +54,9 @@ each `phases/<phase>.html` and each data file as `src/<file>`, all with the
 content type `text/plain`: the page fetches the phase files, and nobody opens
 the data on its own.
 
-The title is the page's own, `<repo>-<objective>`. Keep it on every publish,
-since the user finds the page by it.
+The title is the page's own, the one the render prints: `<repo>-<objective>`,
+and the project's status after it once it isn't active, such as `[archived]`.
+Publish it every time, since the user finds the page by it.
 
 ## Updating
 

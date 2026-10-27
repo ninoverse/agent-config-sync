@@ -2218,7 +2218,11 @@ def sheet(key, name, note, inner, src=""):
 
 def page(project, sections, opening, inline, data_dir, agenda_html, months_html, ball_html, guides_html):
     css = stylesheet(project, data_dir)
-    title = f'{project.get("repo", "")}-{project.get("objective", "")}'
+    called = f'{project.get("repo", "")}-{project.get("objective", "")}'
+    # The title adds the project's status once it isn't active, so a list of pages tells
+    # an archived one from the page that takes over, which may share its name.
+    status = project["state"].get("status", "active")
+    title = called if status == "active" else f"{called} [{status}]"
     counts = progress()
     # The views that aren't phases: the agenda, the guides to using the page, and the
     # render's warnings, when it gave any, with how many.
@@ -2281,7 +2285,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
     <p class="eyebrow">Project page</p>
     <nav class="views" aria-label="Views">{views}</nav>
   </div>
-  <h1>{esc(title)}</h1>
+  <h1>{esc(called)}</h1>
   <p class="lede">{project.get("summary", "")}</p>
   {standing_html(project)}
   <div class="now">

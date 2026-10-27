@@ -154,7 +154,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
 
 ## The data
 
-- `project.toml`: `repo` and `objective`, which make the title; `summary`;
+- `project.toml`: `repo` and `objective`, which make the name, and the title
+  with the project's status; `summary`;
   `read_at`, a date and time in UTC; a `[phases.<phase>]` table for each phase,
   with its `status`, its `why` when it is `not-needed`, and optionally its
   `start` and `end`, `accepted`, the day the user accepted its draft, `early`,
