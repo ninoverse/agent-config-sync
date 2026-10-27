@@ -25,8 +25,10 @@ The project: $ARGUMENTS
    cp -r .agents/create-project/starter <data directory>
    ```
 
-   Set `repo`, `objective`, `summary` and `read_at` in `project.toml`, and the
-   day the Brief starts. A project that starts later than its Brief, such as
+   Set `repo`, `objective`, `summary` and `read_at`, now, in UTC, in
+   `project.toml`, and the day the Brief starts; and replace the starter's
+   samples, the notes for the next session, with their day, and the glossary
+   term, with the project's own. A project that starts later than its Brief, such as
    one split from another, sets each phase's status: one not needed says why,
    and one that starts before those it follows are done says why, in `early`.
    The starter's comments, and *The data* below, say what each field holds.
