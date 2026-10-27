@@ -39,8 +39,9 @@ The page to publish: $ARGUMENTS
    Fix every problem, and fix each warning or tell the user why it stands: the
    page lists those left in its Warnings. Show: what `--since` printed, or, on
    the first publish, the line the render prints.
-4. Open the `--inline` preview, or capture it with `/take-screenshot` where the
-   repository has it, and look at what changed.
+4. Capture the `--inline` preview, with `/take-screenshot` where the repository
+   has it, or with a script of your own in a headless browser, and look at
+   what changed.
 5. Publish, as below, then keep a copy of the data as published, in a
    directory of its own beside the data directory: the next `--since`
    compares with it.
