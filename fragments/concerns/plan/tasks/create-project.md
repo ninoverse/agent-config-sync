@@ -33,8 +33,11 @@ The project: $ARGUMENTS
    and one that starts before those it follows are done says why, in `early`.
    The starter's comments, and *The data* below, say what each field holds.
 3. Write the Brief from a discussion with the user of what it will hold: the
-   problem, the objective, the scope, the success criteria, each with how it is
-   checked, the repositories and the ground rules. Until the user approves the
+   problem, the objective, the scope, where the project comes from, the success
+   criteria, each with how it is checked, the repositories and the ground rules.
+   What a criterion is measured against, such as a checklist in the prompt
+   that starts the project, goes in the Brief, since the user agrees the
+   criteria by approving it. Until the user approves the
    Brief, the page shows it waiting on them; once they do, give `brief.toml`
    `approved`, the day they did, and the Brief is Done. The approval agrees the
    success criteria, which take no status before it. After it, each has its

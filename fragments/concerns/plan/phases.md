@@ -81,9 +81,11 @@ closes it, and `/resume-project` picks it up in a new session.
 
 ## The phases
 
-- **Brief**: the problem, the objective, what is in scope and what is out, the
-  success criteria, each with the checks that verify it, the repositories, each
-  with what the project does with it (changes it, reads it, or creates it), and
+- **Brief**: the problem, the objective, what is in scope and what is out,
+  where the project comes from, such as a prompt, the success criteria, each
+  with the checks that verify it, what they are measured against, such as a
+  checklist, held rather than named, the repositories, each with what the
+  project does with it (changes it, reads it, or creates it), and
   the ground rules: how the user wants the project run, such as who merges and
   which branches need asking. A ground rule holds until the user changes it.
   The success criteria are written before Execution starts, so they steer the

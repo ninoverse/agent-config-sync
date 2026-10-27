@@ -22,7 +22,9 @@ The project: $ARGUMENTS
    warning.
 3. Read each phase against *Project phases*:
    - the Brief: does each success criterion say what is measured, and is each
-     verified by a check? Does the scope cover the objective, and no more?
+     verified by a check? Does the Brief hold what each is measured against,
+     and say where the project comes from? Does the scope cover the objective,
+     and no more?
    - the Research: does each piece raise something an item takes up?
    - the Analysis: does each decision list its options, with the reasons for
      the one recommended, none of them made up, or propose one alone, saying

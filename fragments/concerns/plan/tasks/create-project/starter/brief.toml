@@ -24,6 +24,13 @@ text = "What the project does."
 term = "Out of scope"
 text = "What it leaves alone, and where that goes instead."
 
+# What started the project, such as a prompt or an issue, named and dated.
+# What the success criteria are measured against, such as its checklist, is
+# held in the Brief, in a section of its own, rather than named.
+[[section.def]]
+term = "Where it comes from"
+text = "What started the project, such as a prompt or an issue, and when."
+
 # Success criteria, each saying what is measured, and how it is checked.
 # Written before Execution, so they steer the work. They take no status until
 # the user approves the Brief, which agrees them; then verify.toml keeps each

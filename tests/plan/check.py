@@ -73,6 +73,8 @@ def check_starter(tmp):
     card = between(page, 'id="brief-approve"', "</section>")
     expect("agrees its success criteria" in card and "<em>Brief: approved</em>" in card and page.find('id="brief-approve"') < page.find('id="the-project"'), f"and its view opens with a card that says so, and how to answer: {card}")
     expect('<span class="pill ask">Approve</span> <a href="#brief-approve">the Brief</a>' in page, "which Who holds the ball links to")
+    project = between(page, 'id="the-project"', "</section>")
+    expect("Where it comes from" in project, f"its Brief has a place for what started the project: {project[:300]}")
     approved = copy_with(tmp, "approved", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
     if approved is not None and replace_in(approved, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
         run = render(approved, tmp / "approved-out")
