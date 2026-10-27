@@ -877,7 +877,7 @@ def check_proposal(tmp):
         page = (tmp / "proposal-out" / "index.html").read_text() if run.returncode == 0 else ""
         card = between(page, 'id="d2"', "</article>")
         expect(run.returncode == 0 and "warning:" not in run.stderr, f"and then renders without a warning: {run.stderr}")
-        expect('<ol class="options proposal">' in card and '<span class="key">' not in card and "The database connection." in card, f"its card shows the proposal, without a letter: {card[-500:]}")
+        expect('<dt>Proposal</dt><dd><ol class="options proposal">' in card and '<span class="key">' not in card and "The database connection." in card, f"its card shows the proposal, under Proposal, without a letter: {card[-500:]}")
 
 
 def check_renamed(tmp):

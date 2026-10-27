@@ -985,7 +985,7 @@ def card(item):
         rows.append(("Title", item.get("title", "")))
     options = item.get("options")
     if isinstance(options, list) and options and all(is_pair(option) for option in options):
-        rows.append(("Options", options_html(item)))
+        rows.append(("Proposal" if len(options) == 1 else "Options", options_html(item)))
     rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in fields if not is_chip(field[1])]
     if shown and item["status"] == "dropped":
         rows.append(("Why", item.get("why", "")))
