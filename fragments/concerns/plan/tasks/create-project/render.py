@@ -64,6 +64,8 @@ LIVE = ("execution", "verify")
 AMENDS = ("brief", "research", "analysis", "plan")
 # The phases the owner approves, each with the phase that starts only once they have.
 APPROVES = {"brief": "research", "research": "analysis", "plan": "execution"}
+# What each approval does, as the card that asks for it says.
+APPROVAL = {"brief": "agrees its success criteria, and lets the Research start", "research": "lets the Analysis start", "plan": "lets Execution start"}
 # The phases the agent writes with the owner, each starting with its draft once the one
 # before it is done: until it has something to show, the agent holds it.
 WRITTEN = ("research", "analysis", "plan")
@@ -1456,6 +1458,11 @@ def render_phase(key, data, data_dir, head=True):
     sections; then its sections, and what closes it: its approval, or its amendments.
     Nothing, for a phase whose file shows neither, such as one holding only statuses."""
     parts = [f'<h2 class="vh">{PHASE_NAME[key]}</h2>'] if head else []
+    # A phase written and waiting on the owner's approval opens with a card that says so,
+    # where its tab's count and Who holds the ball lead.
+    if key in APPROVES and STATES[key]["status"] == "now" and data.get("section") and not data.get("approved"):
+        name = PHASE_NAME[key]
+        parts.append(f'<section class="block approve" id="{key}-approve">\n  <h3><span class="pill ask">Approve</span> the {name}</h3>\n<p>It waits on the owner\'s approval, which {APPROVAL[key]}. Answer in the chat: <em>{name}: approved</em>, or say what to change first.</p>\n</section>')
     # A draft is the phase's view until the owner accepts it; then it is the summary the
     # phase opens with.
     summary = ""
@@ -1640,7 +1647,7 @@ def calendar_view(project, phases):
     # anything else, though it isn't an item.
     for key in reversed(APPROVES):
         if project["status"][key]["status"] == "now" and phases.get(key, {}).get("section") and not phases[key].get("approved"):
-            owner_rows.insert(0, f'<li><span class="pill ask">Approve</span> <a href="#{key}">the {PHASE_NAME[key]}</a></li>')
+            owner_rows.insert(0, f'<li><span class="pill ask">Approve</span> <a href="#{key}-approve">the {PHASE_NAME[key]}</a></li>')
     # So does a draft, until they accept it.
     for key in reversed(DRAFTED):
         if project["status"][key]["status"] == "draft":

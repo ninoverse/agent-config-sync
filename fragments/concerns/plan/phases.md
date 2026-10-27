@@ -46,7 +46,8 @@ closes it, and `/resume-project` picks it up in a new session.
   many of its items are done, and Deferred's tab how many items wait. Every
   tab also counts, in the user's yellow, what in its phase waits on them, its
   approval or its draft included, whatever its state: a Done phase with an
-  amendment to answer stays Done.
+  amendment to answer stays Done. A phase waiting on its approval opens with a
+  card in that yellow, saying what the approval lets start and how to answer.
 - The phases run in order: each starts once the one before it is Done or Not
   needed, but Verify and Reuse, which start once Execution has. One that starts
   early says why, and the Agenda shows it on the day it started. A phase that

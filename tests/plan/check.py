@@ -69,6 +69,10 @@ def check_starter(tmp):
     expect(run.returncode == 0 and "warning:" not in run.stderr, f"the starter renders without a warning: {run.stderr}")
     expect("opening on Brief; loaded when picked: phases/guides.html" in run.stdout, f"and opens on its Brief, the only phase it has: {run.stdout}")
     expect("  the owner: Approve the Brief.\n" in run.stdout, f"which waits on the owner's approval, as a Plan does: {run.stdout}")
+    page = (tmp / "starter" / "index.html").read_text() if run.returncode == 0 else ""
+    card = between(page, 'id="brief-approve"', "</section>")
+    expect("agrees its success criteria" in card and "<em>Brief: approved</em>" in card and page.find('id="brief-approve"') < page.find('id="the-project"'), f"and its view opens with a card that says so, and how to answer: {card}")
+    expect('<span class="pill ask">Approve</span> <a href="#brief-approve">the Brief</a>' in page, "which Who holds the ball links to")
     approved = copy_with(tmp, "approved", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
     if approved is not None and replace_in(approved, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
         run = render(approved, tmp / "approved-out")
@@ -397,7 +401,7 @@ def check_example(tmp):
         run = render(approving, tmp / "approving-out")
         index = tmp / "approving-out" / "index.html"
         owner = between(between(index.read_text(), 'id="ball"', "</section>"), "<h3>The owner</h3>", "</ul>") if index.exists() else ""
-        expect(owner.startswith('<h3>The owner</h3><ul><li><span class="pill ask">Approve</span> <a href="#plan">the Plan</a></li>'), f"a Plan not approved yet waits on the owner, first: {run.stderr} {owner}")
+        expect(owner.startswith('<h3>The owner</h3><ul><li><span class="pill ask">Approve</span> <a href="#plan-approve">the Plan</a></li>'), f"a Plan not approved yet waits on the owner, first, linked to its card: {run.stderr} {owner}")
     expect('href="#plan">the Plan' not in ball, "and once approved, no longer")
     expect('id="ball"' not in between(page, 'aria-labelledby="agenda-title"', "</dialog>"), "the agenda leaves who holds the ball to the header")
     expect('<span class="what">Amended in the Plan:</span>' in between(page, 'id="history"', "</section>"), "the agenda says an item was amended in its phase, added or edited")

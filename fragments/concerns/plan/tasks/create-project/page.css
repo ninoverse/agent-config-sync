@@ -204,6 +204,8 @@
   .pill.day::before { content: none; }
   .block { margin-top: 40px; }
   .block > h3 { padding-top: 14px; border-top: 1px solid var(--rule); }
+  .block.approve { padding: 4px 16px 12px; border: 1px solid var(--open); border-radius: var(--corner-md); background: var(--open-soft); }
+  .block.approve > h3 { border-top: 0; }
   .intro { color: var(--ink-muted); }
   .loadfail { color: var(--blocked); }
   .loadfail button { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
