@@ -888,6 +888,41 @@ def check_proposal(tmp):
         expect('<dt>Proposal</dt><dd><ol class="options proposal">' in card and '<span class="key">' not in card and "The database connection." in card, f"its card shows the proposal, under Proposal, without a letter: {card[-500:]}")
 
 
+def check_state(tmp):
+    """A project's own status: active, with no band; or paused, closed or archived, each a
+    band under the summary, while nobody holds the ball."""
+    archived = 'state = { status = "archived", on = 2026-10-09, why = "The service was retired.", to = "https://example.com/next" }\n'
+    data = copy_with(tmp, "state", EXAMPLE, "project.toml", "\n[phases.brief]", "\n" + archived + "\n[phases.brief]")
+    if data is None:
+        return
+    run = render(data, tmp / "state-out", "--inline")
+    page = (tmp / "state-out" / "index.html").read_text() if run.returncode == 0 else ""
+    band = between(page, '<p class="standing', "</p>")
+    expect(run.returncode == 0 and 's-archived" role="note"><strong>Archived on 9 Oct.</strong> The service was retired. <a href="https://example.com/next">The page that takes over</a>.' in band, f"an archived project says so under its summary, with why and its successor: {run.stderr}{band}")
+    expect("Who holds the ball:\n  nobody: the project is archived.\n" in run.stdout, f"and nobody holds the ball: {run.stdout}")
+    expect("<h3>The owner</h3>" not in between(page, 'id="ball"', "</section>") and "pill ask mine" not in between(page, '<nav class="phases"', "</nav>"), "neither on the page, nor in the tabs' counts")
+    for status, label in (("paused", "Paused since 9 Oct."), ("closed", "Closed on 9 Oct.")):
+        other = copy_with(tmp, f"state-{status}", data, "project.toml", archived, f'state = {{ status = "{status}", on = 2026-10-09, why = "The platform freezes deploys." }}\n')
+        if other is not None:
+            run = render(other, tmp / f"state-{status}-out")
+            page = (tmp / f"state-{status}-out" / "index.html").read_text() if run.returncode == 0 else ""
+            expect(f's-{status}" role="note"><strong>{label}</strong>' in page and f"nobody: the project is {status}." in run.stdout, f"a {status} project says so too: {run.stderr}{run.stdout[-300:]}")
+    active = copy_with(tmp, "state-active", data, "project.toml", archived, 'state = { status = "active" }\n')
+    if active is not None:
+        run = render(active, tmp / "state-active-out")
+        page = (tmp / "state-active-out" / "index.html").read_text() if run.returncode == 0 else ""
+        expect(run.returncode == 0 and 'class="standing' not in page and "  the owner:" in run.stdout, f"an active project has no band: {run.stderr}")
+    for name, state, message in [
+        ("state-unknown", 'state = { status = "done", on = 2026-10-09 }\n', "project.toml [state]: `status` is active, paused, closed or archived"),
+        ("state-undated", 'state = { status = "closed" }\n', "project.toml [state]: a project closed says the day, in `on`"),
+        ("state-unexplained", 'state = { status = "archived", on = 2026-10-09 }\n', "project.toml [state]: a project archived says why, in `why`"),
+    ]:
+        broken = copy_with(tmp, name, data, "project.toml", archived, state)
+        if broken is not None:
+            run = render(broken, tmp / f"{name}-out")
+            expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
+
+
 def check_renamed(tmp):
     """Data from before Build was renamed Execution stops the render, saying so."""
     data = tmp / "renamed"
@@ -931,6 +966,7 @@ def main():
         check_result(tmp)
         check_draft(tmp)
         check_proposal(tmp)
+        check_state(tmp)
         check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)

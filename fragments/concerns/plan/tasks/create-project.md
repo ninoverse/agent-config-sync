@@ -82,6 +82,9 @@ It writes nothing, and names the file and the item, when:
   Moved one doesn't link its card there in `to`; or a phase that is Not
   needed doesn't say why, or has a `<phase>.toml`: its tab doesn't open, so
   nothing in it would show;
+- the project's `[state]` has a `status` other than `active`, `paused`,
+  `closed` or `archived`, or one but `active` without its day, in `on`, or a
+  paused or archived project doesn't say why;
 - a phase is in Draft that starts with none, such as the Brief, or without its
   `draft`, or with sections beside it, or with `accepted`; or one holds a
   `draft` while neither in Draft nor `accepted`, or is `accepted` without it;
@@ -161,8 +164,11 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   as a scheduled run or a freeze, with `automated = true` on a run that starts
   on its own, which the page marks Automated; `[handoff]`, the notes for the
   next session and the day they were `updated`; `[[glossary]]` entries, each
-  a `term`, its `text` and its `source`, `coined` or `borrowed`; and `css`,
-  stylesheets of the project's own, beside it.
+  a `term`, its `text` and its `source`, `coined` or `borrowed`; `[state]`,
+  the project's own `status`, `active` unless it is `paused`, `closed` or
+  `archived`, with `on`, the day, `why`, and for an archived project the
+  address of the page that takes over, in `to`; and `css`, stylesheets of the
+  project's own, beside it.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
   `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`;
   or, in the Retrospective, one of the parts it builds from the other phases,

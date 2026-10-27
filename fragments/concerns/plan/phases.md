@@ -25,6 +25,11 @@ closes it, and `/resume-project` picks it up in a new session.
 - One page per project, named `<main repository>-<objective>`, such as
   `hmi-components-agentcfg-adoption`. The name is settled when the project
   starts, and kept.
+- A project is active, the rest of the time; paused, waiting on something
+  outside it; closed, once `/close-project` has run; or archived, stopped
+  unfinished, such as when it restarts, linking the page that takes over, if
+  one does. A band under its summary says each but active, with the day and
+  why, and while it shows, nobody holds the ball.
 - Nine phases, each a view the indicator at the top of the page switches to,
   in two groups. The first six run in this order, numbered: Brief, Research,
   Analysis, Plan, Execution, Verify. The other three, unnumbered, are what the

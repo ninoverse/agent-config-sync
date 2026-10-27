@@ -74,6 +74,9 @@ WRITTEN = ("research", "analysis", "plan")
 DRAFTED = ("research", "analysis", "plan", "reuse", "retrospective")
 # What waits on the owner, by phase: its tab counts it, beside the phase's own state.
 OWNER_WAITS = {}
+# The whole project's own status, when it isn't active: a band under its summary says it, and
+# nobody holds the ball.
+STANDING = {"paused": "Paused since", "closed": "Closed on", "archived": "Archived on"}
 PHASE_STATUS = {"done": "Done", "now": "Now", "draft": "Draft", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -347,6 +350,20 @@ def read_project(data_dir):
             problem(where, "an event has a `date`")
         if not isinstance(event.get("automated", False), bool):
             problem(where, "`automated` is true or false: true for a run that starts on its own, such as a scheduled workflow")
+    state = project.get("state", {})
+    if not isinstance(state, dict):
+        problem("project.toml", "`state` is a table: `status`, `on`, `why` and `to`")
+        state = {}
+    status = state.get("status", "active")
+    if status != "active" and status not in STANDING:
+        problem("project.toml [state]", "`status` is active, paused, closed or archived")
+    elif status in STANDING:
+        state["on"] = as_date(state.get("on"), "project.toml [state]", "on")
+        if state["on"] is None:
+            problem("project.toml [state]", f"a project {status} says the day, in `on`")
+        if status in ("paused", "archived") and not state.get("why"):
+            problem("project.toml [state]", f"a project {status} says why, in `why`")
+    project["state"] = state
     handoff = project.get("handoff")
     if handoff is not None:
         handoff["updated"] = as_date(handoff.get("updated"), "project.toml [handoff]", "updated")
@@ -1672,6 +1689,9 @@ def calendar_view(project, phases):
         + column("A date", date_rows, "No date ahead.", more)
         + "</div></section>"
     )
+    # A project paused, closed or archived waits on nobody: the band under its summary says why.
+    if standing(project):
+        ball = f'<section class="hold" id="ball" aria-labelledby="ball-title"><h2 id="ball-title">Who holds the ball</h2><p class="nobody">Nobody: the project is {standing(project)}.</p></section>'
     # The same, for the terminal, where the agent tells the user where the project stands.
     owner_text = [plain_text(row) for row in owner_rows] + ([f"deferred until they say: {parked}"] if parked else [])
     date_text = [f"{weekday(date)}, {plain_text(text)}" for date, cls, text, label, word, ref in ahead[:3]] + ([f"{len(ahead) - 3} more in the agenda"] if len(ahead) > 3 else [])
@@ -1679,7 +1699,7 @@ def calendar_view(project, phases):
         f"  the owner: {'; '.join(owner_text) or 'nothing to do'}.",
         f"  the agent: {'; '.join(plain_text(row) for row in agent_rows) or 'nothing ready'}.",
         f"  a date: {'; '.join(date_text) or 'none ahead'}.",
-    ]
+    ] if not standing(project) else [f"  nobody: the project is {standing(project)}."]
     handoff = project.get("handoff")
     notes = ""
     if handoff and handoff.get("notes"):
@@ -1763,6 +1783,25 @@ def owner_waits(project, phases):
         if project["status"][key]["status"] == "draft":
             counts[key] = counts.get(key, 0) + 1
     return counts
+
+
+def standing(project):
+    """The project's own status when it isn't active, or None."""
+    status = project.get("state", {}).get("status", "active")
+    return status if status in STANDING else None
+
+
+def standing_html(project):
+    """The band under the summary: the project's status, its day, why, and the page that
+    takes over, if one does."""
+    status = standing(project)
+    if not status:
+        return ""
+    state = project["state"]
+    when = f" {day(state['on'])}" if state.get("on") else ""
+    why = f" {state['why']}" if state.get("why") else ""
+    to = f' <a href="{esc(state["to"])}">The page that takes over</a>.' if isinstance(state.get("to"), str) else ""
+    return f'<p class="standing s-{status}" role="note"><strong>{STANDING[status]}{when}.</strong>{why}{to}</p>'
 
 
 def opening_phase(statuses, shown):
@@ -2244,6 +2283,7 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
   </div>
   <h1>{esc(title)}</h1>
   <p class="lede">{project.get("summary", "")}</p>
+  {standing_html(project)}
   <div class="now">
     <div class="months" role="group" aria-label="Calendar">{months_html}</div>
     <p class="glance">{read} as of {read_at.day} {read_at:%b %Y}, {read_at:%H:%M} UTC.</p>
@@ -2391,7 +2431,8 @@ def main(argv):
         failed()
         return 1
     agenda_html, months_html, ball_html, holders = calendar_view(project, phases)
-    OWNER_WAITS.update(owner_waits(project, phases))
+    if not standing(project):
+        OWNER_WAITS.update(owner_waits(project, phases))
     opening = opening_phase(project["status"], sections)
     guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")
     title, files, shell = page(project, sections, opening, inline, data_dir, agenda_html, months_html, ball_html, guides_html)

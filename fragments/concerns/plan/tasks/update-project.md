@@ -35,7 +35,11 @@ The project, and what changed: $ARGUMENTS
      there; once the user accepts it, the phase is `now`, with `accepted`, the
      day, and the phase keeps its draft, as its summary;
    - an item set aside is `deferred`, with what it waits on, or `to-move`,
-     naming the project that takes it.
+     naming the project that takes it;
+   - a project that waits on something outside it is `paused` in `[state]`,
+     with `on` and `why`, and `active` again once it resumes; one stopped
+     unfinished, such as one that restarts, is `archived`, with `on`, `why`,
+     and the page that takes over in `to`, if one does.
 
    Show: each change, in the words the page will use.
 4. After a merge, also:

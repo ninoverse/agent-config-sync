@@ -26,7 +26,8 @@ The project: $ARGUMENTS
 4. Write the Retrospective's lessons with the user, unless they say it isn't
    needed, which the page then says, with why. An adopted lesson's change waits
    in Deferred until it ships. Its story is only for a project shown outside it.
-5. Update the notes for the next session: the project is complete, where its
-   work went, and what still waits.
+5. Set the project's `[state]` to `closed`, `on` the day it closes, and update
+   the notes for the next session: the project is complete, where its work
+   went, and what still waits.
 6. Publish with `/publish-project`. The page now opens on Deferred, or on the
    Retrospective when nothing waits.
