@@ -38,6 +38,14 @@ The project: $ARGUMENTS
 4. Read it as a newcomer: could a session that never saw the project carry it
    on from the notes and the Brief alone? Is a fact said twice, or an item
    named without its link?
-5. Report the findings, numbered, each with where it is, what is wrong and the
-   fix you propose, and change nothing until the user says which to make.
-   Show: the numbered findings.
+5. List the findings, numbered, each with where it is, what is wrong and the
+   fix you propose. A reviewer apart from the session reports them to it and
+   changes nothing.
+6. Act on each, as the session that keeps the project, in the data and never
+   in the chat alone, since the user reads the page: fix what is plainly
+   wrong; put what is the user's to settle on the page, as a decision, or a
+   question once Execution has started, proposed alone where one way is
+   worth taking; and leave, saying why, what isn't worth its fix. Then
+   publish with `/publish-project`. Show: each finding in a line, with what
+   became of it, and the items the user now has to answer, each by the name
+   of its page and its phase.
