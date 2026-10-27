@@ -37,11 +37,13 @@ The page to publish: $ARGUMENTS
    ```
 
    Fix every problem, and fix each warning or tell the user why it stands: the
-   page lists those left in its Warnings. Show: what `--since` printed.
+   page lists those left in its Warnings. Show: what `--since` printed, or, on
+   the first publish, the line the render prints.
 4. Open the `--inline` preview, or capture it with `/take-screenshot` where the
    repository has it, and look at what changed.
-5. Publish, as below, then keep a copy of the data as published: the next
-   `--since` compares with it.
+5. Publish, as below, then keep a copy of the data as published, in a
+   directory of its own beside the data directory: the next `--since`
+   compares with it.
 6. Tell the user what changed, from what `--since` printed: a correction
    first, saying what was wrong; or, on the first publish, that it is the
    first. Show: the link.
@@ -50,9 +52,9 @@ The page to publish: $ARGUMENTS
 
 Publish `<out directory>/index.html` with the Artifact tool, with one generic
 word as its `icon`, such as `plan`. Beside it, under the same paths, publish
-each `phases/<phase>.html` and each data file as `src/<file>`, all with the
-content type `text/plain`: the page fetches the phase files, and nobody opens
-the data on its own.
+each file in `phases/`, the Guides' included, and each data file as
+`src/<file>`, all with the content type `text/plain`: the page fetches the
+files in `phases/`, and nobody opens the data on its own.
 
 The title is the page's own, the one the render prints: `<repo>-<objective>`,
 and the project's status after it once it isn't active, such as `[archived]`.
