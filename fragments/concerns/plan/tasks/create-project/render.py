@@ -70,6 +70,8 @@ WRITTEN = ("research", "analysis", "plan")
 # The phases written from a discussion, which start in Draft: what the phase will hold, on
 # its tab, which the owner accepts before the agent writes it in full.
 DRAFTED = ("research", "analysis", "plan", "reuse", "retrospective")
+# What waits on the owner, by phase: its tab counts it, beside the phase's own state.
+OWNER_WAITS = {}
 PHASE_STATUS = {"done": "Done", "now": "Now", "draft": "Draft", "to-come": "To come", "not-needed": "Not needed"}
 ITEM_STATUS = {"done": "Done", "open": "Open", "ready": "Ready", "blocked": "Blocked", "happened": "Happened", "deferred": "Deferred", "to-move": "To be moved", "moved": "Moved", "dropped": "Dropped"}
 UNFINISHED = {"open", "ready", "blocked"}
@@ -1734,6 +1736,28 @@ def site_footer(aids, line):
     return f'<footer class="site">{panels}\n<p>{line}</p>\n</footer>'
 
 
+def owner_waits(project, phases):
+    """How many things in each phase wait on the owner, as Who holds the ball lists them:
+    its items Open, counted in the phase that keeps their status; those deferred until the
+    owner says, in Deferred; and its approval, or its draft, while either waits."""
+    counts = {}
+    for item in ITEMS.values():
+        if item.get("status") == "open":
+            key = item.get("status_from") or item["phase"]
+        elif item.get("status") == "deferred" and item.get("waits") == "owner":
+            key = "deferred"
+        else:
+            continue
+        counts[key] = counts.get(key, 0) + 1
+    for key in APPROVES:
+        if project["status"][key]["status"] == "now" and phases.get(key, {}).get("section") and not phases[key].get("approved"):
+            counts[key] = counts.get(key, 0) + 1
+    for key in DRAFTED:
+        if project["status"][key]["status"] == "draft":
+            counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
 def opening_phase(statuses, shown):
     """The phase in progress, or else the last one done, until the next starts, or else
     the first: of those with something to show. Deferred holds what waits beside the
@@ -2173,10 +2197,12 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
             status, state = "amended", "Amended"
         if key == "deferred":
             state = f"{waiting} waiting" if waiting else "Nothing waiting"
-            status = "waiting" if waiting else status
         elif status == "now" and key in counts:
             done, total = counts[key]
             state += f' <span class="count" title="{done} of {total} done, not counting dropped or set-aside items">{done}/{total}</span>'
+        # Whatever its state, what in the phase waits on the owner, in their yellow.
+        if OWNER_WAITS.get(key):
+            state += f' <span class="pill ask mine">{OWNER_WAITS[key]}<span class="vh"> waiting on the owner</span></span>'
         group.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
     shells, files = [], {}
     for key, text in sections.items():
@@ -2358,6 +2384,7 @@ def main(argv):
         failed()
         return 1
     agenda_html, months_html, ball_html, holders = calendar_view(project, phases)
+    OWNER_WAITS.update(owner_waits(project, phases))
     opening = opening_phase(project["status"], sections)
     guides_html = expand_refs(guides_view(project), "project.toml [[glossary]]")
     title, files, shell = page(project, sections, opening, inline, data_dir, agenda_html, months_html, ball_html, guides_html)

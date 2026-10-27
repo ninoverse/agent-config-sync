@@ -110,7 +110,7 @@ def check_example(tmp):
     expect(unwritten in leaves and 'id="retrospective"' not in page, "a phase with nothing written has a tab that doesn't open, and no view")
     reuse = '<li><span class="off t-not-needed"><span class="name">Reuse</span><span class="state">Not needed</span></span></li>'
     expect(reuse in leaves and 'id="reuse"' not in page and "Two routes are too little" not in page and '"reuse"' not in manifest(page), "a phase not needed has a tab that doesn't open, and no view; its reason stays in the data")
-    expect('<span class="name">Deferred</span><span class="state">2 waiting</span>' in leaves, f"Deferred's tab says how many items wait, deferred work that is blocked among them: {leaves}")
+    expect('<span class="name">Deferred</span><span class="state">2 waiting <span class="pill ask mine">1<' in leaves, f"Deferred's tab says how many items wait, deferred work that is blocked among them: {leaves}")
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
     expect('href="#warnings"' not in views and 'id="warnings"' not in page, "a page rendered without a warning has no Warnings")
     warned = copy_with(tmp, "warned", EXAMPLE, "plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }')
@@ -130,7 +130,10 @@ def check_example(tmp):
     expect('<span class="chip s-deferred">' in guides and '<span class="mine">Your go</span>' in guides, "one of them is set aside, until the owner says")
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
     expect('data-open="execution"' in page, "the page opens on the phase in progress")
-    expect('<a href="#deferred" data-phase="deferred" class="t-waiting">' in page, "Deferred's tab, with items waiting, reads as what waits on the owner")
+    pill = '<span class="pill ask mine">1<span class="vh"> waiting on the owner</span></span>'
+    expect('<a href="#deferred" data-phase="deferred" class="t-now">' in page and pill in between(page, 'data-phase="deferred" class="t-', "</a>"), "Deferred's tab reads its count of what waits in the text's colour, and counts in yellow what waits on the owner")
+    expect(pill in between(page, 'data-phase="execution" class="t-', "</a>"), "as every tab does: Execution's, its PR to merge")
+    expect("pill ask mine" not in between(page, 'data-phase="plan" class="t-', "</a>"), "a tab with nothing waiting on the owner shows no count")
     counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
     expect(counts == {"execution": "3/6", "verify": "2/4"}, f"each phase in progress counts its items done, and only those: {counts}")
     views = [page] + list(phase.values())
@@ -803,7 +806,7 @@ def check_draft(tmp):
     expect("  the owner: Accept the Research's draft.\n  the agent: nothing ready.\n" in run.stdout, f"and the owner holds the ball, to accept it: {run.stdout}")
     run = render(data, tmp / "draft-since-out", "--since", str(before))
     expect("  Research: `draft` edited.\n  project.toml: Research To come → Draft.\n" in run.stdout, f"--since lists the draft, and the phase in Draft: {run.stdout}")
-    expect('class="t-draft"' in between(page, '<nav class="phases"', "</nav>") and '<span class="state">Draft</span>' in between(page, '<nav class="phases"', "</nav>"), "its tab reads Draft")
+    expect('class="t-draft"' in between(page, '<nav class="phases"', "</nav>") and '<span class="state">Draft <span class="pill ask mine">1<' in between(page, '<nav class="phases"', "</nav>"), "its tab reads Draft, and counts the draft as waiting on the owner")
     view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
     expect('id="research-draft"' in view and "<p>The pieces it will hold, by title.</p>" in view and "<li>Its probes today</li>" in view, f"its view holds the draft, one block of text: {view[-600:]}")
     # Once the owner accepts it, the phase is Now, and the agent writes it; the draft can stay,
@@ -823,6 +826,7 @@ def check_draft(tmp):
         page = (tmp / "draft-written-out" / "index.html").read_text() if run.returncode == 0 else ""
         view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
         expect(run.returncode == 0 and view.find('id="research-summary"') < view.find('id="pieces"') and 'id="r1"' in view, f"and leads the phase once it is written: {run.stderr}{view[:600]}")
+        expect('<span class="pill ask mine">1<' in between(page, 'data-phase="research" class="t-', "</a>"), "whose tab then counts its approval as waiting on the owner")
     for name, file, old, new, message in [
         ("draft-unaccepted", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\n', "research.toml: the Research holds a `draft`, but isn't in Draft, and has no `accepted`: give the phase the day the owner accepted it, or put it back in Draft"),
         ("draft-accepted-still", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "draft"\nstart = 2026-01-02\naccepted = 2026-01-03\n', "project.toml [phases.research]: the Research's draft is `accepted`, so the phase is Now"),

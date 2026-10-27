@@ -43,7 +43,10 @@ closes it, and `/resume-project` picks it up in a new session.
   written yet, doesn't open. Execution and Verify can both be Now: Verify
   starts with the first merge, or with the first test of a branch before its
   PR opens, whichever comes first. A phase that is Now shows on its tab how
-  many of its items are done, and Deferred's tab how many items wait.
+  many of its items are done, and Deferred's tab how many items wait. Every
+  tab also counts, in the user's yellow, what in its phase waits on them, its
+  approval or its draft included, whatever its state: a Done phase with an
+  amendment to answer stays Done.
 - The phases run in order: each starts once the one before it is Done or Not
   needed, but Verify and Reuse, which start once Execution has. One that starts
   early says why, and the Agenda shows it on the day it started. A phase that

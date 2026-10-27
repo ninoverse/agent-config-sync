@@ -142,7 +142,7 @@
   nav.phases .count { margin-left: 3px; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: 0; }
   nav.phases a.t-done .state { color: var(--done); }
   nav.phases a.t-amended .state { color: var(--done); }
-  nav.phases a.t-waiting .state { color: var(--open); }
+  nav.phases .mine { margin-left: 4px; padding: 0 6px; font-size: 0.66rem; letter-spacing: 0; vertical-align: 1px; }
   nav.phases a.t-now { color: var(--ink); }
   nav.phases a.t-now .state { color: var(--accent); }
   nav.phases a.t-draft { color: var(--ink); }
