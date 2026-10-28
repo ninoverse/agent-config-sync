@@ -138,9 +138,12 @@ PHASE_TYPES = {
 # The kinds of section a phase is held to, where it is: the Analysis is its decisions,
 # the Plan its PRs, settings, tasks and risks, Execution its board, results and questions,
 # Verify its checks and where the success criteria stand, and Reuse its pieces, each
-# with how to take it; and where what they leave out goes.
-PHASE_KINDS = {"analysis": ("items",), "plan": ("items",), "execution": ("board", "results", "items"), "verify": ("items", "results"), "reuse": ("defs",)}
+# with how to take it; and where what they leave out goes. The Brief holds the project,
+# its criteria and rules, its repositories and its attachments, one section of each
+# but its items.
+PHASE_KINDS = {"brief": ("defs", "items", "repos", "attachments"), "analysis": ("items",), "plan": ("items",), "execution": ("board", "results", "items"), "verify": ("items", "results"), "reuse": ("defs",)}
 ELSEWHERE = {
+    "brief": "what the project starts from, such as a checklist or a prompt, goes in its Attachments",
     "analysis": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
     "plan": "anything else, such as evidence in a table, goes in the Research, and the cards link to it",
     "execution": "what happened is in the Agenda, and what came of an item is its Result",
@@ -155,7 +158,7 @@ KIND_MEANING = {
     "patch": "Merging it releases a patch: a fix, with nothing new.",
     "owner": "Only the owner can do it, such as a setting in a service they own.",
 }
-SECTION_KINDS = ("prose", "table", "repos", "items", "board", "results", "figures", "defs", "timeline", "roads", "risks", "cost", "next", "decisions")
+SECTION_KINDS = ("prose", "table", "repos", "items", "board", "results", "figures", "defs", "attachments", "timeline", "roads", "risks", "cost", "next", "decisions")
 # The Retrospective's record, built from the other phases rather than written: how the
 # phases went, what was dropped, the risks, what it cost, what waits, and every decision.
 BUILT = ("timeline", "roads", "risks", "cost", "next", "decisions")
@@ -1276,6 +1279,28 @@ def render_section(section, key, data, data_dir):
             # Its terms' column grows to fit the widest, which may be a chip.
             terms = "".join(f'<dt>{entry.get("term", "")}</dt><dd>{entry.get("text", "")}</dd>' for entry in entries)
             parts.append(f'  <article class="item">\n    <dl class="terms">{terms}</dl>\n  </article>')
+    elif kind == "attachments":
+        # What the project starts from: each held in its card, or kept as a file beside the
+        # data, which the page publishes under src/attachments/.
+        entries = section.get("attachment", [])
+        empty = not entries
+        for entry in entries:
+            name = entry.get("name", "")
+            required(entry, "name", where)
+            if not entry.get("from"):
+                problem(where, f"{name} says where it comes from, in `from`")
+            if ("text" in entry) == ("file" in entry):
+                problem(where, f"{name} holds its `text` or names its `file`, one of them")
+                continue
+            if "file" in entry:
+                file = entry["file"]
+                if not isinstance(file, str) or "/" in file or not (data_dir / "attachments" / file).is_file():
+                    problem(where, f"`file` {file} is not in attachments/ beside project.toml")
+                    continue
+                held = ("File", f'<a href="src/attachments/{esc(file)}">{esc(file)}</a>')
+            else:
+                held = ("Holds", entry["text"])
+            parts.append(card_html("", name, rows=[("From", entry.get("from", "")), held]))
     elif kind in BUILT:
         parts.append(built_html(kind, section, where))
     if empty:
@@ -1493,6 +1518,14 @@ def render_phase(key, data, data_dir, head=True):
         accepted = f" on {day(STATES[key]['accepted'])}" if STATES[key]["accepted"] else ""
         summary = f'<section class="block draft" id="{key}-summary">\n  <h3>Summary</h3>\n<p class="note">The draft the owner accepted{accepted}.</p>\n{body}\n</section>'
         parts.append(summary)
+    if key == "brief":
+        seen = set()
+        for section in data.get("section", []):
+            kind = section.get("kind")
+            if kind in ("defs", "repos", "attachments") and kind in seen:
+                what = {"defs": "the project", "repos": "the repositories", "attachments": "the attachments"}[kind]
+                problem(f"brief.toml section {section.get('id', '(no id)')}", f"the Brief holds one `{kind}` section, {what}: {ELSEWHERE['brief']}")
+            seen.add(kind)
     rendered = [(section, render_section(section, key, data, data_dir)) for section in data.get("section", [])]
     shown = [section for section, html in rendered if html]
     ending = closing(key, data)

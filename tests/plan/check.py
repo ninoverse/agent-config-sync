@@ -75,6 +75,8 @@ def check_starter(tmp):
     expect('<span class="pill ask">Approve</span> <a href="#brief-approve">the Brief</a>' in page, "which Who holds the ball links to")
     project = between(page, 'id="the-project"', "</section>")
     expect("Where it comes from" in project, f"its Brief has a place for what started the project: {project[:300]}")
+    attachments = between(page, 'id="attachments"', "</section>")
+    expect("<h3>Attachments</h3>" in attachments and "<dt>From</dt>" in attachments and page.find('id="attachments"') > page.find('id="ground-rules"'), f"and ends with its attachments, what the project starts from: {attachments[:300]}")
     approved = copy_with(tmp, "approved", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
     if approved is not None and replace_in(approved, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n'):
         run = render(approved, tmp / "approved-out")
@@ -927,6 +929,48 @@ def check_state(tmp):
             expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
 
 
+def check_attachments(tmp):
+    """The Brief ends with its attachments, each held in its card or published as a file
+    beside the page; and holds its own sections and nothing else."""
+    section = """
+[[section]]
+id = "attachments"
+title = "Attachments"
+kind = "attachments"
+
+[[section.attachment]]
+name = "The checklist"
+from = "The prompt, below."
+text = "Prepare, then test."
+
+[[section.attachment]]
+name = "The prompt"
+from = "The maintainer's handoff, kept as it was."
+file = "prompt.md"
+"""
+    data = tmp / "attachments"
+    shutil.copytree(EXAMPLE, data)
+    (data / "brief.toml").write_text((data / "brief.toml").read_text() + section)
+    (data / "attachments").mkdir()
+    (data / "attachments" / "prompt.md").write_text("# The handoff\n")
+    run = render(data, tmp / "attachments-out", "--inline")
+    page = (tmp / "attachments-out" / "index.html").read_text() if run.returncode == 0 else ""
+    held = between(page, 'id="attachments"', "</section>")
+    expect(run.returncode == 0 and "<h4>The checklist</h4>" in held and "Prepare, then test." in held, f"an attachment held in its card shows there, titled by its name: {run.stderr}{held[:400]}")
+    expect('<a href="src/attachments/prompt.md">prompt.md</a>' in held, f"and one kept as a file links it, where the page publishes it: {held[-400:]}")
+    for name, old, new, message in [
+        ("attachment-missing", 'file = "prompt.md"', 'file = "handoff.md"', "brief.toml section attachments: `file` handoff.md is not in attachments/ beside project.toml"),
+        ("attachment-both", 'text = "Prepare, then test."', 'text = "Prepare, then test."\nfile = "prompt.md"', "brief.toml section attachments: The checklist holds its `text` or names its `file`, one of them"),
+        ("attachment-unsourced", 'from = "The prompt, below."\n', "", "brief.toml section attachments: The checklist says where it comes from, in `from`"),
+        ("brief-second-defs", 'id = "attachments"\ntitle = "Attachments"\nkind = "attachments"', 'id = "the-checklist"\ntitle = "The checklist"\nkind = "defs"\n\n[[section.def]]\nterm = "Prepare"\ntext = "First."\n\n[[section]]\nid = "attachments"\ntitle = "Attachments"\nkind = "attachments"', "brief.toml section the-checklist: the Brief holds one `defs` section, the project: what the project starts from, such as a checklist or a prompt, goes in its Attachments"),
+        ("brief-table", 'id = "attachments"\ntitle = "Attachments"\nkind = "attachments"', 'id = "steps"\ntitle = "Steps"\nkind = "table"\nhead = ["Step"]\nrows = [["Prepare"]]\n\n[[section]]\nid = "attachments"\ntitle = "Attachments"\nkind = "attachments"', "brief.toml section steps: Brief holds only defs, items, repos and attachments sections"),
+    ]:
+        broken = copy_with(tmp, name, data, "brief.toml", old, new)
+        if broken is not None:
+            run = render(broken, tmp / f"{name}-out")
+            expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
+
+
 def check_renamed(tmp):
     """Data from before Build was renamed Execution stops the render, saying so."""
     data = tmp / "renamed"
@@ -971,6 +1015,7 @@ def main():
         check_draft(tmp)
         check_proposal(tmp)
         check_state(tmp)
+        check_attachments(tmp)
         check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)

@@ -24,9 +24,8 @@ text = "What the project does."
 term = "Out of scope"
 text = "What it leaves alone, and where that goes instead."
 
-# What started the project, such as a prompt or an issue, named and dated.
-# What the success criteria are measured against, such as its checklist, is
-# held in the Brief, in a section of its own, rather than named.
+# What started the project, such as a prompt or an issue, named and dated,
+# linking its attachment.
 [[section.def]]
 term = "Where it comes from"
 text = "What started the project, such as a prompt or an issue, and when."
@@ -73,3 +72,18 @@ title = "A rule, as the user put it"
 fields = [
   ["Why", "Where it comes from, when that isn't plain."],
 ]
+
+# What the project starts from, such as a checklist its criteria are measured
+# against, or the prompt that started it: held in the card when it is short, or
+# kept as a file in attachments/ beside project.toml, named in `file`, which the
+# page publishes under src/attachments/. A criterion links what it is measured
+# against, rather than naming it.
+[[section]]
+id = "attachments"
+title = "Attachments"
+kind = "attachments"
+
+[[section.attachment]]
+name = "An attachment"
+from = "Where it comes from, and when."
+text = "What it holds, when it is short."

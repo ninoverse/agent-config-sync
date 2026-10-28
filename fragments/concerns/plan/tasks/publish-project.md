@@ -54,8 +54,9 @@ The page to publish: $ARGUMENTS
 Publish `<out directory>/index.html` with the Artifact tool, with one generic
 word as its `icon`, such as `plan`. Beside it, under the same paths, publish
 each file in `phases/`, the Guides' included, and each data file as
-`src/<file>`, all with the content type `text/plain`: the page fetches the
-files in `phases/`, and nobody opens the data on its own.
+`src/<file>`, the Brief's attachments as `src/attachments/<file>`, all with the
+content type `text/plain`: the page fetches the files in `phases/`, links the
+attachments, and nobody opens the rest of the data on its own.
 
 The title is the page's own, the one the render prints: `<repo>-<objective>`,
 and the project's status after it once it isn't active, such as `[archived]`.

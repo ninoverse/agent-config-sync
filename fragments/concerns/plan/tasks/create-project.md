@@ -36,8 +36,9 @@ The project: $ARGUMENTS
    problem, the objective, the scope, where the project comes from, the success
    criteria, each with how it is checked, the repositories and the ground rules.
    What a criterion is measured against, such as a checklist in the prompt
-   that starts the project, goes in the Brief, since the user agrees the
-   criteria by approving it. Until the user approves the
+   that starts the project, goes in the Brief's attachments, and the prompt
+   too, as a file, where it is worth keeping as it was: the user agrees the
+   criteria by approving the Brief. Until the user approves the
    Brief, the page shows it waiting on them; once they do, give `brief.toml`
    `approved`, the day they did, and the Brief is Done. The approval agrees the
    success criteria, which take no status before it. After it, each has its
@@ -109,11 +110,15 @@ It writes nothing, and names the file and the item, when:
 - an item that isn't a risk is `happened`, or a risk that is doesn't name what
   took it over, in `result`, or was amended in after the day it happened;
 - an item's status is set both on the item and in a `[status]` table;
-- an item is in a phase that doesn't hold its type, the Analysis or the Plan
-  has a section other than `items`, Execution one other than a `board`,
+- an item is in a phase that doesn't hold its type, the Brief has a section
+  other than `defs`, `items`, `repos` or `attachments`, or two of one of them
+  but `items`, the Analysis or the Plan one other than `items`, Execution one
+  other than a `board`,
   `results` or `items`, Verify one other than `items` or `results`, or Reuse
   one other than `defs`; or a phase other than the Retrospective has a part it
   builds;
+- an attachment doesn't say where it comes from, holds both its `text` and a
+  `file` or neither, or names a file that isn't in `attachments/`;
 - a section shows nothing but its title, such as a card section with no
   cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;
@@ -176,7 +181,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   address of the page that takes over, in `to`; and `css`, stylesheets of the
   project's own, beside it.
 - `<phase>.toml`: `[[section]]`s, each with an `id`, a `title` and a `kind`:
-  `prose`, `table`, `repos`, `items`, `board`, `results`, `figures` or `defs`;
+  `prose`, `table`, `repos`, `items`, `board`, `results`, `figures`, `defs` or
+  `attachments`;
   or, in the Retrospective, one of the parts it builds from the other phases,
   below; or its `draft`, a list, each a paragraph or a list of points: alone
   while the phase is `draft`, and then, once `accepted`, the summary its view
@@ -250,6 +256,10 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   own, titled by it: a piece another project can take. So is a definition
   with `fields`, `[label, text]` pairs in place of its `text`, such as what
   only using it revealed: Expected, Observed, Changed.
+- An `attachments` section, the Brief's last, is a card for each
+  `[[section.attachment]]`: its `name`, `from`, where it comes from, and its
+  `text`, or `file`, a file in `attachments/` beside `project.toml`, which the
+  card links where the page publishes it, under `src/attachments/`.
 - The Retrospective builds its record from the other phases, in sections of
   their own kinds: `timeline`, how each phase went, with a line for each in
   `lines`, keyed by the phase; `roads`, every item dropped, with why; `risks`,
