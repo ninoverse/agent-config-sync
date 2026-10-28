@@ -939,18 +939,20 @@ title = "Attachments"
 kind = "attachments"
 
 [[section.attachment]]
+id = "checklist"
 name = "The checklist"
 from = "The prompt, below."
 text = "Prepare, then test."
 
 [[section.attachment]]
+id = "prompt"
 name = "The prompt"
 from = "The maintainer's handoff, kept as it was."
 file = "prompt.md"
 """
     data = tmp / "attachments"
     shutil.copytree(EXAMPLE, data)
-    (data / "brief.toml").write_text((data / "brief.toml").read_text() + section)
+    (data / "brief.toml").write_text((data / "brief.toml").read_text().replace('title = "A process that hangs is restarted"', 'title = "A process that hangs is restarted, as <a href=\\"#checklist\\">the checklist</a> says"', 1) + section)
     (data / "attachments").mkdir()
     (data / "attachments" / "prompt.md").write_text("# The handoff\n")
     run = render(data, tmp / "attachments-out", "--inline")
@@ -958,9 +960,11 @@ file = "prompt.md"
     held = between(page, 'id="attachments"', "</section>")
     expect(run.returncode == 0 and "<h4>The checklist</h4>" in held and "Prepare, then test." in held, f"an attachment held in its card shows there, titled by its name: {run.stderr}{held[:400]}")
     expect('<a href="src/attachments/prompt.md">prompt.md</a>' in held, f"and one kept as a file links it, where the page publishes it: {held[-400:]}")
+    expect('id="checklist"' in held and '"checklist":"brief"' in page, f"each card is an anchor a criterion can link: {held[:300]}")
     for name, old, new, message in [
         ("attachment-missing", 'file = "prompt.md"', 'file = "handoff.md"', "brief.toml section attachments: `file` handoff.md is not in attachments/ beside project.toml"),
         ("attachment-both", 'text = "Prepare, then test."', 'text = "Prepare, then test."\nfile = "prompt.md"', "brief.toml section attachments: The checklist holds its `text` or names its `file`, one of them"),
+        ("attachment-unnamed", 'id = "checklist"\n', "", "brief.toml section attachments: The checklist has an `id`, in kebab-case, which a link reaches it by"),
         ("attachment-unsourced", 'from = "The prompt, below."\n', "", "brief.toml section attachments: The checklist says where it comes from, in `from`"),
         ("brief-second-defs", 'id = "attachments"\ntitle = "Attachments"\nkind = "attachments"', 'id = "the-checklist"\ntitle = "The checklist"\nkind = "defs"\n\n[[section.def]]\nterm = "Prepare"\ntext = "First."\n\n[[section]]\nid = "attachments"\ntitle = "Attachments"\nkind = "attachments"', "brief.toml section the-checklist: the Brief holds one `defs` section, the project: what the project starts from, such as a checklist or a prompt, goes in its Attachments"),
         ("brief-table", 'id = "attachments"\ntitle = "Attachments"\nkind = "attachments"', 'id = "steps"\ntitle = "Steps"\nkind = "table"\nhead = ["Step"]\nrows = [["Prepare"]]\n\n[[section]]\nid = "attachments"\ntitle = "Attachments"\nkind = "attachments"', "brief.toml section steps: Brief holds only defs, items, repos and attachments sections"),

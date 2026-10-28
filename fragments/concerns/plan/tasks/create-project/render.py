@@ -1287,6 +1287,10 @@ def render_section(section, key, data, data_dir):
         for entry in entries:
             name = entry.get("name", "")
             required(entry, "name", where)
+            anchor = entry.get("id")
+            if not isinstance(anchor, str) or not KEBAB.fullmatch(anchor):
+                problem(where, f"{name} has an `id`, in kebab-case, which a link reaches it by")
+                continue
             if not entry.get("from"):
                 problem(where, f"{name} says where it comes from, in `from`")
             if ("text" in entry) == ("file" in entry):
@@ -1300,7 +1304,7 @@ def render_section(section, key, data, data_dir):
                 held = ("File", f'<a href="src/attachments/{esc(file)}">{esc(file)}</a>')
             else:
                 held = ("Holds", entry["text"])
-            parts.append(card_html("", name, rows=[("From", entry.get("from", "")), held]))
+            parts.append(card_html("", name, rows=[("From", entry.get("from", "")), held], anchor=anchor))
     elif kind in BUILT:
         parts.append(built_html(kind, section, where))
     if empty:

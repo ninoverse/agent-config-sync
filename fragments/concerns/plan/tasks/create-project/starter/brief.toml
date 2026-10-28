@@ -76,14 +76,16 @@ fields = [
 # What the project starts from, such as a checklist its criteria are measured
 # against, or the prompt that started it: held in the card when it is short, or
 # kept as a file in attachments/ beside project.toml, named in `file`, which the
-# page publishes under src/attachments/. A criterion links what it is measured
-# against, rather than naming it.
+# page publishes under src/attachments/. Its `id` is its card's anchor: a
+# criterion links what it is measured against, as <a href="#its-id">, rather
+# than naming it.
 [[section]]
 id = "attachments"
 title = "Attachments"
 kind = "attachments"
 
 [[section.attachment]]
+id = "an-attachment"
 name = "An attachment"
 from = "Where it comes from, and when."
 text = "What it holds, when it is short."

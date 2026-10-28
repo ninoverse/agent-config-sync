@@ -117,8 +117,9 @@ It writes nothing, and names the file and the item, when:
   `results` or `items`, Verify one other than `items` or `results`, or Reuse
   one other than `defs`; or a phase other than the Retrospective has a part it
   builds;
-- an attachment doesn't say where it comes from, holds both its `text` and a
-  `file` or neither, or names a file that isn't in `attachments/`;
+- an attachment has no `id` in kebab-case, doesn't say where it comes from,
+  holds both its `text` and a `file` or neither, or names a file that isn't in
+  `attachments/`;
 - a section shows nothing but its title, such as a card section with no
   cards; a Results section with nothing to show yet says so instead;
 - `needs` loops, or a date isn't one;
@@ -257,9 +258,11 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   with `fields`, `[label, text]` pairs in place of its `text`, such as what
   only using it revealed: Expected, Observed, Changed.
 - An `attachments` section, the Brief's last, is a card for each
-  `[[section.attachment]]`: its `name`, `from`, where it comes from, and its
-  `text`, or `file`, a file in `attachments/` beside `project.toml`, which the
-  card links where the page publishes it, under `src/attachments/`.
+  `[[section.attachment]]`: its `id`, in kebab-case, the card's anchor, which a
+  criterion links as `<a href="#<id>">`; its `name`; `from`, where it comes
+  from; and its `text`, or `file`, a file in `attachments/` beside
+  `project.toml`, which the card links where the page publishes it, under
+  `src/attachments/`.
 - The Retrospective builds its record from the other phases, in sections of
   their own kinds: `timeline`, how each phase went, with a line for each in
   `lines`, keyed by the phase; `roads`, every item dropped, with why; `risks`,
