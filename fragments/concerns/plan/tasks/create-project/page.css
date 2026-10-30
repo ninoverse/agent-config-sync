@@ -120,36 +120,37 @@
   .lede { font-size: 1.12rem; margin-top: 16px; }
   .readat { font-size: 0.9rem; color: var(--ink-muted); }
 
-  /* The phase indicator, in two groups side by side: the six phases in their
-     order, numbered, then what the project leaves. Each tab is a link to its
-     view but a phase that is not needed, which has none; its name over its
-     state so the nine fit one row on a laptop. */
-  .hold.groups { display: flex; flex-wrap: wrap; column-gap: 26px; row-gap: 14px; align-items: flex-start; }
-  nav.phases ol { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  /* The phases, a card each, in two groups, one under the other: the six phases in
+     their order, numbered, then what the project leaves. Each card links to its view
+     but a phase with nothing to show; it says its state in a chip, how far a phase in
+     progress is, and who holds what in it, each a pill with its icon, all in the
+     page's one colour, so no count borrows the meaning of a status's colour. */
+  .hold.groups .group + .group { margin-top: 14px; }
+  nav.phases ol { list-style: none; padding: 0; margin: 10px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); gap: 8px; }
   nav.phases li { margin: 0; }
-  nav.phases.leaves :is(a, .off) { grid-template-columns: auto; }
-  nav.phases.leaves .state { grid-column: 1; }
   nav.phases :is(a, .off) {
-    display: grid; grid-template-columns: auto auto; column-gap: 7px; align-items: baseline;
-    padding: 6px 11px 7px 9px;
-    border: 1px solid var(--rule);
-    border-radius: var(--corner-md);
-    background: var(--bg); color: var(--ink-muted); text-decoration: none; font-size: 0.88rem; line-height: 1.35;
+    display: grid; align-content: start; gap: 6px; height: 100%; padding: 9px 12px 10px;
+    border: 1px solid var(--rule); border-radius: var(--corner-md);
+    background: var(--bg); color: var(--ink); text-decoration: none; font-size: 0.92rem; line-height: 1.35;
   }
-  nav.phases a:hover { border-color: var(--outline); color: var(--ink); }
+  nav.phases a:hover { border-color: var(--outline); }
+  nav.phases .trow { display: flex; align-items: baseline; gap: 7px; }
   nav.phases .n { font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; }
-  nav.phases .state { grid-column: 2; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; }
-  nav.phases .count { margin-left: 3px; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: 0; }
-  nav.phases a.t-done .state { color: var(--done); }
-  nav.phases a.t-amended .state { color: var(--done); }
-  nav.phases .mine { margin-left: 4px; padding: 0 6px; font-size: 0.66rem; letter-spacing: 0; vertical-align: 1px; }
-  nav.phases a.t-now { color: var(--ink); }
-  nav.phases a.t-now .state { color: var(--accent); }
-  nav.phases a.t-draft { color: var(--ink); }
-  nav.phases a.t-draft .state { color: var(--open); }
-  /* A phase with nothing to show: not needed, or not written yet. */
-  nav.phases .off { border-style: dashed; cursor: default; }
-  nav.phases a[aria-current] { border-color: var(--accent-fill); background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent-fill); }
+  nav.phases .state { margin-left: auto; padding: 0 7px; border: 1px solid transparent; border-radius: var(--corner-full); font-family: var(--font-mono); font-size: 0.66rem; line-height: 1.6; white-space: nowrap; }
+  nav.phases .state:is(.s-done, .s-amended) { color: var(--done); background: var(--done-soft); }
+  nav.phases .state:is(.s-now, .s-draft) { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-fill); }
+  nav.phases .state.s-waiting { color: var(--na); background: var(--na-soft); border-color: var(--na); }
+  nav.phases .state:is(.s-to-come, .s-not-needed) { color: var(--na); border: 1px dashed var(--outline); }
+  /* A phase done steps back; one with nothing to show is dashed, and doesn't open. */
+  nav.phases a:is(.t-done, .t-amended) { opacity: 0.7; }
+  nav.phases a:is(.t-done, .t-amended):hover { opacity: 1; }
+  nav.phases .off { border-style: dashed; color: var(--ink-muted); cursor: default; }
+  /* The phase on view: outlined, not filled, so its pills read. */
+  nav.phases a[aria-current] { opacity: 1; border-color: var(--accent-fill); box-shadow: inset 0 -3px 0 var(--accent-fill); }
+  nav.phases .line { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; font-size: 0.82rem; }
+  nav.phases .count { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  nav.phases .share { display: inline-flex; align-items: center; gap: 4px; padding: 1px 9px 1px 7px; border: 1px solid var(--accent-fill); border-radius: var(--corner-full); color: var(--accent); background: var(--accent-soft); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+  nav.phases .share svg { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
   /* The calendar, on every view: one month, with arrows to the others; under
      it, when the PR statuses were read, then who holds the ball. */
@@ -462,7 +463,7 @@
     nav.views a[href="#warnings"] > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .glance { padding: 10px 14px; }
     dialog.sheet { padding: 0 16px; }
-    nav.phases ol { gap: 5px; }
+    nav.phases ol { grid-template-columns: 1fr; gap: 6px; }
     article.item { padding: 14px 14px 16px; }
     .item-head { grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
     .item-head:has(.n:empty) { display: block; }
@@ -473,6 +474,6 @@
     article.item dl, article.item dl.terms { grid-template-columns: 1fr; }
     /* A field with no label, such as the text of a piece in Reuse, keeps no row for one. */
     article.item dt:empty { display: none; }
-    nav.phases :is(a, .off) { padding: 5px 8px 6px 7px; column-gap: 5px; }
+    nav.phases :is(a, .off) { padding: 8px 11px 9px; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

@@ -2158,6 +2158,15 @@ def stylesheet(project, data_dir):
     return css
 
 
+# Who holds what in a phase, on its tab: the owner, a person; the agent, a sparkle; and
+# what waits on neither, an hourglass.
+SHARE_ICONS = {
+    "you": '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.2" r="2.6"/><path d="M3 14c.6-2.8 2.6-4.3 5-4.3s4.4 1.5 5 4.3"/></svg>',
+    "agent": '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8l1.5 4.7 4.7 1.5-4.7 1.5L8 14.2l-1.5-4.7L1.8 8l4.7-1.5z"/></svg>',
+    "wait": '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h8M4 14h8M5 2c0 3.2 6 4.6 6 6s-6 2.8-6 6M11 2c0 3.2-6 4.6-6 6s6 2.8 6 6"/></svg>',
+}
+
+
 def progress():
     """For each phase, how many of the statuses it keeps are done, of those not Dropped or
     set aside; a risk that happened is done with, since a question or a blocker took it
@@ -2275,22 +2284,32 @@ def page(project, sections, opening, inline, data_dir, agenda_html, months_html,
         inner = f'<span class="name">{name}</span>' if key in LEAVES else f'<span class="n">{number}</span><span class="name">{name}</span>'
         # A phase with nothing to show, not needed or not written yet, has a tab that doesn't open.
         if key not in sections:
-            group.append(f'<li><span class="off t-{status}">{inner}<span class="state">{state}</span></span></li>')
+            group.append(f'<li><span class="off t-{status}"><span class="trow">{inner}<span class="state s-{status}">{state}</span></span></span></li>')
             continue
         current = ' aria-current="true"' if key == opening else ""
         # Deferred says how many items wait; a phase in progress, how far it is; a done
         # phase that has taken amendments reads Amended.
         if status == "done" and any(item["phase"] == key and item["amended"] for item in ITEMS.values()):
             status, state = "amended", "Amended"
+        line = []
         if key == "deferred":
-            state = f"{waiting} waiting" if waiting else "Nothing waiting"
-        elif status == "now" and key in counts:
-            done, total = counts[key]
-            state += f' <span class="count" title="{done} of {total} done, not counting dropped or set-aside items">{done}/{total}</span>'
-        # Whatever its state, what in the phase waits on the owner, in their yellow.
-        if OWNER_WAITS.get(key):
-            state += f' <span class="pill ask mine">{OWNER_WAITS[key]}<span class="vh"> waiting on the owner</span></span>'
-        group.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}>{inner}<span class="state">{state}</span></a></li>')
+            state, chip = (f"{waiting} waiting" if waiting else "Nothing waiting"), "waiting"
+        else:
+            chip = status
+            if status == "now" and key in counts:
+                done, total = counts[key]
+                line.append(f'<span class="count" title="{done} of {total} done, not counting dropped or set-aside items">{done} of {total} done</span>')
+        # Whatever its state, who holds what in the phase: the owner, the agent, or
+        # neither, waiting; each a pill with its icon, in the page's one colour.
+        held = sum(1 for item in ITEMS.values() if item.get("status_from") == key and item.get("status") == "ready")
+        blocked = sum(1 for item in ITEMS.values() if item.get("status_from") == key and item.get("status") == "blocked" and key != "deferred")
+        # A project paused, closed or archived has nobody holding the ball, so none of it.
+        active = project["state"].get("status", "active") == "active"
+        for share, n, words in (("you", OWNER_WAITS.get(key, 0), "on you"), ("agent", held, "for the agent"), ("wait", blocked, "waiting")):
+            if n and active:
+                line.append(f'<span class="share {share}">{SHARE_ICONS[share]}{n} {words}</span>')
+        line = f'<span class="line">{"".join(line)}</span>' if line else ""
+        group.append(f'<li><a href="#{key}" data-phase="{key}" class="t-{status}"{current}><span class="trow">{inner}<span class="state s-{chip}">{state}</span></span>{line}</a></li>')
     shells, files = [], {}
     for key, text in sections.items():
         hidden = "" if key == opening else " hidden"

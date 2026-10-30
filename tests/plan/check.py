@@ -114,11 +114,11 @@ def check_example(tmp):
     expect(indicator.count("<li>") == 6 and tabs == ["brief", "research", "analysis", "plan", "execution", "verify"], f"the indicator holds the six phases, each a link: {tabs}")
     expect(leaves.count("<li>") == 3 and left == ["deferred"] and '<span class="n">' not in leaves, f"then, unnumbered, the three that are what the project leaves, each a link but those with nothing to show: {left}")
     expect('<h2 id="phases-title">Phases</h2><nav class="phases" aria-labelledby="phases-title">' in page and '<h2 id="leaves-title">What it leaves</h2>' in page, "the two groups have a title each, Phases and What it leaves")
-    unwritten = '<li><span class="off t-to-come"><span class="name">Retrospective</span><span class="state">To come</span></span></li>'
+    unwritten = '<li><span class="off t-to-come"><span class="trow"><span class="name">Retrospective</span><span class="state s-to-come">To come</span></span></span></li>'
     expect(unwritten in leaves and 'id="retrospective"' not in page, "a phase with nothing written has a tab that doesn't open, and no view")
-    reuse = '<li><span class="off t-not-needed"><span class="name">Reuse</span><span class="state">Not needed</span></span></li>'
+    reuse = '<li><span class="off t-not-needed"><span class="trow"><span class="name">Reuse</span><span class="state s-not-needed">Not needed</span></span></span></li>'
     expect(reuse in leaves and 'id="reuse"' not in page and "Two routes are too little" not in page and '"reuse"' not in manifest(page), "a phase not needed has a tab that doesn't open, and no view; its reason stays in the data")
-    expect('<span class="name">Deferred</span><span class="state">2 waiting <span class="pill ask mine">1<' in leaves, f"Deferred's tab says how many items wait, deferred work that is blocked among them: {leaves}")
+    expect('<span class="name">Deferred</span><span class="state s-waiting">2 waiting</span></span><span class="line"><span class="share you">' in leaves and '1 on you</span>' in leaves, f"Deferred's tab says how many items wait, deferred work that is blocked among them: {leaves}")
     expect(page.count('<dialog class="sheet"') == 2 and 'aria-label="Close the agenda"' in page and 'aria-label="Close the guides"' in page, "the agenda and the guides are sheets over the page, each with its close button")
     expect('href="#warnings"' not in views and 'id="warnings"' not in page, "a page rendered without a warning has no Warnings")
     warned = copy_with(tmp, "warned", EXAMPLE, "plan.toml", 'why = "the answer to [[Q1]]" }', 'why = "the answer to Q1" }')
@@ -138,12 +138,14 @@ def check_example(tmp):
     expect('<span class="chip s-deferred">' in guides and '<span class="mine">Your go</span>' in guides, "one of them is set aside, until the owner says")
     expect("Readiness probe" in between(guides, 'id="glossary"', "</section>") and 'id="glossary"' not in page, "the glossary is in the guides, and only there")
     expect('data-open="execution"' in page, "the page opens on the phase in progress")
-    pill = '<span class="pill ask mine">1<span class="vh"> waiting on the owner</span></span>'
-    expect('<a href="#deferred" data-phase="deferred" class="t-now">' in page and pill in between(page, 'data-phase="deferred" class="t-', "</a>"), "Deferred's tab reads its count of what waits in the text's colour, and counts in yellow what waits on the owner")
-    expect(pill in between(page, 'data-phase="execution" class="t-', "</a>"), "as every tab does: Execution's, its PR to merge")
-    expect("pill ask mine" not in between(page, 'data-phase="plan" class="t-', "</a>"), "a tab with nothing waiting on the owner shows no count")
-    counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>([\d/]+)</span>', page))
-    expect(counts == {"execution": "3/6", "verify": "2/4"}, f"each phase in progress counts its items done, and only those: {counts}")
+    pill = '1 on you</span>'
+    expect('<a href="#deferred" data-phase="deferred" class="t-now"' in page and pill in between(page, 'data-phase="deferred" class="t-', "</a>"), "Deferred's tab says how many items wait, and what of it waits on the owner")
+    execution = between(page, 'data-phase="execution" class="t-', "</a>")
+    expect(pill in execution, "as every tab does: Execution's, its PR to merge")
+    expect('<span class="share agent"><svg' in execution and "1 for the agent</span>" in execution and '<span class="share wait"><svg' in execution and "1 waiting</span>" in execution, f"and what is ready for the agent, and what waits on neither, so its counts add up, each with its icon: {execution}")
+    expect('class="share' not in between(page, 'data-phase="plan" class="t-', "</a>"), "a tab with nothing waiting shows no count")
+    counts = dict(re.findall(r'data-phase="(\w+)"[^>]*>(?:(?!</a>).)*?<span class="count"[^>]*>(\d+ of \d+) done</span>', page))
+    expect(counts == {"execution": "3 of 6", "verify": "2 of 4"}, f"each phase in progress counts its items done, and only those: {counts}")
     views = [page] + list(phase.values())
     expect('<section class="phase" id="execution" data-phase="execution">\n<h2 class="vh">Execution</h2>\n<section class="block" id="board">' in page, "a phase's view starts with its first section, its name only for screen readers")
     shown = [between(page, '<main id="phases"', "</main>")] + [text for key, text in phase.items() if key != "guides"]
@@ -168,14 +170,14 @@ def check_example(tmp):
     approved = '<span class="n"></span><p class="says">Approved.</p></div>\n    <div class="item-tags"><span class="pill day">3 Oct</span></div>\n    <dl><dt>Amended since</dt><dd><ul class="amendments"><li><span class="pill day">7 Oct</span> the answer to <a class="ref" href="#q1"><b>Q1</b> The probe\'s timeout in production</a>:<ul class="list"><li><a class="ref" href="#ex-3"><b>EX-3</b> Ten seconds in production</a></li></ul></li></ul></dd></dl>'
     expect(approved in phase["plan"] and 'pill amended">Amended 7 Oct<' in phase["plan"], "an item added after the approval says so, with when and why, and the plan's approval lists it under that day and why")
     expect(phase["plan"].index('id="plan-approval"') > phase["plan"].index('id="risks"'), "the approval comes after the plan's sections")
-    expect('<a href="#plan" data-phase="plan" class="t-amended"><span class="n">4</span><span class="name">Plan</span><span class="state">Amended</span></a>' in page, "a done phase that has taken amendments reads Amended on its tab")
+    expect('<a href="#plan" data-phase="plan" class="t-amended"><span class="trow"><span class="n">4</span><span class="name">Plan</span><span class="state s-amended">Amended</span></span></a>' in page, "a done phase that has taken amendments reads Amended on its tab")
     amending = copy_with(tmp, "amending", EXAMPLE, "analysis.toml", 'id = "D2"\ntitle = "What readiness waits for"\n', 'id = "D2"\ntitle = "What readiness waits for"\namended = { on = 2026-10-02, why = "the cache, found on the way" }\n')
     if amending is not None:
         run = render(amending, tmp / "amending-out")
         analysis = (tmp / "amending-out" / "phases" / "analysis.html").read_text() if run.returncode == 0 else ""
         closing = between(analysis, '<section class="block" id="analysis-amendments">', "</section>")
         expect('<h3>Amendments</h3>' in closing and '<p class="says">Done.</p>' in closing and '<span class="pill day">2 Oct</span> the cache, found on the way:' in closing and 'href="#d2"' in closing, f"a phase without an approval takes amendments after its end, and lists them there: {run.stderr} {closing[:600]}")
-        expect('<span class="name">Analysis</span><span class="state">Amended</span>' in (tmp / "amending-out" / "index.html").read_text(), "and its tab reads Amended")
+        expect('<span class="name">Analysis</span><span class="state s-amended">Amended</span>' in (tmp / "amending-out" / "index.html").read_text(), "and its tab reads Amended")
     link = '<a class="pill link" href="https://github.com/example/example-service/pull/12" target="_blank" rel="noopener">example/example-service#12</a>'
     expect(link in phase["plan"], "a PR's url is a chip linking to it, named as GitHub names it")
     ex2 = between(phase["plan"], 'id="ex-2"', "</article>")
@@ -259,7 +261,7 @@ def check_example(tmp):
         (statuses / "verify.toml").write_text('[status.SC1]\nstatus = "done"\non = 2026-10-06\n\n[status.SC2]\nstatus = "blocked"\nwaits = "its checks, written in Verify"\n')
         run = render(statuses, tmp / "statuses-only-out")
         index = tmp / "statuses-only-out" / "index.html"
-        tab = '<li><span class="off t-now"><span class="n">6</span><span class="name">Verify</span>'
+        tab = '<li><span class="off t-now"><span class="trow"><span class="n">6</span><span class="name">Verify</span>'
         expect(run.returncode == 0 and tab in index.read_text() and not (tmp / "statuses-only-out" / "phases" / "verify.html").exists(), f"a phase whose file holds only statuses has nothing to show: its tab doesn't open: {run.stderr}")
 
     expect('<div class="scroll" data-start' not in page, "a board whose first column has work left opens at its start")
@@ -288,7 +290,7 @@ def check_example(tmp):
         work = between((tmp / "parked-out" / "phases" / "deferred.html").read_text(), 'id="work"', "</section>") if run.returncode == 0 else ""
         expect('<span class="n">EX-2</span>' in work and 'st-deferred">Deferred · 7 Oct</span><span class="waits">waits on the next release train</span>' in work, f"Deferred lists what another phase deferred, with what it waits on: {run.stderr} {work[-600:]}")
         build_tab = between((tmp / "parked-out" / "index.html").read_text(), 'data-phase="execution"', "</a>") if run.returncode == 0 else ""
-        expect('<span class="count" title="3 of 5 done, not counting dropped or set-aside items">3/5</span>' in build_tab, f"and a deferred item no longer counts in its phase: {build_tab}")
+        expect('<span class="count" title="3 of 5 done, not counting dropped or set-aside items">3 of 5 done</span>' in build_tab, f"and a deferred item no longer counts in its phase: {build_tab}")
     early = copy_with(tmp, "early", EXAMPLE, "project.toml", '[phases.plan]\nstatus = "done"', '[phases.plan]\nstatus = "now"')
     if early is not None:
         run = render(early, tmp / "early-out")
@@ -814,7 +816,7 @@ def check_draft(tmp):
     expect("  the owner: Accept the Research's draft.\n  the agent: nothing ready.\n" in run.stdout, f"and the owner holds the ball, to accept it: {run.stdout}")
     run = render(data, tmp / "draft-since-out", "--since", str(before))
     expect("  Research: `draft` edited.\n  project.toml: Research To come → Draft.\n" in run.stdout, f"--since lists the draft, and the phase in Draft: {run.stdout}")
-    expect('class="t-draft"' in between(page, '<nav class="phases"', "</nav>") and '<span class="state">Draft <span class="pill ask mine">1<' in between(page, '<nav class="phases"', "</nav>"), "its tab reads Draft, and counts the draft as waiting on the owner")
+    expect('class="t-draft"' in between(page, '<nav class="phases"', "</nav>") and '<span class="state s-draft">Draft</span>' in between(page, '<nav class="phases"', "</nav>") and "1 on you</span>" in between(page, 'data-phase="research" class="t-', "</a>"), "its tab reads Draft, and counts the draft as waiting on the owner")
     view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
     expect('id="research-draft"' in view and "<p>The pieces it will hold, by title.</p>" in view and "<li>Its probes today</li>" in view, f"its view holds the draft, one block of text: {view[-600:]}")
     # Once the owner accepts it, the phase is Now, and the agent writes it; the draft can stay,
@@ -834,7 +836,7 @@ def check_draft(tmp):
         page = (tmp / "draft-written-out" / "index.html").read_text() if run.returncode == 0 else ""
         view = between(page, '<section class="phase" id="research"', "</section>\n</section>")
         expect(run.returncode == 0 and view.find('id="research-summary"') < view.find('id="pieces"') and 'id="r1"' in view, f"and leads the phase once it is written: {run.stderr}{view[:600]}")
-        expect('<span class="pill ask mine">1<' in between(page, 'data-phase="research" class="t-', "</a>"), "whose tab then counts its approval as waiting on the owner")
+        expect("1 on you</span>" in between(page, 'data-phase="research" class="t-', "</a>"), "whose tab then counts its approval as waiting on the owner")
     for name, file, old, new, message in [
         ("draft-unaccepted", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "now"\nstart = 2026-01-02\n', "research.toml: the Research holds a `draft`, but isn't in Draft, and has no `accepted`: give the phase the day the owner accepted it, or put it back in Draft"),
         ("draft-accepted-still", "project.toml", 'status = "draft"\nstart = 2026-01-02\n', 'status = "draft"\nstart = 2026-01-02\naccepted = 2026-01-03\n', "project.toml [phases.research]: the Research's draft is `accepted`, so the phase is Now"),
@@ -904,7 +906,7 @@ def check_state(tmp):
     band = between(page, '<p class="standing', "</p>")
     expect(run.returncode == 0 and 's-archived" role="note"><strong>Archived on 9 Oct.</strong> The service was retired. <a href="https://example.com/next">The page that takes over</a>.' in band, f"an archived project says so under its summary, with why and its successor: {run.stderr}{band}")
     expect("Who holds the ball:\n  nobody: the project is archived.\n" in run.stdout, f"and nobody holds the ball: {run.stdout}")
-    expect("<h3>The owner</h3>" not in between(page, 'id="ball"', "</section>") and "pill ask mine" not in between(page, '<nav class="phases"', "</nav>"), "neither on the page, nor in the tabs' counts")
+    expect("<h3>The owner</h3>" not in between(page, 'id="ball"', "</section>") and 'class="share' not in between(page, '<nav class="phases"', "</nav>"), "neither on the page, nor in the tabs' counts")
     name = between(page, "<h1>", "</h1>").removeprefix("<h1>")
     expect(f"<title>{name} [archived]</title>" in page and f"{name} [archived]: index.html" in run.stdout, f"its title, and the line the render prints, say its status after its name, which its heading keeps alone: {name}")
     for status, label in (("paused", "Paused since 9 Oct."), ("closed", "Closed on 9 Oct.")):
