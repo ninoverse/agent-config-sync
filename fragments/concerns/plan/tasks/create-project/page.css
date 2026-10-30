@@ -139,6 +139,8 @@
   nav.phases .state { margin-left: auto; padding: 0 7px; border: 1px solid transparent; border-radius: var(--corner-full); font-family: var(--font-mono); font-size: 0.66rem; line-height: 1.6; white-space: nowrap; }
   nav.phases .state:is(.s-done, .s-amended) { color: var(--done); background: var(--done-soft); }
   nav.phases .state:is(.s-now, .s-draft) { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-fill); }
+  /* A draft is a phase on its way to Now: Now's chip, its border dashed. */
+  nav.phases .state.s-draft { border-style: dashed; }
   nav.phases .state.s-waiting { color: var(--na); background: var(--na-soft); border-color: var(--na); }
   nav.phases .state:is(.s-to-come, .s-not-needed) { color: var(--na); border: 1px dashed var(--outline); }
   /* A phase done steps back; one with nothing to show is dashed, and doesn't open. */
