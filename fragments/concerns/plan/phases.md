@@ -122,7 +122,8 @@ closes it, and `/resume-project` picks it up in a new session.
   The Plan is Done once the owner approves it, and Execution starts only after
   that.
 - **Execution**: the live state. A board of the PRs, settings and tasks in
-  waves, built from what each needs; each item's *Result* once it lands; and
+  waves, built from what each needs; the Plan's risks not yet closed, under
+  it, with what each closes with; each item's *Result* once it lands; and
   the questions the work raises, and nothing else: one asked before the Plan's
   approval is a decision. What happened is in the Agenda, so Execution keeps no
   log of its own.

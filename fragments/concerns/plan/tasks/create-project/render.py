@@ -1541,7 +1541,16 @@ def render_phase(key, data, data_dir, head=True):
             links += f'<li><a href="#{ending[1]}">{ending[0]}</a></li>'
         # A contents line, as the guides open with.
         parts.append(f'<nav class="contents" id="{key}-contents" aria-label="In this view"><ol>{links}</ol></nav>')
-    parts += [html for _, html in rendered]
+    built = [html for _, html in rendered]
+    # Execution keeps the status of the Plan's risks: those not closed show under its
+    # board, so what its card counts is in its view, beside the work that closes them.
+    if key == "execution":
+        risks = [item for item in ITEMS.values() if item["type"] == "risk" and item.get("status_from") == key and item.get("status") in UNFINISHED]
+        if risks:
+            section = '<section class="block" id="open-risks">\n  <h3>Risks</h3>\n' + "\n".join(result_card(item) for item in risks) + "\n</section>"
+            after = next((n + 1 for n, (data_section, html) in enumerate(rendered) if html and data_section.get("kind") == "board"), 0)
+            built.insert(after, section)
+    parts += built
     if ending:
         parts.append(ending[2])
     return expand_refs("\n".join(part for part in parts if part), f"{key}.toml")

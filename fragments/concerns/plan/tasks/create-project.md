@@ -251,7 +251,9 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   item.
   A `results` section in the same phase leaves out what the board shows until
   it has a `result`, and then shows the result alone, or until it moves, and
-  then shows the link to its new page.
+  then shows the link to its new page. Under the board, the render lists the
+  Plan's risks that aren't closed, each with its status and what it closes
+  with, so Execution shows each item its tab counts.
 - A `defs` section is one card of `[[section.def]]`s, each a `term` and its
   `text`, such as the Brief's project. In Reuse, each term is a card of its
   own, titled by it: a piece another project can take. So is a definition

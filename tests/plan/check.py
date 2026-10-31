@@ -264,6 +264,13 @@ def check_example(tmp):
         tab = '<li><span class="off t-now"><span class="trow"><span class="n">6</span><span class="name">Verify</span>'
         expect(run.returncode == 0 and tab in index.read_text() and not (tmp / "statuses-only-out" / "phases" / "verify.html").exists(), f"a phase whose file holds only statuses has nothing to show: its tab doesn't open: {run.stderr}")
 
+    risks = between(page, '<section class="block" id="open-risks">', "</section>")
+    view = between(page, '<section class="phase" id="execution"', '<section class="block" id="questions">')
+    expect("<h3>Risks</h3>" in risks and '<span class="n">RK1</span>' in risks and 'href="#rk1"' in risks and "Slow database" in risks and view.find('id="board"') < view.find('id="open-risks"'), f"Execution shows the Plan's risks that aren't closed, under its board, so what its card counts is in its view: {risks[:400]}")
+    closed = copy_with(tmp, "risk-closed", EXAMPLE, "execution.toml", '[status.RK1]\nstatus = "blocked"', '[status.RK1]\nstatus = "done"\non = 2026-10-07')
+    if closed is not None:
+        run = render(closed, tmp / "risk-closed-out", "--inline")
+        expect(run.returncode == 0 and 'id="open-risks"' not in (tmp / "risk-closed-out" / "index.html").read_text(), f"and a risk closed leaves it, the section with it once none is open: {run.stderr}")
     expect('<div class="scroll" data-start' not in page, "a board whose first column has work left opens at its start")
     shipped = copy_with(tmp, "shipped", EXAMPLE, "execution.toml", '[status.EX-3]\nstatus = "ready"', '[status.EX-3]\nstatus = "done"\non = 2026-10-07\nresult = "Released 1.4.1."')
     if shipped is not None:
