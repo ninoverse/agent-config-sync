@@ -110,7 +110,9 @@ closes it, and `/resume-project` picks it up in a new session.
   it out. One list is the default; only when the decisions are many do they
   come in batches, one section each, answered together, which the page lists
   at the top. The evidence behind them, such as a comparison or a measurement,
-  goes in the Research, and the decisions link to it.
+  goes in the Research, and the decisions link to it. The Analysis takes no
+  approval: it is Done once every decision is taken or deferred, on the day of
+  the last.
 - **Plan**: its cards and nothing else, which the page lists at the top. The
   PRs as approved, one at a time in each repository, each with its branch, what
   it needs first, what its merge releases, as its kind, and *Done when*: what

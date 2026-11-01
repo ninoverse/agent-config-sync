@@ -686,6 +686,10 @@ def check_states(project, phases):
                 warn(where, f"{item_id} is amended on {day(item['amended']['on'])}, before its phase was approved")
             elif not approved and end and item["amended"]["on"] < end:
                 warn(where, f"{item_id} is amended on {day(item['amended']['on'])}, before its phase ended on {day(end)}")
+    # The Analysis takes no approval: once every decision is taken or deferred, it is Done.
+    decisions = [item for item in ITEMS.values() if item["type"] == "decision" and item["phase"] == "analysis" and item.get("status") != "dropped"]
+    if statuses["analysis"]["status"] == "now" and decisions and all(item.get("status") == "done" or item.get("status") in PARKED for item in decisions):
+        warn("project.toml [phases.analysis]", "every decision is taken or deferred, so the Analysis is Done: give it `status = \"done\"` and the day the last was taken, in `end`")
     # The last change the data records: the newest day an item reached its status, or was amended.
     changed = [item["on"] for item in ITEMS.values() if item.get("on")] + [item["amended"]["on"] for item in ITEMS.values() if item["amended"] and item["amended"]["on"]]
     if changed and max(changed) > TODAY:

@@ -129,7 +129,8 @@ It still writes the page, prints a warning naming the file and the item, and
 lists it in the page's Warnings, which opens beside the Agenda and the Guides,
 with how many there are, when:
 
-- a state looks stale, as *Project phases* says;
+- a state looks stale, as *Project phases* says, such as an Analysis still
+  Now once every decision is taken or deferred;
 - text names an item by its number alone rather than its `[[ref]]`, outside a
   `short`, which can't hold a link, and a link written by hand;
 - a link takes a possessive, such as `[[HMI-8]]'s`, which reads as its short

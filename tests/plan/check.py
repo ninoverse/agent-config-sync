@@ -988,6 +988,23 @@ file = "prompt.md"
             expect(run.returncode == 1 and message in run.stderr, f"{name} says {message!r}; it said: {run.stderr.strip()}")
 
 
+def check_analysis_end(tmp):
+    """The Analysis takes no approval: it is Done once every decision is taken or
+    deferred, and a render warns while it stays Now past that."""
+    data = copy_with(tmp, "analysis-end", STARTER, "brief.toml", '\n[[section]]\nid = "the-project"', '\napproved = 2026-01-02\n\n[[section]]\nid = "the-project"')
+    if data is None or not replace_in(data, "project.toml", 'status = "now"\nstart = 2026-01-01\n', 'status = "done"\nstart = 2026-01-01\nend = 2026-01-02\n\n[phases.research]\nstatus = "done"\nstart = 2026-01-02\nend = 2026-01-03\n\n[phases.analysis]\nstatus = "now"\nstart = 2026-01-03\n'):
+        return
+    (data / "verify.toml").write_text('[status.SC1]\nstatus = "blocked"\nwaits = "its checks"\n')
+    (data / "research.toml").write_text('approved = 2026-01-03\n\n[[section]]\nid = "read"\ntitle = "What it read"\nkind = "repos"\n\n[[section.repo]]\nname = "owner/repository"\nuse = "read"\npart = "All of it."\nat = "abc1234"\n\n[[section]]\nid = "pieces"\ntitle = "What exists"\nkind = "items"\ntype = "piece"\n\n[[section.item]]\nid = "R1"\ntitle = "A piece"\nfields = [["Raises", "[[D1]]"]]\n')
+    (data / "analysis.toml").write_text('[[section]]\nid = "decisions"\ntitle = "Decisions"\nkind = "items"\ntype = "decision"\n\n[[section.item]]\nid = "D1"\ntitle = "A decision"\nstatus = "open"\non = 2026-01-03\noptions = [["a", "One way."], ["b", "Another."]]\nrecommended = "a"\nfields = [["Why a", "It is shorter."]]\n')
+    run = render(data, tmp / "analysis-end-out")
+    expect(run.returncode == 0 and "every decision" not in run.stderr, f"an Analysis with a decision to take stays Now, without a warning: {run.stderr}")
+    if replace_in(data, "analysis.toml", 'status = "open"\non = 2026-01-03\n', 'status = "done"\non = 2026-01-04\nchosen = "a"\n'):
+        run = render(data, tmp / "analysis-end-out")
+        message = "warning: project.toml [phases.analysis]: every decision is taken or deferred, so the Analysis is Done: give it `status = \"done\"` and the day the last was taken, in `end`"
+        expect(run.returncode == 0 and message in run.stderr, f"once every decision is taken, the Analysis is Done, and a render warns while it stays Now: {run.stderr}")
+
+
 def check_renamed(tmp):
     """Data from before Build was renamed Execution stops the render, saying so."""
     data = tmp / "renamed"
@@ -1033,6 +1050,7 @@ def main():
         check_proposal(tmp)
         check_state(tmp)
         check_attachments(tmp)
+        check_analysis_end(tmp)
         check_renamed(tmp)
         check_unlinked(tmp)
         check_broken(tmp)
