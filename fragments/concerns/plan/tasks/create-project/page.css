@@ -352,6 +352,7 @@
   ol.options li.chosen { border-color: var(--accent-fill); background: var(--accent-soft); }
   ol.options li.recommended { border-color: var(--outline); background: var(--ready-soft); }
   ol.options.proposal li { grid-template-columns: minmax(0, 1fr); }
+  ol.options .reasons { grid-column: -2 / -1; color: var(--ink-muted); }
   ol.options .key, table.decisions .key { font-family: var(--font-mono); font-weight: 700; }
   table.decisions td:last-child { white-space: nowrap; }
   /* The decision log's batches, each a table under its title. */

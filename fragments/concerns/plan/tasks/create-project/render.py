@@ -462,6 +462,13 @@ def is_pair(value):
     return isinstance(value, list) and len(value) == 2 and all(isinstance(part, str) for part in value)
 
 
+def is_option(value):
+    """An option: [key, text], or [key, text, reasons], its reasons a text or a list of them."""
+    if not (isinstance(value, list) and len(value) in (2, 3) and all(isinstance(part, str) for part in value[:2])):
+        return False
+    return len(value) == 2 or isinstance(value[2], str) or (isinstance(value[2], list) and all(isinstance(part, str) for part in value[2]))
+
+
 def is_field(value):
     """A [label, text] pair, its text one string or a list of them."""
     if not (isinstance(value, list) and len(value) == 2 and isinstance(value[0], str)):
@@ -556,10 +563,16 @@ def collect_items(phases):
                     needs = []
                 options = item.get("options")
                 if options is not None:
-                    keys = [option[0] for option in options] if isinstance(options, list) and all(is_pair(o) for o in options) else None
+                    keys = [option[0] for option in options] if isinstance(options, list) and all(is_option(o) for o in options) else None
                     if keys is None or len(set(keys)) != len(keys):
-                        problem(where, '`options` is a list of [key, text] pairs, each key once, such as ["a", "One port for everything."]')
+                        problem(where, '`options` is a list of [key, text] entries, or [key, text, reasons], each key once, such as ["a", "One port for everything.", "The platform\'s settings stay two lines."]')
                     else:
+                        # A field named after an option argues for it, and would stay on the card
+                        # once another is chosen: that option's reasons hold it instead.
+                        for field in item.get("fields", []):
+                            last = field[0].split()[-1].strip(".,:;()").lower() if is_field(field) and field[0].split() else ""
+                            if last in keys:
+                                problem(where, f"`{field[0]}` is named after option {last}: move it into that option's reasons, its third entry")
                         for mark in ("recommended", "chosen"):
                             if mark in item and item[mark] not in keys:
                                 problem(where, f"`{mark}` is {item[mark]}, which no option has; the options are {', '.join(keys)}")
@@ -637,7 +650,7 @@ def link_items():
                 ITEMS[need]["needed_by"].append(item_id)
         texts = [item.get("title", ""), item.get("waits", ""), item.get("why", ""), item.get("result", "")]
         texts += [part for _, value in (f for f in item.get("fields", []) if is_field(f)) for part in texts_of(value)]
-        texts += [text for _, text in (o for o in item.get("options") or [] if is_pair(o))]
+        texts += [part for option in item.get("options") or [] if is_option(option) for part in [option[1], *texts_of(option[2] if len(option) == 3 else [])]]
         if item["amended"]:
             texts.append(item["amended"]["why"])
         for ref in REF.findall(" ".join(str(text) for text in texts)):
@@ -857,10 +870,13 @@ def options_html(item):
     # One option alone is a proposal, which needs no letter.
     alone = len(item["options"]) == 1
     rows = []
-    for key, text in item["options"]:
+    for key, text, *reasons in item["options"]:
         tag, note = (f' class="{mark}"', f'<span class="vh"> ({mark})</span>') if key == marked else ("", "")
         letter = "" if alone else f'<span class="key">{esc(key)}</span>'
-        rows.append(f'<li{tag}>{letter}<span>{text}{note}</span></li>')
+        # Each option's reasons show until one is chosen, and then only the chosen one's.
+        why = reasons[0] if reasons and (not chosen or key == chosen) else ""
+        why = f'<div class="reasons">{list_html(why) if isinstance(why, list) else why}</div>' if why else ""
+        rows.append(f'<li{tag}>{letter}<span>{text}{note}</span>{why}</li>')
     return f'<ol class="options{" proposal" if alone else ""}">{"".join(rows)}</ol>'
 
 
@@ -1019,7 +1035,7 @@ def card(item):
     if short and short != text_of(item.get("title", "")):
         rows.append(("Title", item.get("title", "")))
     options = item.get("options")
-    if isinstance(options, list) and options and all(is_pair(option) for option in options):
+    if isinstance(options, list) and options and all(is_option(option) for option in options):
         rows.append(("Proposal" if len(options) == 1 else "Options", options_html(item)))
     rows += [(field[0], list_html(field[1]) if isinstance(field[1], list) else field[1]) for field in fields if not is_chip(field[1])]
     if shown and item["status"] == "dropped":
@@ -1463,7 +1479,7 @@ def built_html(kind, section, where):
             rows = []
             for item in items:
                 name = f"[[{item['id']}]]" + (f" {status_pill(dict(item, on=None))}" if item.get("status") in ITEM_STATUS and item["status"] != "done" else "")
-                options = dict(option for option in item.get("options", []) if is_pair(option))
+                options = dict(option[:2] for option in item.get("options", []) if is_option(option))
                 chosen = f'<span class="key">{esc(item["chosen"])}</span> {options[item["chosen"]]}' if item.get("chosen") in options else ""
                 rows.append([name] + ([chosen] if with_options else []) + [day(item["on"]) if item.get("on") else ""])
             # A batch is titled only when there are several.

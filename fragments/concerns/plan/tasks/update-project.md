@@ -24,8 +24,9 @@ The project, and what changed: $ARGUMENTS
      it is done, or approved, or edited there, is `amended`, with the day and
      why;
    - new work in Execution or Verify, once done, reopens it, with `reopened`;
-   - a decision, or a question, is written in full, with its options and the
-     one recommended, or the one way worth taking, alone, with `Why only
+   - a decision, or a question, is written in full, with its options, each
+     with its reasons in the option itself where it needs any, and the one
+     recommended, or the one way worth taking, alone, with `Why only
      this`, before the user is asked to take it: they read it on the page, and
      the chat only says it is there;
    - a decision taken has its `chosen` option, and `on`; once every decision

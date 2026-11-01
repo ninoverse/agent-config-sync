@@ -227,7 +227,11 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   - `options`, as `[key, text]` pairs, with `recommended` and `chosen` naming
     one each by its key: a decision's choices, shown as a list that marks the
     recommended one until one is chosen, and then only the chosen one; one
-    alone is a proposal, shown without its key, with a `Why only this` field;
+    alone is a proposal, shown without its key, with a `Why only this` field.
+    An option that needs its reasons takes them as a third entry,
+    `[key, text, reasons]`, a text or a list of them, shown under it until
+    one is chosen, and then only the chosen one's. A field never argues for
+    an option: one named after it, such as `Why a`, stops the render;
   - `amended`, as `{ on = <date>, why = "..." }`, when it was added, or
     edited, after its phase's approval, or after its end in a phase without
     one, which lists it at its end under that day and `why`, and whose tab

@@ -639,7 +639,7 @@ BROKEN = [
     (EXAMPLE, "project.toml", 'short = "Renovate"\nautomated = true', 'short = "Renovate"\nautomated = "yes"', "`automated` is true or false"),
     (EXAMPLE, "plan.toml", 'pull/14"\nneeds = ["EX-1"]', 'pull/14"\nneeds = ["EX-9"]', "`needs` names EX-9, which no item has"),
     (EXAMPLE, "analysis.toml", 'chosen = "a"', 'chosen = "c"', "`chosen` is c, which no option has"),
-    (EXAMPLE, "analysis.toml", '["b", "A second port', '["A second port', "`options` is a list of [key, text] pairs"),
+    (EXAMPLE, "analysis.toml", '["b", "A second port', '["A second port', "`options` is a list of [key, text] entries, or [key, text, reasons]"),
     (EXAMPLE, "plan.toml", '["Carries out", ["[[D1]]", "[[D2]]"]]', '["Carries out", ["[[D1]]", 2]]', "each of `fields` is a [label, text] pair, its text one string or a list of them"),
     (EXAMPLE, "plan.toml", 'short = "Liveness probe"\n', 'short = "Liveness probe"\nneeds = ["EX-2"]\n', "`needs` loops: EX-1 → EX-2 → EX-1"),
     (EXAMPLE, "plan.toml", ', why = "the answer to [[Q1]]" }', " }", "`amended` is"),
@@ -905,6 +905,39 @@ def check_proposal(tmp):
         expect('<dt>Proposal</dt><dd><ol class="options proposal">' in card and '<span class="key">' not in card and "The database connection." in card, f"its card shows the proposal, under Proposal, without a letter: {card[-500:]}")
 
 
+def check_option_reasons(tmp):
+    """Each option can carry its own reasons, a third entry: the card shows each option's
+    until the decision is taken, and then only the chosen one's. A field named after an
+    option, such as `Why a`, stops the render, since a taken decision's card would keep it."""
+    two = 'options = [\n  ["a", "The database connection."],\n  ["b", "The database and the cache."],\n]\nrecommended = "a"\nchosen = "a"\nfields = [["Reasons", "The service answers from the database when the cache is down, only slower."]]\n'
+    reasoned = 'options = [\n  ["a", "The database connection.", "The service answers from the database when the cache is down, only slower."],\n  ["b", "The database and the cache.", ["Its answers are never stale.", "See [[D1]]."]],\n  ["c", "Nothing."],\n]\nrecommended = "a"\nchosen = "a"\n'
+    data = copy_with(tmp, "reasons", EXAMPLE, "analysis.toml", two, reasoned)
+    if data is None:
+        return
+    run = render(data, tmp / "reasons-out", "--inline")
+    page = (tmp / "reasons-out" / "index.html").read_text() if run.returncode == 0 else ""
+    card = between(page, 'id="d2"', "</article>")
+    expect(run.returncode == 0 and "warning:" not in run.stderr, f"options with reasons render without a warning: {run.stderr}")
+    expect('<li class="chosen"><span class="key">a</span><span>The database connection.<span class="vh"> (chosen)</span></span><div class="reasons">The service answers from the database when the cache is down, only slower.</div></li>' in card, f"once taken, the chosen option shows its reasons under it: {card[-900:]}")
+    expect("Its answers are never stale." not in card and '<span class="key">c</span><span>Nothing.</span></li>' in card, f"and the others show none: {card[-900:]}")
+    expect("D2" in between(page, 'id="d1"', "</article>"), "an option's reasons link like any text")
+    if replace_in(data, "analysis.toml", '["c", "Nothing."],\n]\nrecommended = "a"\nchosen = "a"\n', '["c", "Nothing."],\n]\nrecommended = "a"\n'):
+        run = render(data, tmp / "reasons-out", "--inline")
+        page = (tmp / "reasons-out" / "index.html").read_text() if run.returncode == 0 else ""
+        card = between(page, 'id="d2"', "</article>")
+        expect('<div class="reasons"><ul class="list"><li>Its answers are never stale.</li>' in card and "only slower." in card, f"until it is taken, each option shows its reasons: {run.stderr}{card[-900:]}")
+    data = copy_with(tmp, "reasons-named", EXAMPLE, "analysis.toml", two, two.replace('[["Reasons",', '[["Under b", "The cache is checked too."], ["Why a",'))
+    if data is None:
+        return
+    run = render(data, tmp / "reasons-named-out")
+    expect(run.returncode == 1 and "analysis.toml item D2: `Under b` is named after option b: move it into that option's reasons, its third entry" in run.stderr and "`Why a` is named after option a" in run.stderr, f"a field named after an option stops the render: {run.stderr}")
+    data = copy_with(tmp, "reasons-bad", EXAMPLE, "analysis.toml", '["b", "The database and the cache."]', '["b", "The database and the cache.", 3]')
+    if data is None:
+        return
+    run = render(data, tmp / "reasons-bad-out")
+    expect(run.returncode == 1 and '`options` is a list of [key, text] entries, or [key, text, reasons], each key once' in run.stderr, f"an option's reasons are a text or a list of them: {run.stderr}")
+
+
 def check_state(tmp):
     """A project's own status: active, with no band; or paused, closed or archived, each a
     band under the summary, while nobody holds the ball."""
@@ -996,7 +1029,7 @@ def check_analysis_end(tmp):
         return
     (data / "verify.toml").write_text('[status.SC1]\nstatus = "blocked"\nwaits = "its checks"\n')
     (data / "research.toml").write_text('approved = 2026-01-03\n\n[[section]]\nid = "read"\ntitle = "What it read"\nkind = "repos"\n\n[[section.repo]]\nname = "owner/repository"\nuse = "read"\npart = "All of it."\nat = "abc1234"\n\n[[section]]\nid = "pieces"\ntitle = "What exists"\nkind = "items"\ntype = "piece"\n\n[[section.item]]\nid = "R1"\ntitle = "A piece"\nfields = [["Raises", "[[D1]]"]]\n')
-    (data / "analysis.toml").write_text('[[section]]\nid = "decisions"\ntitle = "Decisions"\nkind = "items"\ntype = "decision"\n\n[[section.item]]\nid = "D1"\ntitle = "A decision"\nstatus = "open"\non = 2026-01-03\noptions = [["a", "One way."], ["b", "Another."]]\nrecommended = "a"\nfields = [["Why a", "It is shorter."]]\n')
+    (data / "analysis.toml").write_text('[[section]]\nid = "decisions"\ntitle = "Decisions"\nkind = "items"\ntype = "decision"\n\n[[section.item]]\nid = "D1"\ntitle = "A decision"\nstatus = "open"\non = 2026-01-03\noptions = [["a", "One way."], ["b", "Another."]]\nrecommended = "a"\nfields = [["Reasons", "It is shorter."]]\n')
     run = render(data, tmp / "analysis-end-out")
     expect(run.returncode == 0 and "every decision" not in run.stderr, f"an Analysis with a decision to take stays Now, without a warning: {run.stderr}")
     if replace_in(data, "analysis.toml", 'status = "open"\non = 2026-01-03\n', 'status = "done"\non = 2026-01-04\nchosen = "a"\n'):
@@ -1048,6 +1081,7 @@ def main():
         check_result(tmp)
         check_draft(tmp)
         check_proposal(tmp)
+        check_option_reasons(tmp)
         check_state(tmp)
         check_attachments(tmp)
         check_analysis_end(tmp)

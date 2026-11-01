@@ -101,18 +101,18 @@ closes it, and `/resume-project` picks it up in a new session.
   misses, and the Analysis starts only after that.
 - **Analysis**: the decisions, and nothing else. A question about what to build
   is one of them, taken before the Plan's approval unless the user defers it,
-  saying what it waits on. Each lists its options, with the reasons for the one
-  recommended, or, when only one way is worth taking, proposes it alone, with
-  why only it, in a line: an option no one would take isn't listed. It is put
-  to the user on the page, in full: the chat only says it is there. Until the
-  user answers, the page marks the one recommended; after, only the one
-  chosen, with the date. Its card lists the PRs, settings and tasks that carry
-  it out. One list is the default; only when the decisions are many do they
-  come in batches, one section each, answered together, which the page lists
-  at the top. The evidence behind them, such as a comparison or a measurement,
-  goes in the Research, and the decisions link to it. The Analysis takes no
-  approval: it is Done once every decision is taken or deferred, on the day of
-  the last.
+  saying what it waits on. Each lists its options, each with its own reasons
+  where it needs any, the one recommended's above all, or, when only one way is
+  worth taking, proposes it alone, with why only it, in a line: an option no
+  one would take isn't listed. It is put to the user on the page, in full: the
+  chat only says it is there. Until the user answers, the page marks the one
+  recommended; after, only the one chosen, with the date. Its card lists the
+  PRs, settings and tasks that carry it out. One list is the default; only when
+  the decisions are many do they come in batches, one section each, answered
+  together, which the page lists at the top. The evidence behind them, such as
+  a comparison or a measurement, goes in the Research, and the decisions link
+  to it. The Analysis takes no approval: it is Done once every decision is
+  taken or deferred, on the day of the last.
 - **Plan**: its cards and nothing else, which the page lists at the top. The
   PRs as approved, one at a time in each repository, each with its branch, what
   it needs first, what its merge releases, as its kind, and *Done when*: what
