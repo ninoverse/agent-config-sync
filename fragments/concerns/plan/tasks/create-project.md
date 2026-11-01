@@ -93,7 +93,7 @@ It writes nothing, and names the file and the item, when:
   paused or archived project doesn't say why;
 - a phase is in Draft that starts with none, such as the Brief, or without its
   `draft`, or with sections beside it, or with `accepted`; or one holds a
-  `draft` while neither in Draft nor `accepted`, or is `accepted` without it;
+  `draft` once it is no longer in Draft: a draft goes once it is accepted;
 - a phase starts before those it follows are done, or before the day they
   end, the Research before the Brief's approval, the Analysis before the
   Research's, or Execution before the Plan's, without `early` saying why; the
@@ -147,6 +147,8 @@ with how many there are, when:
 - with `--since`, which renders for a publish, `read_at` is more than 15
   minutes before the render: the page would show a state that may have
   changed;
+- a Research with pieces doesn't say which commit of each repository it read,
+  in `at`;
 - an item has `stands`, but no warning about it to stand.
 
 Fix the data and render again, or tell the user why the warning stands. Once
@@ -186,8 +188,7 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   `attachments`;
   or, in the Retrospective, one of the parts it builds from the other phases,
   below; or its `draft`, a list, each a paragraph or a list of points: alone
-  while the phase is `draft`, and then, once `accepted`, the summary its view
-  opens with.
+  while the phase is `draft`, and gone once it is `accepted`.
   A section that carries on the one before it can go without a `title`, and
   `--since` then names it by that section's. A phase the user approves, the
   Brief, the Research and the Plan, has `approved`, the day they did. A
@@ -236,7 +237,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
     reads To test, not To merge.
 - A `repos` section lists the repositories, each a `[[section.repo]]` with its
   `name`, its `use`, `change`, `read` or `new`, shown as a chip, and its
-  `part`.
+  `part`; in the Research, which opens with one, `at` too, the commit read and
+  its tag, if it has one, such as `47cfa40, v5.54.5`.
 - A `[status.<id>]` table sets the `status`, `on`, `waits`, `why` and `result`
   of an item kept in another phase. The Plan's items keep theirs this way in
   `execution.toml`, and the Brief's success criteria theirs in `verify.toml`,

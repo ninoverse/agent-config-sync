@@ -43,8 +43,8 @@ closes it, and `/resume-project` picks it up in a new session.
   phases and chips included, and hold the glossary.
 - A phase is Done, Now, Draft, To come or Not needed, and a Done phase that
   has taken amendments reads Amended. Draft holds the draft alone. Once the
-  user accepts it, the day the Agenda then lists, the phase keeps its draft, as
-  the summary its view opens with. Not needed says why in one sentence, in the
+  user accepts it, the day the Agenda then lists, the draft goes, and the
+  agent writes the phase in full. Not needed says why in one sentence, in the
   data; Reuse is the phase most often not needed. A tab opens only once its
   phase has something to show, so the tab of a phase not needed, or not
   written yet, doesn't open. Execution and Verify can both be Now: Verify
@@ -96,7 +96,8 @@ closes it, and `/resume-project` picks it up in a new session.
   work rather than record it. The Brief is Done once the owner approves it,
   which agrees its success criteria, and the Research starts only after that.
 - **Research**: what exists, one numbered piece at a time, and what each piece
-  raises. It is Done once the owner approves it, since they may know what it
+  raises, opening with what it read: each repository, and the commit read. It
+  is Done once the owner approves it, since they may know what it
   misses, and the Analysis starts only after that.
 - **Analysis**: the decisions, and nothing else. A question about what to build
   is one of them, taken before the Plan's approval unless the user defers it,

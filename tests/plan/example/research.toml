@@ -3,6 +3,24 @@
 
 approved = 2026-10-02
 
+# What it read: each repository, and in `at` the commit read, with its tag.
+[[section]]
+id = "read"
+title = "What it read"
+kind = "repos"
+
+[[section.repo]]
+name = "example-service"
+use = "read"
+part = "The routes and the deployment settings, as they ran."
+at = "3f2a91c, v1.3.2"
+
+[[section.repo]]
+name = "platform-docs"
+use = "read"
+part = "What the platform expects of a probe."
+at = "b71e0d4"
+
 # Every section has an id, a title and a kind. "items" holds cards: each has an
 # id, a title, and its fields as [label, text] pairs. Its `type` sets the words
 # its statuses take: piece, rule, criterion, decision, question, pr, setting,

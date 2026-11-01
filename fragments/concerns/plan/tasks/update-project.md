@@ -33,7 +33,7 @@ The project, and what changed: $ARGUMENTS
      Reuse or the Retrospective, is `draft`, its `draft` in its own file, a
      list of paragraphs and lists of points, and the chat only says it is
      there; once the user accepts it, the phase is `now`, with `accepted`, the
-     day, and the phase keeps its draft, as its summary;
+     day, the draft goes, and the agent writes the phase in full;
    - an item set aside is `deferred`, with what it waits on, or `to-move`,
      naming the project that takes it;
    - a project that waits on something outside it is `paused` in `[state]`,
