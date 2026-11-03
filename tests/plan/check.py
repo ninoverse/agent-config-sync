@@ -949,6 +949,9 @@ def check_closes_with(tmp):
     risks = between(page, '<section class="block" id="open-risks">', "</section>")
     expect(run.returncode == 0 and "RK1" not in run.stderr, f"an Open risk with a `Closes with` field needs no `waits`: {run.stderr}")
     expect('<span class="waits">closes with A week of the probe in staging without a slow night.</span>' in risks, f"and says it closes with what the field says: {risks[:900]}")
+    if replace_in(data, "plan.toml", '"A week of the probe in staging without a slow night."', '"A week of the probe in staging without a slow night, as [[D2]] chose."'):
+        run = render(data, tmp / "closes-with-out")
+        expect(run.returncode == 0 and "RK1 waits on" not in run.stderr, f"an item its field names in passing, such as the decision behind it, isn't what it waits on: {run.stderr}")
 
 
 def check_state(tmp):

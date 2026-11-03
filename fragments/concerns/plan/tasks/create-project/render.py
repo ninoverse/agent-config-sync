@@ -624,7 +624,7 @@ def collect_items(phases):
             item["status_from"] = key
     for item in ITEMS.values():
         if item.get("status") == "blocked" and not item.get("waits") and not item["needs"] and closes_with(item, item["type"]):
-            item["waits"] = closes_with(item, item["type"])
+            item["waits"], item["waits_read"] = closes_with(item, item["type"]), True
     # A risk is written before what it describes: one added after it happened was a question or a blocker.
     for item_id, item in ITEMS.items():
         written = item["amended"] and item["amended"]["on"]
@@ -692,7 +692,9 @@ def check_states(project, phases):
         if status == "blocked" and needs and all(ITEMS[need].get("status") == "done" for need in needs):
             if not item.get("waits"):
                 warn(where, f"{item_id} is `blocked`, but everything it needs is done: is it `ready`?")
-        if status == "blocked" and item.get("waits"):
+        # A wait read from a risk's Closes with names items in passing, such as the decision
+        # behind it: none of them is what it waits on.
+        if status == "blocked" and item.get("waits") and not item.get("waits_read"):
             named = [ref for ref in REF.findall(item["waits"]) if ref in ITEMS]
             if named and all(ITEMS[ref].get("status") == "done" for ref in named):
                 warn(where, f"{item_id} waits on {', '.join(named)}, which {'is' if len(named) == 1 else 'are'} done: is it `ready`?")
