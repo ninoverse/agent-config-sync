@@ -115,15 +115,15 @@ closes it, and `/resume-project` picks it up in a new session.
   taken or deferred, on the day of the last.
 - **Plan**: its cards and nothing else, which the page lists at the top. The
   PRs as approved, one at a time in each repository, each with its branch, what
-  it needs first, what its merge releases, as its kind, and *Done when*: what
-  proves it works. The settings only the user can change. The tasks: work that
-  isn't a PR, such as a review, each with its *Done when*, and done without a
-  merge. The risk register: each risk, written before what it describes can
-  happen, and the step that closes it. The Plan stays as approved: an item
-  added or edited after the approval is an amendment, dated and saying why, and
-  the Plan ends with its approval: the day, and its amendments by day and why.
-  The Plan is Done once the owner approves it, and Execution starts only after
-  that.
+  it needs first, what its merge releases, as its kind, which a PR that
+  releases nothing goes without, and *Done when*: what proves it works. The
+  settings only the user can change. The tasks: work that isn't a PR, such as a
+  review, each with its *Done when*, and done without a merge. The risk
+  register: each risk, written before what it describes can happen, and the
+  step that closes it. The Plan stays as approved: an item added or edited
+  after the approval is an amendment, dated and saying why, and the Plan ends
+  with its approval: the day, and its amendments by day and why. The Plan is
+  Done once the owner approves it, and Execution starts only after that.
 - **Execution**: the live state. A board of the PRs, settings and tasks in
   waves, built from what each needs; the Plan's risks not yet closed, under
   it, with what each closes with; each item's *Result* once it lands; and

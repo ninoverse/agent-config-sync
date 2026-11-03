@@ -30,7 +30,7 @@ The project: $ARGUMENTS
      the one recommended, none of them made up, or propose one alone, saying
      why only it? Does a PR, a setting or a task carry it out?
    - the Plan: does each PR say its branch, what it needs first and its kind,
-     with a *Done when* a check can prove, and each task its *Done when*? Does
+     or none when its merge releases nothing, with a *Done when* a check can prove, and each task its *Done when*? Does
      each success criterion have a check, and each check the PR it needs, or
      that needs it? Is each risk one that hasn't happened, with the step that
      closes it?

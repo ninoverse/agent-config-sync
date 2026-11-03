@@ -210,7 +210,8 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
   shows as a chip instead, so a folded card shows it. Optionally, it has:
   - `short`, the name it goes by wherever it is linked;
   - `stands`, why its warnings stand, by the user's choice;
-  - `kind`: `major`, `minor`, `patch` or `owner`;
+  - `kind`: `major`, `minor`, `patch` or `owner`; a PR whose merge releases
+    nothing, such as one of tests only, has none;
   - `status`, with its `waits` or `why`, `on`, the day it got there, and
     `result`, once it lands: `open`, `ready`, `blocked`, `done` or `dropped`;
     `happened`, for a risk; or, for any item, `deferred`, `to-move`, with the
