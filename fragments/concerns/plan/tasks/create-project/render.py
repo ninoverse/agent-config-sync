@@ -497,6 +497,15 @@ def texts_of(text):
     return text if isinstance(text, list) else [text]
 
 
+def closes_with(item, item_type):
+    """A risk's closing step as its Plan writes it, in a `Closes with` field, when it isn't
+    an item: an Open risk without `waits` reads its wait from there."""
+    if item_type != "risk":
+        return None
+    text = dict(field for field in item.get("fields", []) if is_field(field)).get("Closes with")
+    return " ".join(texts_of(text)) if text else None
+
+
 def check_status(entry, item_type, where):
     status = entry.get("status")
     if status is None:
@@ -543,7 +552,7 @@ def collect_items(phases):
                 if item_type is not None and item_type not in TYPES:
                     problem(where, f"`type` is one of {', '.join(TYPES)}")
                     item_type = None
-                check_status(item, item_type, where)
+                check_status(dict(item, waits=item.get("waits") or closes_with(item, item_type)), item_type, where)
                 if item_type is not None and item_type not in PHASE_TYPES[key]:
                     holders = " or ".join(PHASE_NAME[phase] for phase, types in PHASE_TYPES.items() if item_type in types)
                     problem(where, f"a card of type `{item_type}` belongs in {holders}, not in {PHASE_NAME[key]}")
@@ -606,13 +615,16 @@ def collect_items(phases):
             if item["status_from"]:
                 problem(where, f"{item_id}'s status is set twice, here and in {item['status_from']}.toml")
                 continue
-            check_status(dict(entry, needs=item["needs"]), item["type"], where)
+            check_status(dict(entry, needs=item["needs"], waits=entry.get("waits") or closes_with(item, item["type"])), item["type"], where)
             for field in ("status", "waits", "why", "result", "to"):
                 if field in entry:
                     item[field] = entry[field]
             if "on" in entry:
                 item["on"] = as_date(entry["on"], where, "on")
             item["status_from"] = key
+    for item in ITEMS.values():
+        if item.get("status") == "blocked" and not item.get("waits") and not item["needs"] and closes_with(item, item["type"]):
+            item["waits"] = closes_with(item, item["type"])
     # A risk is written before what it describes: one added after it happened was a question or a blocker.
     for item_id, item in ITEMS.items():
         written = item["amended"] and item["amended"]["on"]

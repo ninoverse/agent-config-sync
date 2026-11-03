@@ -218,7 +218,9 @@ changes with its state: its `url`, `ask`, `to`, `chosen` and `stands`.
     project that takes it in `to`, or `moved`, with its card's address there
     in `to`. A deferred item's `waits` is `owner` when it waits on the user's
     go, or their call on a question or a decision, which its card shows as
-    theirs, and the header counts under them;
+    theirs, and the header counts under them. A risk Open without `waits` or
+    `needs` reads its wait from its `Closes with` field, the step that closes
+    it when that isn't an item, written once, in the Plan;
   - `from`, on an item moved in from another project, its card's address on
     that project's page;
   - `url`, the PR's address once it is open, where its state is read from;

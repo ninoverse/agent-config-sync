@@ -120,10 +120,12 @@ closes it, and `/resume-project` picks it up in a new session.
   settings only the user can change. The tasks: work that isn't a PR, such as a
   review, each with its *Done when*, and done without a merge. The risk
   register: each risk, written before what it describes can happen, and the
-  step that closes it. The Plan stays as approved: an item added or edited
-  after the approval is an amendment, dated and saying why, and the Plan ends
-  with its approval: the day, and its amendments by day and why. The Plan is
-  Done once the owner approves it, and Execution starts only after that.
+  step that closes it: an item it needs, or, when the step isn't one, its
+  *Closes with*, which Execution then shows as its wait. The Plan stays as
+  approved: an item added or edited after the approval is an amendment, dated
+  and saying why, and the Plan ends with its approval: the day, and its
+  amendments by day and why. The Plan is Done once the owner approves it, and
+  Execution starts only after that.
 - **Execution**: the live state. A board of the PRs, settings and tasks in
   waves, built from what each needs; the Plan's risks not yet closed, under
   it, with what each closes with; each item's *Result* once it lands; and

@@ -938,6 +938,19 @@ def check_option_reasons(tmp):
     expect(run.returncode == 1 and '`options` is a list of [key, text] entries, or [key, text, reasons], each key once' in run.stderr, f"an option's reasons are a text or a list of them: {run.stderr}")
 
 
+def check_closes_with(tmp):
+    """A risk whose closing step isn't an item writes it once, in its Plan's `Closes with`
+    field: Open, without `waits` or `needs`, it reads its wait from there."""
+    data = copy_with(tmp, "closes-with", EXAMPLE, "plan.toml", 'short = "Slow database"\nneeds = ["EX-3"]\n', 'short = "Slow database"\nfields = [["Closes with", "A week of the probe in staging without a slow night."]]\n')
+    if data is None:
+        return
+    run = render(data, tmp / "closes-with-out", "--inline")
+    page = (tmp / "closes-with-out" / "index.html").read_text() if run.returncode == 0 else ""
+    risks = between(page, '<section class="block" id="open-risks">', "</section>")
+    expect(run.returncode == 0 and "RK1" not in run.stderr, f"an Open risk with a `Closes with` field needs no `waits`: {run.stderr}")
+    expect('<span class="waits">closes with A week of the probe in staging without a slow night.</span>' in risks, f"and says it closes with what the field says: {risks[:900]}")
+
+
 def check_state(tmp):
     """A project's own status: active, with no band; or paused, closed or archived, each a
     band under the summary, while nobody holds the ball."""
@@ -1082,6 +1095,7 @@ def main():
         check_draft(tmp)
         check_proposal(tmp)
         check_option_reasons(tmp)
+        check_closes_with(tmp)
         check_state(tmp)
         check_attachments(tmp)
         check_analysis_end(tmp)
