@@ -24,8 +24,11 @@ paths:
 - Colours, radii, shadows and spacing come only from CSS custom properties, the
   design tokens, and sizes are computed from them. A hook one element adds for
   theming is read as `var(--<name>-<property>, <fallback>)`.
-- Motion stops under `@media (prefers-reduced-motion: reduce)`, in the same
-  `css` template as the animation.
+- Under `@media (prefers-reduced-motion: reduce)`, in the same `css`
+  template as the animation, motion that only decorates stops: a transition,
+  a shimmer, a slide, a fade. An indicator whose movement is its meaning, such
+  as a spinner or an indeterminate progress bar, keeps a slow motion inside its
+  own box, so a page that is loading doesn't look frozen.
 - Overlays never use `z-index`: the top layer orders them. A `0` or `1` between
   nodes inside one shadow root is fine.
 - A value that differs per instance is set on the host with
